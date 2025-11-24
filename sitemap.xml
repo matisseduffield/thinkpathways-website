@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+   <!-- Main Pages -->
+   <url>
+      <loc>https://thinkpathways.com/</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>1.00</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/index.html</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>0.80</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/activities.html</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>0.80</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/referral.html</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>0.80</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/pricing.html</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>0.80</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/resources.html</loc>
+      <lastmod>2025-11-25</lastmod>
+      <priority>0.70</priority>
+   </url>
+   
+   <!-- Forms & Legal -->
+   <url>
+      <loc>https://thinkpathways.com/feedback.html</loc>
+      <priority>0.50</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/incident.html</loc>
+      <priority>0.50</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/privacy.html</loc>
+      <priority>0.30</priority>
+   </url>
+   <url>
+      <loc>https://thinkpathways.com/terms.html</loc>
+      <priority>0.30</priority>
+   </url>
+</urlset>
