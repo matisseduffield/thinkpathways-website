@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Agreement - Think Pathways</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #e2e8f0; color: #334155; }
+        
+        /* Visual Paper Style */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 40px auto;
+            background: white;
+            padding: 40px 50px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Print Logic */
+        @media print {
+            body { background: white; margin: 0; }
+            .a4-page { 
+                box-shadow: none; 
+                margin: 0; 
+                width: 100%; 
+                height: 100vh; 
+                page-break-after: always; 
+                border: none;
+            }
+            .no-print { display: none !important; }
+            nav { display: none; }
+        }
+
+        h1, h2, h3 { color: #0f172a; }
+        p, li { line-height: 1.5; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        
+        .footer {
+            margin-top: auto;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation / Print Bar (Hidden when printing) -->
+    <nav class="bg-slate-900 text-white p-4 sticky top-0 z-50 no-print shadow-md">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 hover:text-gray-300 transition-colors text-sm font-medium">
+                <i class="fa-solid fa-arrow-left"></i> Back to Website
+            </a>
+            <div class="flex gap-3">
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-md font-bold transition-colors flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-print"></i> Print / Save as PDF
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= PAGE 1 ================= -->
+    <div class="a4-page">
+        
+        <!-- Document Header -->
+        <header class="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-8">
+            <div>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight uppercase">Service Agreement</h1>
+                <p class="text-slate-500 mt-2 font-medium">NDIS Support Services</p>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center justify-end gap-2 mb-1">
+                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">TP</div>
+                    <span class="font-bold text-xl text-slate-900">Think Pathways</span>
+                </div>
+                <p class="text-xs text-slate-500">ABN: 74 169 269 966</p>
+                <p class="text-xs text-slate-500">Adelaide, South Australia</p>
+                <p class="text-xs text-blue-600 font-medium">care@thinkpathways.com</p>
+            </div>
+        </header>
+
+        <!-- 1. Parties & Dates -->
+        <section class="mb-8 bg-slate-50 p-5 rounded-lg border border-slate-200">
+            <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+                <div class="col-span-2 border-b border-slate-200 pb-4 mb-2">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Agreement Details</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Start Date</label>
+                            <div class="h-8 border-b border-slate-300"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">End Date</label>
+                            <div class="h-8 border-b border-slate-300"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-slate-900 mb-1 text-sm">The Provider</h3>
+                    <p class="font-medium text-sm">Think Pathways</p>
+                    <p class="text-xs text-slate-500">Matisse Duffield (Director)</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 mb-1 text-sm">The Participant</h3>
+                    <p class="text-slate-400 italic text-sm">[Participant Name]</p>
+                    <p class="text-xs text-slate-500 mt-1">NDIS Number: _______________________</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Purpose -->
+        <section class="mb-6">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-3">1. Purpose of this Agreement</h2>
+            <p class="text-sm">This Service Agreement is made for the purpose of providing supports under the participant’s National Disability Insurance Scheme (NDIS) plan.</p>
+            <p class="text-sm">The Parties agree that this Service Agreement is made in the context of the NDIS, which is a scheme that aims to:</p>
+            <ul class="list-disc list-inside ml-2 space-y-1 text-xs text-slate-600">
+                <li>Support the independence and social and economic participation of people with disability.</li>
+                <li>Enable people with disability to exercise choice and control in the pursuit of their goals and the planning and delivery of their supports.</li>
+            </ul>
+        </section>
+
+        <!-- 3. Schedule of Supports -->
+        <section class="mb-6">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-3">2. Schedule of Supports</h2>
+            <p class="mb-3 text-xs">The Provider agrees to provide the participant with the supports listed below. The prices listed are indicative and subject to the limits set out in the current <strong>NDIS Pricing Arrangements and Price Limits</strong>.</p>
+            
+            <table class="w-full text-xs text-left border-collapse border border-slate-200">
+                <thead class="bg-slate-100">
+                    <tr>
+                        <th class="p-2 border border-slate-200 w-1/4">Support Item</th>
+                        <th class="p-2 border border-slate-200 w-1/2">Description</th>
+                        <th class="p-2 border border-slate-200 w-1/4 text-right">Agreed Price / Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="p-2 border border-slate-200 align-top font-mono">01_011_0107_1_1</td>
+                        <td class="p-2 border border-slate-200 align-top">
+                            <strong>Assistance with Self-Care Activities</strong><br>
+                            <span class="text-slate-500">Standard Intensity - Weekday Daytime</span>
+                        </td>
+                        <td class="p-2 border border-slate-200 text-right align-top">NDIS Price Limit</td>
+                    </tr>
+                    <tr>
+                        <td class="p-2 border border-slate-200 align-top font-mono">04_104_0125_6_1</td>
+                        <td class="p-2 border border-slate-200 align-top">
+                            <strong>Access Community Social/Rec Activities</strong><br>
+                            <span class="text-slate-500">Standard - Weekday Daytime</span>
+                        </td>
+                        <td class="p-2 border border-slate-200 text-right align-top">NDIS Price Limit</td>
+                    </tr>
+                    <tr>
+                        <td class="p-2 border border-slate-200 align-top font-mono">04_590_0125_6_1</td>
+                        <td class="p-2 border border-slate-200 align-top">
+                            <strong>Activity Based Transport</strong><br>
+                            <span class="text-slate-500">Transport provided by worker during shift</span>
+                        </td>
+                        <td class="p-2 border border-slate-200 text-right align-top">$1.00 / km</td>
+                    </tr>
+                    <tr>
+                        <td class="p-2 border border-slate-200 h-8"></td>
+                        <td class="p-2 border border-slate-200"></td>
+                        <td class="p-2 border border-slate-200"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="mt-2 text-[10px] text-slate-500 italic">
+                * Note: Prices typically increase on weekends, public holidays, and evenings in accordance with the NDIS Award. The Provider will charge the applicable rate at the time of service delivery.
+            </p>
+        </section>
+
+        <!-- Footer 1 -->
+        <div class="footer">
+            <p>Service Agreement - Think Pathways | ABN 74 169 269 966 | <strong>Page 1 of 3</strong></p>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 2 ================= -->
+    <div class="a4-page">
+        <!-- Header Small -->
+        <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-8 opacity-50">
+            <span class="text-xs uppercase font-bold tracking-widest">Service Agreement</span>
+            <span class="text-xs">Think Pathways</span>
+        </div>
+
+        <!-- 4. Responsibilities -->
+        <section class="mb-8">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-4">3. Responsibilities</h2>
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-2 text-sm bg-slate-100 p-2 rounded">The Provider (Think Pathways) agrees to:</h3>
+                    <ul class="list-disc list-outside ml-5 space-y-1 text-sm text-slate-700">
+                        <li>Provide supports that meet the participant's needs and preferred times (where possible).</li>
+                        <li>Review the provision of supports at least every 3 months with the participant.</li>
+                        <li>Communicate openly and honestly in a timely manner.</li>
+                        <li>Treat the participant with courtesy and respect.</li>
+                        <li>Keep accurate records on the supports provided to the participant.</li>
+                        <li>Issue invoices and statements of the supports delivered to the participant.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-2 text-sm bg-slate-100 p-2 rounded">The Participant agrees to:</h3>
+                    <ul class="list-disc list-outside ml-5 space-y-1 text-sm text-slate-700">
+                        <li>Inform the Provider about how they wish the supports to be delivered to meet their needs.</li>
+                        <li>Treat the Provider and staff with courtesy and respect.</li>
+                        <li>Talk to the Provider if they have any concerns about the supports being provided.</li>
+                        <li>Provide a safe environment for the Provider's staff (if services are delivered in-home).</li>
+                        <li>Give the Provider the required notice if a scheduled appointment needs to be cancelled (see Section 5).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Payments -->
+        <section class="mb-8">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-4">4. Payments and Invoicing</h2>
+            <p class="mb-4 text-sm">The Provider will seek payment for their provision of supports after the participant confirms satisfactory delivery.</p>
+            
+            <div class="bg-slate-50 p-4 rounded border border-slate-200 mb-6">
+                <p class="font-bold text-sm mb-3">How will payments be managed? (Select one)</p>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 border-2 border-slate-400 bg-white rounded-sm"></div>
+                        <span><strong>Self-Managed:</strong> The Provider invoices the Participant directly. Payment is due within 7 days.</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 border-2 border-slate-400 bg-white rounded-sm"></div>
+                        <span><strong>Plan-Managed:</strong> The Provider invoices the Plan Manager directly.</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 border-2 border-slate-400 bg-white rounded-sm"></div>
+                        <span><strong>NDIA Managed:</strong> The Provider claims directly from the NDIA portal.</span>
+                    </div>
+                </div>
+                
+                <!-- Plan Manager Details (Optional) -->
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <p class="text-xs font-bold text-slate-500 mb-2">IF PLAN MANAGED - Plan Manager Details:</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] text-slate-400 block">Plan Manager Name / Agency</label>
+                            <div class="border-b border-slate-300 h-6"></div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block">Plan Manager Email for Invoices</label>
+                            <div class="border-b border-slate-300 h-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-bold text-sm text-slate-900 mt-4 mb-2">Travel and Transport Costs</h3>
+            <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+                <li><strong>Provider Travel:</strong> The Provider may claim travel time (labour) and non-labour costs (e.g. $1.00/km) for traveling <em>to</em> the participant, up to the limits specified in the NDIS Price Guide (typically 30 mins in metro areas).</li>
+                <li><strong>Activity Based Transport:</strong> If the Provider transports the participant <em>during</em> the service (e.g. to the shops), the Provider will claim $1.00 per km for vehicle running costs, in addition to the hourly labour rate.</li>
+            </ul>
+        </section>
+
+        <!-- Footer 2 -->
+        <div class="footer">
+            <p>Service Agreement - Think Pathways | ABN 74 169 269 966 | <strong>Page 2 of 3</strong></p>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 3 ================= -->
+    <div class="a4-page">
+        <!-- Header Small -->
+        <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-8 opacity-50">
+            <span class="text-xs uppercase font-bold tracking-widest">Service Agreement</span>
+            <span class="text-xs">Think Pathways</span>
+        </div>
+
+        <!-- 6. Cancellation Policy -->
+        <section class="mb-8">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-4">5. Cancellation Policy</h2>
+            <div class="bg-red-50 p-5 rounded-lg border border-red-100">
+                <p class="font-bold text-red-800 text-sm mb-2">Short Notice Cancellations</p>
+                <p class="text-sm text-red-900 mb-2">
+                    Think Pathways adheres strictly to the <strong>NDIS Pricing Arrangements and Price Limits</strong>. A cancellation is considered "Short Notice" if the participant:
+                </p>
+                <ul class="list-disc list-inside text-sm text-red-900 ml-2 space-y-1">
+                    <li>Does not show up for a scheduled support within a reasonable time ("No Show").</li>
+                    <li>Gives less than <strong>2 clear business days' notice</strong> for a support that meets the NDIS definition.</li>
+                </ul>
+                <p class="text-sm text-red-900 mt-3 font-semibold">
+                    In these events, the Provider may charge 100% of the agreed fee for the scheduled support.
+                </p>
+            </div>
+        </section>
+
+        <!-- 7. Changes & Termination -->
+        <section class="mb-8">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-4">6. Ending this Agreement</h2>
+            <p class="text-sm">Either party may end this Service Agreement by giving the other party <strong>14 days' notice</strong> in writing.</p>
+            <p class="text-sm">If either party seriously breaches this Service Agreement, the requirement of notice will be waived, and the agreement may be terminated immediately.</p>
+        </section>
+
+        <!-- 8. Feedback & GST -->
+        <section class="mb-10">
+            <h2 class="text-md font-bold text-slate-900 border-l-4 border-blue-600 pl-3 mb-4">7. Feedback & GST</h2>
+            <p class="text-sm mb-2"><strong>Feedback:</strong> The Participant can make a complaint or provide feedback by contacting Matisse Duffield at <span class="underline text-blue-600">care@thinkpathways.com</span> or by contacting the NDIS Commission.</p>
+            <p class="text-sm mb-1"><strong>Goods and Services Tax (GST):</strong> For the purposes of GST legislation, the Parties confirm that:</p>
+            <ul class="list-disc list-inside text-xs text-slate-600 ml-2">
+                <li>A supply of supports under this Service Agreement is a supply of one or more of the reasonable and necessary supports specified in the statement included, under subsection 33(2) of the <em>National Disability Insurance Scheme Act 2013 (NDIS Act)</em>, in the participant’s NDIS plan currently in effect.</li>
+                <li>The supply is GST-free under section 38-38 of the <em>A New Tax System (Goods and Services Tax) Act 1999</em>.</li>
+            </ul>
+        </section>
+
+        <!-- 9. Signatures -->
+        <section class="mt-auto pt-8 border-t-2 border-slate-800">
+            <h3 class="text-lg font-bold text-slate-900 mb-8">8. Signatures</h3>
+            <div class="grid grid-cols-2 gap-12">
+                <!-- Column 1 -->
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-8">Signed by the Participant / Nominee</p>
+                    
+                    <div class="h-12 border-b border-slate-400 mb-1"></div>
+                    <p class="text-[10px] text-slate-500 uppercase mb-6">Signature</p>
+
+                    <div class="h-8 border-b border-slate-400 mb-1"></div>
+                    <p class="text-[10px] text-slate-500 uppercase mb-6">Print Name</p>
+
+                    <div class="h-8 border-b border-slate-400 mb-1 w-1/2"></div>
+                    <p class="text-[10px] text-slate-500 uppercase">Date</p>
+                </div>
+
+                <!-- Column 2 -->
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-8">Signed by the Provider</p>
+                    
+                    <div class="h-12 border-b border-slate-400 mb-1 flex items-end pb-1">
+                        <span class="font-signature text-2xl text-blue-900 italic">Matisse Duffield</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 uppercase mb-6">Think Pathways Representative</p>
+
+                    <div class="h-8 border-b border-slate-400 mb-1 w-1/2"></div>
+                    <p class="text-[10px] text-slate-500 uppercase">Date</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer 3 -->
+        <div class="footer mt-8">
+            <p>Service Agreement - Think Pathways | ABN 74 169 269 966 | <strong>Page 3 of 3</strong></p>
+        </div>
+    </div>
+
+</body>
+</html>
