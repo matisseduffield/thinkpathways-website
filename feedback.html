@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback & Complaints - Think Pathways</title>
+    
+    <!-- FEATURE 1: Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter for high readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        *:focus-visible { outline: 4px solid #facc15; outline-offset: 2px; }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .high-contrast { background-color: #000000 !important; color: #ffff00 !important; }
+        .high-contrast * { background-color: #000000 !important; color: #ffff00 !important; border-color: #ffff00 !important; }
+        .high-contrast img, .high-contrast svg { filter: grayscale(100%) contrast(150%); }
+        .high-contrast button, .high-contrast a.bg-brand-600 { border: 2px solid #ffff00 !important; text-decoration: underline; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 40px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 antialiased flex flex-col min-h-screen relative">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                        </div>
+                        <span class="font-bold text-xl text-slate-900 tracking-tight">Think Pathways</span>
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
+                    <a href="index.html#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
+                    <a href="index.html#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
+                    <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
+                    <a href="index.html#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
+                    <a href="index.html#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">Contact Us</a>
+                </div>
+
+                <div class="flex items-center md:hidden">
+                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2" aria-label="Toggle menu">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Home</a>
+                <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Services</a>
+                <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
+                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">About Us</a>
+                <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">FAQ</a>
+                <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Simple Header -->
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">We Value Your Feedback</h1>
+            <p class="text-lg text-slate-600">
+                Whether it's a compliment, a suggestion, or a complaint, we want to hear from you. Your feedback helps us improve our support services.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <!-- Left Column: Feedback Form -->
+            <div class="lg:col-span-7">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 min-h-[500px]">
+                    <!-- Form Section -->
+                    <div id="feedbackFormContainer">
+                        <h2 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                            <i class="fa-solid fa-pen-to-square text-brand-500 mr-3"></i>
+                            Send us a message
+                        </h2>
+                        <form name="feedback" method="POST" data-netlify="true" action="/success.html" class="space-y-5">
+                            <input type="hidden" name="form-name" value="feedback" />
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="name" name="name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all" placeholder="John Doe">
+                                </div>
+                                <div>
+                                    <label for="role" class="block text-sm font-medium text-slate-700 mb-1">I am a... <span class="text-red-500">*</span></label>
+                                    <select id="role" name="role" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all">
+                                        <option value="" disabled selected>Select an option</option>
+                                        <option>Participant</option>
+                                        <option>Family Member / Nominee</option>
+                                        <option>Support Coordinator</option>
+                                        <option>Other Professional</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all" placeholder="you@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Type of Feedback <span class="text-red-500">*</span></label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="compliment" class="text-brand-600 focus:ring-brand-500" checked>
+                                        <span class="ml-2 text-slate-600 text-sm">Compliment</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="complaint" class="text-brand-600 focus:ring-brand-500">
+                                        <span class="ml-2 text-slate-600 text-sm">Complaint</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="suggestion" class="text-brand-600 focus:ring-brand-500">
+                                        <span class="ml-2 text-slate-600 text-sm">Suggestion</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-slate-700 mb-1">Your Message <span class="text-red-500">*</span></label>
+                                <textarea id="message" name="message" rows="5" required placeholder="Please provide details about your experience..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm">Submit Feedback</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Info & Process -->
+            <div class="lg:col-span-5 space-y-8">
+                <!-- Alternative Contact Methods -->
+                <div class="bg-slate-900 text-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-lg font-bold mb-6">Other Ways to Reach Us</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-phone text-brand-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Call Us Directly</p>
+                                <p class="text-lg font-medium">+61 420 673 303</p>
+                                <p class="text-sm text-slate-400 mt-1">Available Mon-Fri, 9am - 5pm</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-envelope text-brand-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Email Us</p>
+                                <a href="mailto:care@thinkpathways.com" class="text-lg font-medium hover:text-brand-400 transition-colors">care@thinkpathways.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Process Info -->
+                <div class="bg-brand-50 rounded-2xl p-8 border border-brand-100">
+                    <h3 class="text-lg font-bold text-brand-900 mb-4">How we handle complaints</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</div>
+                            <p class="text-sm text-brand-800">We will acknowledge your complaint within <strong>2 business days</strong>.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</div>
+                            <p class="text-sm text-brand-800">We will investigate the issue fairly and confidentially.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</div>
+                            <p class="text-sm text-brand-800">We will work with you to find a resolution and keep you updated on the outcome.</p>
+                        </li>
+                    </ul>
+                    <div class="mt-6 pt-6 border-t border-brand-200">
+                        <p class="text-xs text-brand-600">
+                            If you are not satisfied with our response, you can contact the <a href="https://www.ndiscommission.gov.au/" target="_blank" class="underline hover:text-brand-800">NDIS Commission</a> directly.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white pt-12 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                         <div class="w-8 h-8 bg-brand-500 rounded flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle"></i>
+                        </div>
+                        <span class="font-bold text-lg tracking-tight">Think Pathways</span>
+                    </div>
+                    <p class="text-slate-400 text-sm">Empowering individuals with disabilities to live life their way.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Quick Links</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="index.html#home" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
+                        <li><a href="index.html#faq" class="hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Legal & Support</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="feedback.html" class="hover:text-white transition-colors">Feedback & Complaints</a></li>
+                        <li><a href="incident.html" class="hover:text-white transition-colors">Incident Reporting</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
+                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-2 text-slate-700">|</span> ABN 74 169 269 966</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FEATURE 2: Accessibility Toolbar -->
+    <div class="fixed bottom-4 left-4 z-50">
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
+            <i class="fa-solid fa-universal-access text-2xl"></i>
+        </button>
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
+                    <div class="flex gap-2">
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            if (!e.target.checkValidity()) { e.target.reportValidity(); return; }
+            e.target.submit();
+        }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        let currentZoom = 100;
+        function resizeText(direction) {
+            if (direction === 0) currentZoom = 100;
+            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
+            else currentZoom = Math.max(currentZoom - 10, 90);
+            document.documentElement.style.fontSize = currentZoom + '%';
+        }
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            if (document.body.classList.contains('high-contrast')) localStorage.setItem('highContrast', 'true');
+            else localStorage.removeItem('highContrast');
+        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
+    </script>
+</body>
+</html>

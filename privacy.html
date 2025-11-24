@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Think Pathways</title>
+    
+    <!-- FEATURE 1: Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter for high readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        *:focus-visible { outline: 4px solid #facc15; outline-offset: 2px; }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .high-contrast { background-color: #000000 !important; color: #ffff00 !important; }
+        .high-contrast * { background-color: #000000 !important; color: #ffff00 !important; border-color: #ffff00 !important; }
+        .high-contrast img, .high-contrast svg { filter: grayscale(100%) contrast(150%); }
+        .high-contrast button, .high-contrast a.bg-brand-600 { border: 2px solid #ffff00 !important; text-decoration: underline; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 40px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 antialiased flex flex-col min-h-screen relative">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                        </div>
+                        <span class="font-bold text-xl text-slate-900 tracking-tight">Think Pathways</span>
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
+                    <a href="index.html#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
+                    <a href="index.html#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
+                    <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
+                    <a href="index.html#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
+                    <a href="index.html#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">Contact Us</a>
+                </div>
+
+                <div class="flex items-center md:hidden">
+                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2" aria-label="Toggle menu">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Home</a>
+                <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Services</a>
+                <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
+                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">About Us</a>
+                <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">FAQ</a>
+                <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Header Section -->
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <div class="inline-flex items-center justify-center p-2 px-3 mb-6 bg-brand-50 rounded-full border border-brand-100">
+                <span class="text-brand-700 text-xs font-semibold uppercase tracking-wider">Legal Document</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">Privacy Policy</h1>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                We are committed to transparency. This policy outlines exactly how Think Pathways collects, uses, and protects your personal information.
+            </p>
+            <p class="mt-4 text-sm text-slate-400">Last Updated: November 2025</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <!-- Left Column: Main Policy Text -->
+            <div class="lg:col-span-8 space-y-12">
+                <!-- Introduction -->
+                <section>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4">Our Commitment to You</h2>
+                    <p class="text-slate-600 leading-relaxed text-lg">
+                        At <strong>Think Pathways</strong> (ABN 74 169 269 966), protecting the privacy of our participants, their families, and our staff is our priority. We adhere strictly to the <em>Privacy Act 1988 (Cth)</em> and the <em>NDIS Practice Standards</em> to ensure your data is handled with respect and care.
+                    </p>
+                </section>
+                <hr class="border-slate-100">
+                <!-- Section 1: Collection -->
+                <section>
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 mr-4">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">1. Information We Collect</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        We collect information reasonably necessary to provide high-quality disability support services. This data allows us to tailor our care to your specific needs.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-xl border border-slate-200 hover:border-brand-200 hover:bg-brand-50/50 transition-colors">
+                            <h4 class="font-semibold text-slate-900 mb-1">Personal Details</h4>
+                            <p class="text-sm text-slate-600">Name, address, DOB, and contact info.</p>
+                        </div>
+                        <div class="p-4 rounded-xl border border-slate-200 hover:border-brand-200 hover:bg-brand-50/50 transition-colors">
+                            <h4 class="font-semibold text-slate-900 mb-1">NDIS Plan Data</h4>
+                            <p class="text-sm text-slate-600">Participant number, goals, and funding.</p>
+                        </div>
+                        <div class="p-4 rounded-xl border border-slate-200 hover:border-brand-200 hover:bg-brand-50/50 transition-colors">
+                            <h4 class="font-semibold text-slate-900 mb-1">Health Information</h4>
+                            <p class="text-sm text-slate-600">Medical history and support needs.</p>
+                        </div>
+                        <div class="p-4 rounded-xl border border-slate-200 hover:border-brand-200 hover:bg-brand-50/50 transition-colors">
+                            <h4 class="font-semibold text-slate-900 mb-1">Emergency Contacts</h4>
+                            <p class="text-sm text-slate-600">Guardians and next of kin details.</p>
+                        </div>
+                    </div>
+                </section>
+                <hr class="border-slate-100">
+                <!-- Section 2: Usage -->
+                <section>
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 mr-4">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">2. How We Use Your Data</h3>
+                    </div>
+                    <p class="text-slate-600 mb-6 leading-relaxed">
+                        Your information is never sold or used for marketing without consent. We strictly use it for:
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-check-circle text-accent-500 mt-1 mr-4 flex-shrink-0"></i>
+                            <span class="text-slate-700"><strong>Service Delivery:</strong> Creating personalized support plans and Rostering appropriate staff.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-check-circle text-accent-500 mt-1 mr-4 flex-shrink-0"></i>
+                            <span class="text-slate-700"><strong>Coordination:</strong> communicating with other health professionals involved in your care.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-check-circle text-accent-500 mt-1 mr-4 flex-shrink-0"></i>
+                            <span class="text-slate-700"><strong>Compliance:</strong> Processing NDIS payments and meeting regulatory reporting obligations.</span>
+                        </li>
+                    </ul>
+                </section>
+                <hr class="border-slate-100">
+                 <!-- Section 3: Security -->
+                 <section>
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 mr-4">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">3. Security & Disclosure</h3>
+                    </div>
+                    <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+                        <p class="mb-4">
+                            We treat your data with the utmost confidentiality. We do not share your information without consent unless required by law (e.g., mandatory reporting to the NDIS Commission or emergency services).
+                        </p>
+                        <div class="bg-slate-50 border-l-4 border-brand-500 p-4 rounded-r-lg">
+                            <p class="text-sm text-slate-700">
+                                <strong>Data Security Measures:</strong> We use secure, encrypted digital systems (2FA enabled) and ensure physical records are locked. Access is restricted strictly to authorized personnel only.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm sticky top-24">
+                    <h3 class="text-lg font-bold text-slate-900 mb-6">Privacy Officer Contact</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-brand-50 flex-shrink-0 flex items-center justify-center text-brand-600 mt-1">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Email Us</p>
+                                <a href="mailto:care@thinkpathways.com" class="text-brand-600 font-medium hover:underline text-lg">care@thinkpathways.com</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-brand-50 flex-shrink-0 flex items-center justify-center text-brand-600 mt-1">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Call Us</p>
+                                <p class="text-slate-900 font-medium text-lg">+61 420 673 303</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-8 border-t border-slate-100">
+                        <h4 class="font-semibold text-slate-900 mb-2">Your Rights</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            You have the right to access the personal information we hold about you and request corrections if data is inaccurate. Please contact us to initiate this process.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white pt-12 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                         <div class="w-8 h-8 bg-brand-500 rounded flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle"></i>
+                        </div>
+                        <span class="font-bold text-lg tracking-tight">Think Pathways</span>
+                    </div>
+                    <p class="text-slate-400 text-sm">Empowering individuals with disabilities to live life their way.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Quick Links</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="index.html#home" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
+                        <li><a href="index.html#faq" class="hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Legal & Support</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="feedback.html" class="hover:text-white transition-colors">Feedback & Complaints</a></li>
+                        <li><a href="incident.html" class="hover:text-white transition-colors">Incident Reporting</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
+                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-2 text-slate-700">|</span> ABN 74 169 269 966</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FEATURE 2: Accessibility Toolbar -->
+    <div class="fixed bottom-4 left-4 z-50">
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
+            <i class="fa-solid fa-universal-access text-2xl"></i>
+        </button>
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
+                    <div class="flex gap-2">
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        let currentZoom = 100;
+        function resizeText(direction) {
+            if (direction === 0) currentZoom = 100;
+            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
+            else currentZoom = Math.max(currentZoom - 10, 90);
+            document.documentElement.style.fontSize = currentZoom + '%';
+        }
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            if (document.body.classList.contains('high-contrast')) localStorage.setItem('highContrast', 'true');
+            else localStorage.removeItem('highContrast');
+        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
+    </script>
+</body>
+</html>
