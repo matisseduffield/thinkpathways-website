@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Think Pathways - Empowering Lives</title>
+    <title>Think Pathways - Empowering Lives | NDIS Support Adelaide</title>
     
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="Think Pathways provides compassionate, NDIS-compatible disability support services in Adelaide. Specializing in community access, in-home support, and skill development.">
+    <meta name="keywords" content="NDIS Adelaide, Disability Support Worker Adelaide, Community Access, In-Home Support, Mentoring, Think Pathways, NDIS Provider South Australia">
+    <meta name="author" content="Think Pathways">
+    <meta name="robots" content="index, follow">
+
+    <!-- Social Media / Sharing Tags (Open Graph) -->
+    <meta property="og:title" content="Think Pathways - Disability Support Adelaide">
+    <meta property="og:description" content="Empowering independence through trusted NDIS support services in Adelaide. Compassionate care tailored to you.">
+    <meta property="og:image" content="https://thinkpathways.com/unnamed.jpg">
+    <meta property="og:url" content="https://thinkpathways.com/">
+    <meta property="og:type" content="website">
+
     <!-- FEATURE 1: Favicon (The Browser Icon) - "TP" Monogram -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial, sans-serif%22 font-size=%2255%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>TP</text></svg>">
 
@@ -105,7 +118,6 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
                     <a href="#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
-                    <!-- Gallery Link Removed from Header -->
                     <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
                     <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
                     <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
@@ -128,7 +140,6 @@
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
                 <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
-                <!-- Gallery Link Removed -->
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
                 <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
                 <a href="#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
@@ -270,7 +281,7 @@
                     </div>
                 </div>
 
-                <!-- PRICING BUTTON -->
+                <!-- NEW PRICING BUTTON -->
                 <div class="mt-16 text-center">
                     <a href="pricing.html" class="inline-flex items-center px-6 py-3 border border-brand-600 text-base font-medium rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-sm hover:shadow-md">
                         <i class="fa-solid fa-tag mr-2"></i> View Full Pricing Guide
@@ -281,7 +292,7 @@
         </div>
     </section>
 
-    <!-- NEW: Activities CTA Section (Integrated here) -->
+    <!-- NEW: Activities CTA Section -->
     <section class="py-16 bg-brand-50 border-t border-b border-brand-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl font-extrabold text-slate-900 mb-4">See Support in Action</h2>
@@ -294,7 +305,7 @@
         </div>
     </section>
 
-    <!-- Onboarding Journey (How It Works) -->
+    <!-- Onboarding Journey -->
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -333,7 +344,7 @@
                         <h3 class="text-lg font-bold text-slate-900 mb-2">Service Agreement</h3>
                         <p class="text-sm text-slate-500 mb-4">We agree on a plan and sign a service agreement outlining your support.</p>
                         
-                        <!-- New Link Added Here -->
+                        <!-- Link Added Here -->
                         <a href="service-agreement.html" target="_blank" class="text-xs font-bold text-brand-600 uppercase tracking-wide hover:text-brand-800 inline-flex items-center">
                             View Sample <i class="fa-solid fa-arrow-right ml-1"></i>
                         </a>
@@ -654,6 +665,9 @@
         // Initialize Carousel
         function initCarousel() {
             // Render all slides at once, stacked on top of each other
+            // Note: This is just placeholder logic if you copy the testimonial section over.
+            if(!container) return;
+            
             container.innerHTML = testimonials.map((t, index) => `
                 <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out px-12 md:px-20 ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}">
                     <div class="relative">

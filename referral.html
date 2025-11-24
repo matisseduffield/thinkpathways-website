@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make a Referral - Think Pathways</title>
     
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="Submit a referral for NDIS support services with Think Pathways Adelaide. We provide trusted in-home and community access support.">
+    <meta name="keywords" content="NDIS Referral Adelaide, Disability Support Referral, Support Coordinator Adelaide, Think Pathways Referral">
+    <meta name="author" content="Think Pathways">
+    <meta name="robots" content="index, follow">
+
+    <!-- FEATURE 1: Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial, sans-serif%22 font-size=%2255%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>TP</text></svg>">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,9 +30,7 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: {
-                            50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e',
-                        },
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
                         accent: { 500: '#10b981' }
                     }
                 }
@@ -36,10 +40,12 @@
     
     <style>
         *:focus-visible { outline: 4px solid #facc15; outline-offset: 2px; }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
         .high-contrast { background-color: #000000 !important; color: #ffff00 !important; }
         .high-contrast * { background-color: #000000 !important; color: #ffff00 !important; border-color: #ffff00 !important; }
         .high-contrast img, .high-contrast svg { filter: grayscale(100%) contrast(150%); }
         .high-contrast button, .high-contrast a.bg-brand-600 { border: 2px solid #ffff00 !important; text-decoration: underline; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 40px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
     </style>
 </head>
 <body class="font-sans text-slate-800 bg-slate-50 antialiased flex flex-col min-h-screen relative">
@@ -61,32 +67,33 @@
                     <a href="index.html#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
                     <a href="index.html#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
                     <a href="index.html#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
-                    <a href="referral.html" class="text-brand-600 font-bold transition-colors">Referrals</a>
+                    <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
                     <a href="index.html#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
                     <a href="index.html#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">Contact Us</a>
                 </div>
 
                 <div class="flex items-center md:hidden">
-                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2">
+                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2" aria-label="Toggle menu">
                         <i class="fa-solid fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
         </div>
-        <!-- Mobile Menu -->
+
+        <!-- Mobile Menu Panel -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
                 <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
-                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
+                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
                 <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
-                <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Contact</a>
+                <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         <!-- Header -->
@@ -231,6 +238,7 @@
                         <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
                         <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
                         <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
+                        <li><a href="activities.html" class="hover:text-white transition-colors">Activities</a></li>
                         <li><a href="index.html#faq" class="hover:text-white transition-colors">FAQ</a></li>
                         <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
                     </ul>
@@ -253,17 +261,46 @@
 
     <!-- Accessibility Toolbar -->
     <div class="fixed bottom-4 left-4 z-50">
-        <button onclick="document.getElementById('a11y-menu').classList.toggle('hidden')" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg flex items-center justify-center" aria-label="Accessibility">
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg flex items-center justify-center" aria-label="Accessibility Tools">
             <i class="fa-solid fa-universal-access text-2xl"></i>
         </button>
-        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl p-4 w-64 border border-slate-200">
-            <h4 class="font-bold text-slate-900 mb-2 border-b pb-2">Accessibility</h4>
-            <button onclick="document.body.classList.toggle('high-contrast')" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold mt-2">Toggle High Contrast</button>
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
+                    <div class="flex gap-2">
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        let currentZoom = 100;
+        function resizeText(direction) {
+            if (direction === 0) currentZoom = 100;
+            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
+            else currentZoom = Math.max(currentZoom - 10, 90);
+            document.documentElement.style.fontSize = currentZoom + '%';
+        }
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            if (document.body.classList.contains('high-contrast')) localStorage.setItem('highContrast', 'true');
+            else localStorage.removeItem('highContrast');
+        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
     </script>
 </body>
 </html>

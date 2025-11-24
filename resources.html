@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adelaide Resources - Think Pathways</title>
     
-    <!-- Favicon -->
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="Helpful resources for disability support in Adelaide. Links to NDIS, transport, advocacy, and community services in South Australia.">
+    <meta name="keywords" content="Disability Resources Adelaide, NDIS Help South Australia, Adelaide Metro Access, Think Pathways Resources">
+    <meta name="author" content="Think Pathways">
+    <meta name="robots" content="index, follow">
+
+    <!-- FEATURE 1: Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
     
     <!-- Tailwind CSS -->
@@ -102,7 +108,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
             <!-- Category: Transport -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
@@ -227,7 +232,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -242,11 +246,8 @@
                         </div>
                         <span class="font-bold text-lg tracking-tight">Think Pathways</span>
                     </div>
-                    <p class="text-slate-400 text-sm">
-                        Empowering individuals with disabilities to live life their way.
-                    </p>
+                    <p class="text-slate-400 text-sm">Empowering individuals with disabilities to live life their way.</p>
                 </div>
-                
                 <div>
                     <h4 class="text-lg font-semibold mb-4 text-brand-400">Quick Links</h4>
                     <ul class="space-y-2 text-slate-400 text-sm">
@@ -254,11 +255,11 @@
                         <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
                         <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
                         <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
+                        <li><a href="activities.html" class="hover:text-white transition-colors">Activities</a></li>
                         <li><a href="index.html#faq" class="hover:text-white transition-colors">FAQ</a></li>
                         <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
                     </ul>
                 </div>
-
                 <div>
                     <h4 class="text-lg font-semibold mb-4 text-brand-400">Legal & Support</h4>
                     <ul class="space-y-2 text-slate-400 text-sm">
@@ -269,13 +270,8 @@
                     </ul>
                 </div>
             </div>
-            
             <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
-                <p>
-                    &copy; 2025 Think Pathways. All rights reserved. 
-                    <span class="mx-2 text-slate-700">|</span> 
-                    ABN 74 169 269 966
-                </p>
+                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-2 text-slate-700">|</span> ABN 74 169 269 966</p>
             </div>
         </div>
     </footer>
@@ -285,10 +281,8 @@
         <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
             <i class="fa-solid fa-universal-access text-2xl"></i>
         </button>
-
         <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
             <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
-            
             <div class="space-y-3">
                 <div>
                     <p class="text-xs text-slate-500 mb-1">Text Size</p>
@@ -298,7 +292,6 @@
                         <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
                     </div>
                 </div>
-
                 <div>
                     <p class="text-xs text-slate-500 mb-1">Display</p>
                     <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
@@ -309,39 +302,22 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
-        function toggleMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        function toggleA11yMenu() {
-            const menu = document.getElementById('a11y-menu');
-            menu.classList.toggle('hidden');
-        }
-
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
         let currentZoom = 100;
         function resizeText(direction) {
             if (direction === 0) currentZoom = 100;
             else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
             else currentZoom = Math.max(currentZoom - 10, 90);
-            
             document.documentElement.style.fontSize = currentZoom + '%';
         }
-
         function toggleContrast() {
             document.body.classList.toggle('high-contrast');
-            if (document.body.classList.contains('high-contrast')) {
-                localStorage.setItem('highContrast', 'true');
-            } else {
-                localStorage.removeItem('highContrast');
-            }
+            if (document.body.classList.contains('high-contrast')) localStorage.setItem('highContrast', 'true');
+            else localStorage.removeItem('highContrast');
         }
-
-        if (localStorage.getItem('highContrast') === 'true') {
-            document.body.classList.add('high-contrast');
-        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
     </script>
 </body>
 </html>
