@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Think Pathways - Empowering Lives</title>
     
-    <!-- FEATURE 1: Favicon (The Browser Icon) - Updated to "TP" Monogram -->
+    <!-- FEATURE 1: Favicon (The Browser Icon) - "TP" Monogram -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial, sans-serif%22 font-size=%2255%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>TP</text></svg>">
 
     <!-- Tailwind CSS -->
@@ -106,9 +106,7 @@
                     <a href="#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
                     <a href="#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
                     <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
-                    <!-- NEW LINK ADDED HERE -->
                     <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
-                    
                     <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
                     <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">
                         Contact Us
@@ -129,10 +127,7 @@
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Home</a>
                 <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Services</a>
-                
-                <!-- NEW LINK ADDED HERE -->
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
-                
                 <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">About Us</a>
                 <a href="#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">FAQ</a>
                 <a href="#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
@@ -276,8 +271,61 @@
         </div>
     </section>
 
+    <!-- NEW SECTION: Onboarding Journey (How It Works) -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-slate-900">Your Journey with Us</h2>
+                <p class="mt-4 text-lg text-slate-500">We make getting started simple and stress-free.</p>
+            </div>
+
+            <div class="relative">
+                <!-- Connector Line (Desktop) -->
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-100 -translate-y-1/2 z-0"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                    <!-- Step 1 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                            1
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Get in Touch</h3>
+                        <p class="text-sm text-slate-500">Fill out our contact or referral form to tell us about your needs.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                            2
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Meet & Greet</h3>
+                        <p class="text-sm text-slate-500">We meet you (in person or online) to ensure we're the right fit for you.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                            3
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Service Agreement</h3>
+                        <p class="text-sm text-slate-500">We agree on a plan and sign a service agreement outlining your support.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                        <div class="w-12 h-12 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Support Begins</h3>
+                        <p class="text-sm text-slate-500">Your support worker starts, helping you achieve your goals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Why Choose Us / About Section -->
-    <section id="about" class="py-16 bg-white">
+    <section id="about" class="py-16 bg-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
                 <div>
@@ -437,9 +485,9 @@
                     <!-- Contact Form -->
                     <div class="p-10">
                         <form name="contact" method="POST" data-netlify="true" action="/success.html" class="space-y-6">
-                            <!-- Hidden input for Netlify to identify the form -->
+                            <!-- Hidden input for Netlify -->
                             <input type="hidden" name="form-name" value="contact" />
-                            
+
                             <div>
                                 <label for="name" class="block text-sm font-medium text-slate-700">Full Name</label>
                                 <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500 sm:text-sm">
@@ -491,6 +539,7 @@
                     <ul class="space-y-2 text-slate-400 text-sm">
                         <li><a href="#home" class="hover:text-white transition-colors">Home</a></li>
                         <li><a href="#services" class="hover:text-white transition-colors">Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
                         <li><a href="#faq" class="hover:text-white transition-colors">FAQ</a></li>
                         <li><a href="#contact" class="hover:text-white transition-colors">Contact</a></li>
                     </ul>
