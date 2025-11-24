@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Think Pathways</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        accent: { 500: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        *:focus-visible { outline: 4px solid #facc15; outline-offset: 2px; }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .high-contrast { background-color: #000000 !important; color: #ffff00 !important; }
+        .high-contrast * { background-color: #000000 !important; color: #ffff00 !important; border-color: #ffff00 !important; }
+        .high-contrast img, .high-contrast svg { filter: grayscale(100%) contrast(150%); }
+        .high-contrast button, .high-contrast a.bg-brand-600 { border: 2px solid #ffff00 !important; text-decoration: underline; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 40px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 antialiased flex flex-col min-h-screen relative">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                        </div>
+                        <span class="font-bold text-xl text-slate-900 tracking-tight">Think Pathways</span>
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
+                    <a href="index.html#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
+                    <a href="referral.html" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Referrals</a>
+                    <a href="pricing.html" class="text-brand-600 font-bold transition-colors">Pricing</a>
+                    <a href="index.html#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
+                    <a href="index.html#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">Contact Us</a>
+                </div>
+
+                <div class="flex items-center md:hidden">
+                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
+                <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
+                <a href="referral.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Referrals</a>
+                <a href="pricing.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Pricing</a>
+                <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
+                <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Header -->
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <div class="inline-flex items-center justify-center p-2 px-3 mb-6 bg-brand-50 rounded-full border border-brand-100">
+                <span class="text-brand-700 text-xs font-semibold uppercase tracking-wider">Transparent & Fair</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">Simple, NDIS-Compatible Pricing</h1>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                We believe in full transparency. Think Pathways strictly adheres to the <strong>NDIS Pricing Arrangements and Price Limits</strong>. You will never be charged above the official rate.
+            </p>
+        </div>
+
+        <!-- Core Pricing Table -->
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden mb-12">
+            <div class="bg-slate-900 p-6 text-white">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fa-solid fa-tag mr-3 text-brand-400"></i> Standard Support Rates
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Based on the 'Assistance with Self-Care Activities - Standard' line item.</p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-5 border-b border-slate-100">Time / Day</th>
+                            <th class="p-5 border-b border-slate-100">Description</th>
+                            <th class="p-5 border-b border-slate-100 text-right">Rate (Hourly)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 font-bold text-slate-900">Weekday Daytime</td>
+                            <td class="p-5 text-slate-600">Standard support between 6am - 8pm</td>
+                            <td class="p-5 text-right font-mono font-medium text-brand-600">$67.56</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 font-bold text-slate-900">Weekday Evening</td>
+                            <td class="p-5 text-slate-600">Support finishing after 8pm</td>
+                            <td class="p-5 text-right font-mono font-medium text-brand-600">$74.56</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 font-bold text-slate-900">Saturday</td>
+                            <td class="p-5 text-slate-600">All day Saturday</td>
+                            <td class="p-5 text-right font-mono font-medium text-brand-600">$95.14</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 font-bold text-slate-900">Sunday</td>
+                            <td class="p-5 text-slate-600">All day Sunday</td>
+                            <td class="p-5 text-right font-mono font-medium text-brand-600">$122.51</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors bg-slate-50/50">
+                            <td class="p-5 font-bold text-slate-900">Public Holiday</td>
+                            <td class="p-5 text-slate-600">Recognized SA Public Holidays</td>
+                            <td class="p-5 text-right font-mono font-medium text-brand-600">$149.88</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-brand-50 border-t border-brand-100 text-center">
+                <a href="https://www.ndis.gov.au/providers/pricing-arrangements" target="_blank" class="text-brand-700 font-bold text-sm hover:underline inline-flex items-center">
+                    Verify current rates on NDIS.gov.au <i class="fa-solid fa-external-link-alt ml-2"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Additional Costs Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            
+            <!-- Travel -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 hover:border-brand-200 transition-colors">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Provider Travel</h3>
+                <p class="text-sm text-slate-600 mb-3">
+                    We charge for the time it takes a worker to travel to you, capped at <strong>30 minutes</strong> within the metropolitan area.
+                </p>
+                <p class="text-xs text-slate-400 uppercase font-bold">Standard Labour Rate</p>
+            </div>
+
+            <!-- Transport -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 hover:border-brand-200 transition-colors">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Participant Transport</h3>
+                <p class="text-sm text-slate-600 mb-3">
+                    If we drive you during your shift (e.g. to the shops), a per-kilometer rate applies to cover vehicle costs.
+                </p>
+                <p class="text-xs text-green-600 font-bold">$1.00 per km</p>
+            </div>
+
+            <!-- Establish Fee -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 hover:border-brand-200 transition-colors">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-4">
+                    <i class="fa-solid fa-file-contract"></i>
+                </div>
+                <h3 class="font-bold text-slate-900 mb-2">Establishment Fee</h3>
+                <p class="text-sm text-slate-600 mb-3">
+                    A one-off fee may apply for new participants who have at least 20 hours of support in their plan.
+                </p>
+                <p class="text-xs text-slate-400 uppercase font-bold">As per NDIS Guide</p>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="bg-slate-50 border-l-4 border-slate-400 p-6 rounded-r-lg">
+            <h4 class="font-bold text-slate-900 mb-2">Temporary Transformation Payment (TTP)</h4>
+            <p class="text-sm text-slate-600">
+                Think Pathways is compliant with the TTP requirements set out by the NDIA and charges the TTP rate for applicable services. This allows us to maintain the highest quality of staff and training.
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white pt-12 pb-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                         <div class="w-8 h-8 bg-brand-500 rounded flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle"></i>
+                        </div>
+                        <span class="font-bold text-lg tracking-tight">Think Pathways</span>
+                    </div>
+                    <p class="text-slate-400 text-sm">Empowering individuals with disabilities to live life their way.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Quick Links</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="index.html#home" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
+                        <li><a href="pricing.html" class="hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
+                        <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Legal & Support</h4>
+                    <ul class="space-y-2 text-slate-400 text-sm">
+                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="feedback.html" class="hover:text-white transition-colors">Feedback & Complaints</a></li>
+                        <li><a href="incident.html" class="hover:text-white transition-colors">Incident Reporting</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
+                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-2 text-slate-700">|</span> ABN 74 169 269 966</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Accessibility Toolbar -->
+    <div class="fixed bottom-4 left-4 z-50">
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
+            <i class="fa-solid fa-universal-access text-2xl"></i>
+        </button>
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
+                    <div class="flex gap-2">
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 mb-1">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        let currentZoom = 100;
+        function resizeText(direction) {
+            if (direction === 0) currentZoom = 100;
+            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
+            else currentZoom = Math.max(currentZoom - 10, 90);
+            document.documentElement.style.fontSize = currentZoom + '%';
+        }
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            if (document.body.classList.contains('high-contrast')) localStorage.setItem('highContrast', 'true');
+            else localStorage.removeItem('highContrast');
+        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
+    </script>
+</body>
+</html>
