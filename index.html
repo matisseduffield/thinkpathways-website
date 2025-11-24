@@ -118,6 +118,7 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
                     <a href="#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
+                    <a href="activities.html" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Activities</a>
                     <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
                     <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
                     <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
@@ -140,6 +141,7 @@
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
                 <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
+                <a href="activities.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Activities</a>
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
                 <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
                 <a href="#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
@@ -281,7 +283,7 @@
                     </div>
                 </div>
 
-                <!-- NEW PRICING BUTTON -->
+                <!-- PRICING BUTTON -->
                 <div class="mt-16 text-center">
                     <a href="pricing.html" class="inline-flex items-center px-6 py-3 border border-brand-600 text-base font-medium rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-sm hover:shadow-md">
                         <i class="fa-solid fa-tag mr-2"></i> View Full Pricing Guide
@@ -292,7 +294,7 @@
         </div>
     </section>
 
-    <!-- NEW: Activities CTA Section -->
+    <!-- Activities CTA Section -->
     <section class="py-16 bg-brand-50 border-t border-b border-brand-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl font-extrabold text-slate-900 mb-4">See Support in Action</h2>
@@ -305,7 +307,7 @@
         </div>
     </section>
 
-    <!-- Onboarding Journey -->
+    <!-- Onboarding Journey (How It Works) -->
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -429,7 +431,7 @@
             <!-- Carousel Wrapper -->
             <div class="relative w-full max-w-5xl mx-auto">
                 
-                <!-- Navigation Arrows -->
+                <!-- Navigation Arrows (Absolute Positioned) -->
                 <button onclick="prevTestimonial()" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/30 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 -ml-2 md:-ml-8" aria-label="Previous testimonial">
                     <i class="fa-solid fa-chevron-left text-xl"></i>
                 </button>
@@ -438,7 +440,7 @@
                     <i class="fa-solid fa-chevron-right text-xl"></i>
                 </button>
 
-                <!-- Slides Container -->
+                <!-- Slides Container (Grid stack for cross-fade) -->
                 <div id="testimonial-container" class="grid grid-rows-1 grid-cols-1 items-center justify-items-center min-h-[200px]">
                     <!-- Slides injected via JS -->
                 </div>
@@ -655,8 +657,8 @@
                 author: "Jimi Tam"
             },
             {
-                quote: "Chicken",
-                author: "Jackson McLeod"
+                quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals while having a great time doing it.",
+                author: "Jordan Trudgen"
             }
         ];
 
@@ -667,9 +669,6 @@
         // Initialize Carousel
         function initCarousel() {
             // Render all slides at once, stacked on top of each other
-            // Note: This is just placeholder logic if you copy the testimonial section over.
-            if(!container) return;
-            
             container.innerHTML = testimonials.map((t, index) => `
                 <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out px-12 md:px-20 ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}">
                     <div class="relative">
