@@ -523,9 +523,11 @@
 
                     <!-- Contact Form -->
                     <div class="p-10">
-                        <form name="contact" method="POST" data-netlify="true" action="/success.html" class="space-y-6">
-                            <!-- Hidden input for Netlify -->
-                            <input type="hidden" name="form-name" value="contact" />
+                        <form action="https://formspree.io/f/xkgagpzz" method="POST" class="space-y-6">
+                            <!-- Redirect to success page -->
+                            <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
+                            <!-- Subject line for your email notification -->
+                            <input type="hidden" name="_subject" value="New Contact Form Submission">
 
                             <div>
                                 <label for="name" class="block text-sm font-medium text-slate-700">Full Name</label>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incident Reporting - Think Pathways</title>
+    <title>Feedback & Complaints - Think Pathways</title>
     
     <!-- FEATURE 1: Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
@@ -25,7 +25,7 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
-                        red: { 50: '#fef2f2', 100: '#fee2e2', 600: '#dc2626', 700: '#b91c1c' }
+                        accent: { 500: '#10b981' }
                     }
                 }
             }
@@ -77,175 +77,138 @@
         <!-- Mobile Menu Panel -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
             <div class="px-4 pt-2 pb-6 space-y-2">
-                <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Home</a>
-                <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">Services</a>
+                <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
+                <a href="index.html#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
-                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">About Us</a>
-                <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 hover:bg-slate-50 rounded-md">FAQ</a>
+                <a href="index.html#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
+                <a href="index.html#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
                 <a href="index.html#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content Area -->
-    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Header Section -->
-        <div class="text-center max-w-3xl mx-auto mb-10">
-            <div class="inline-flex items-center justify-center p-2 px-3 mb-6 bg-red-50 rounded-full border border-red-100 animate-pulse">
-                <span class="text-red-700 text-xs font-bold uppercase tracking-wider flex items-center">
-                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> Safety First
-                </span>
-            </div>
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">Incident Reporting</h1>
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Simple Header -->
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">We Value Your Feedback</h1>
             <p class="text-lg text-slate-600">
-                Please use this form to report any accidents, injuries, near misses, or incidents involving participants or staff.
+                Whether it's a compliment, a suggestion, or a complaint, we want to hear from you. Your feedback helps us improve our support services.
             </p>
         </div>
 
-        <!-- Emergency Banner -->
-        <div class="bg-red-600 rounded-xl p-4 md:p-6 mb-12 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
-                    <i class="fa-solid fa-phone-volume"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-lg">Is someone in immediate danger?</h3>
-                    <p class="text-red-100 text-sm">Do not use this form. Call Emergency Services immediately.</p>
-                </div>
-            </div>
-            <a href="tel:000" class="bg-white text-red-600 hover:bg-red-50 font-bold py-3 px-8 rounded-lg transition-colors shadow-sm whitespace-nowrap">Call 000</a>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            <!-- Left Column: Incident Form -->
-            <div class="lg:col-span-8">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                    <div id="incidentFormContainer">
-                        <h2 class="text-xl font-bold text-slate-900 mb-6 flex items-center border-b border-slate-100 pb-4">
-                            <i class="fa-solid fa-file-signature text-brand-500 mr-3"></i>
-                            Incident Details
+            <!-- Left Column: Feedback Form -->
+            <div class="lg:col-span-7">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 min-h-[500px]">
+                    <!-- Form Section -->
+                    <div id="feedbackFormContainer">
+                        <h2 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                            <i class="fa-solid fa-pen-to-square text-brand-500 mr-3"></i>
+                            Send us a message
                         </h2>
-                        <!-- Updated Form for Netlify -->
-                        <form name="incident" method="POST" data-netlify="true" action="/success.html" class="space-y-6">
-                            <input type="hidden" name="form-name" value="incident" />
-                            <!-- Section: When & Where -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <form action="https://formspree.io/f/xpwewogp" method="POST" class="space-y-5">
+                            <!-- Redirect to success page -->
+                            <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
+                            <!-- Subject line for your email notification -->
+                            <input type="hidden" name="_subject" value="New Feedback Form Submission">
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Incident <span class="text-red-500">*</span></label>
-                                    <input type="date" name="date" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="name" name="name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all" placeholder="John Doe">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Time of Incident <span class="text-red-500">*</span></label>
-                                    <input type="time" name="time" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Location of Incident <span class="text-red-500">*</span></label>
-                                <input type="text" name="location" required placeholder="e.g., Participant's home, Community Park, Vehicle..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                            </div>
-                            <!-- Section: Type & People -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Type of Incident <span class="text-red-500">*</span></label>
-                                    <select name="incident_type" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                        <option value="" disabled selected>Select type...</option>
-                                        <option>Injury / Illness</option>
-                                        <option>Near Miss</option>
-                                        <option>Property Damage</option>
-                                        <option>Behavioural Incident</option>
-                                        <option>Medication Error</option>
-                                        <option>Other</option>
+                                    <label for="role" class="block text-sm font-medium text-slate-700 mb-1">I am a... <span class="text-red-500">*</span></label>
+                                    <select id="role" name="role" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all">
+                                        <option value="" disabled selected>Select an option</option>
+                                        <option>Participant</option>
+                                        <option>Family Member / Nominee</option>
+                                        <option>Support Coordinator</option>
+                                        <option>Other Professional</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Who was involved? <span class="text-red-500">*</span></label>
-                                    <input type="text" name="people_involved" required placeholder="Names of staff/participants" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                </div>
-                            </div>
-                            <!-- Section: Description -->
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">What happened? <span class="text-red-500">*</span></label>
-                                <p class="text-xs text-slate-500 mb-2">Describe the events leading up to, during, and immediately after the incident.</p>
-                                <textarea name="description" rows="5" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Immediate Actions Taken <span class="text-red-500">*</span></label>
-                                <textarea name="immediate_actions" rows="3" required placeholder="First aid provided, ambulance called, area made safe..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" name="email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all" placeholder="you@example.com">
                             </div>
-                            <!-- Section: Reporter -->
-                            <div class="pt-4 border-t border-slate-100">
-                                <h3 class="font-semibold text-slate-900 mb-4">Your Details</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Your Name <span class="text-red-500">*</span></label>
-                                        <input type="text" name="reporter_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Your Phone <span class="text-red-500">*</span></label>
-                                        <input type="tel" name="reporter_phone" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                    </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Type of Feedback <span class="text-red-500">*</span></label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="compliment" class="text-brand-600 focus:ring-brand-500" checked>
+                                        <span class="ml-2 text-slate-600 text-sm">Compliment</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="complaint" class="text-brand-600 focus:ring-brand-500">
+                                        <span class="ml-2 text-slate-600 text-sm">Complaint</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="feedbackType" value="suggestion" class="text-brand-600 focus:ring-brand-500">
+                                        <span class="ml-2 text-slate-600 text-sm">Suggestion</span>
+                                    </label>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 mt-4">Submit Incident Report</button>
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-slate-700 mb-1">Your Message <span class="text-red-500">*</span></label>
+                                <textarea id="message" name="message" rows="5" required placeholder="Please provide details about your experience..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm">Submit Feedback</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Emergency Info -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl sticky top-24">
-                    <h3 class="text-lg font-bold mb-6 flex items-center">
-                        <i class="fa-solid fa-address-book text-brand-400 mr-3"></i> Emergency Contacts
-                    </h3>
-                    <div class="space-y-4">
-                        <a href="tel:000" class="flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-colors group">
-                            <div class="flex items-center">
-                                <span class="w-8 h-8 rounded bg-red-600 flex items-center justify-center mr-3 font-bold">0</span>
-                                <div>
-                                    <p class="font-bold">Triple Zero</p>
-                                    <p class="text-xs text-slate-400">Police, Fire, Ambulance</p>
-                                </div>
+            <!-- Right Column: Info & Process -->
+            <div class="lg:col-span-5 space-y-8">
+                <!-- Alternative Contact Methods -->
+                <div class="bg-slate-900 text-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-lg font-bold mb-6">Other Ways to Reach Us</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-phone text-brand-400"></i>
                             </div>
-                            <i class="fa-solid fa-phone text-red-500 group-hover:text-white transition-colors"></i>
-                        </a>
-                        <a href="tel:131126" class="flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-colors group">
-                            <div class="flex items-center">
-                                <span class="w-8 h-8 rounded bg-green-600 flex items-center justify-center mr-3 font-bold"><i class="fa-solid fa-skull-crossbones text-xs"></i></span>
-                                <div>
-                                    <p class="font-bold">Poisons Info</p>
-                                    <p class="text-xs text-slate-400">24/7 Advice</p>
-                                </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Call Us Directly</p>
+                                <p class="text-lg font-medium">+61 420 673 303</p>
+                                <p class="text-sm text-slate-400 mt-1">Available Mon-Fri, 9am - 5pm</p>
                             </div>
-                            <span class="text-sm font-mono opacity-75">13 11 26</span>
-                        </a>
-                        <a href="tel:1800622359" class="flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-colors group">
-                            <div class="flex items-center">
-                                <span class="w-8 h-8 rounded bg-brand-600 flex items-center justify-center mr-3 font-bold"><i class="fa-solid fa-user-nurse text-xs"></i></span>
-                                <div>
-                                    <p class="font-bold">Health Direct</p>
-                                    <p class="text-xs text-slate-400">GP Advice Line</p>
-                                </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-envelope text-brand-400"></i>
                             </div>
-                            <span class="text-sm font-mono opacity-75">1800 022 222</span>
-                        </a>
-                    </div>
-                    <div class="mt-8 pt-6 border-t border-white/10">
-                        <h4 class="text-sm font-bold mb-2 text-slate-300">Management Contact</h4>
-                        <p class="text-2xl font-bold tracking-tight">+61 420 673 303</p>
-                        <p class="text-xs text-slate-400 mt-1">Matisse Duffield (Director)</p>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Email Us</p>
+                                <a href="mailto:care@thinkpathways.com" class="text-lg font-medium hover:text-brand-400 transition-colors">care@thinkpathways.com</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-brand-50 border border-brand-100 p-6 rounded-2xl">
-                    <h4 class="font-bold text-brand-900 mb-2">When to report?</h4>
-                    <p class="text-sm text-slate-600 mb-4">You must complete this form within <strong>24 hours</strong> of any incident occurring.</p>
-                    <ul class="text-sm text-slate-600 space-y-2 list-disc pl-4">
-                        <li>Any injury to a person</li>
-                        <li>Damage to property</li>
-                        <li>Near misses (hazards)</li>
-                        <li>Medication errors</li>
-                        <li>Allegations of abuse</li>
+                <!-- Process Info -->
+                <div class="bg-brand-50 rounded-2xl p-8 border border-brand-100">
+                    <h3 class="text-lg font-bold text-brand-900 mb-4">How we handle complaints</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</div>
+                            <p class="text-sm text-brand-800">We will acknowledge your complaint within <strong>2 business days</strong>.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</div>
+                            <p class="text-sm text-brand-800">We will investigate the issue fairly and confidentially.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded-full bg-brand-200 text-brand-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</div>
+                            <p class="text-sm text-brand-800">We will work with you to find a resolution and keep you updated on the outcome.</p>
+                        </li>
                     </ul>
+                    <div class="mt-6 pt-6 border-t border-brand-200">
+                        <p class="text-xs text-brand-600">
+                            If you are not satisfied with our response, you can contact the <a href="https://www.ndiscommission.gov.au/" target="_blank" class="underline hover:text-brand-800">NDIS Commission</a> directly.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -271,6 +234,7 @@
                         <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
                         <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
                         <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
+                        <li><a href="activities.html" class="hover:text-white transition-colors">Activities</a></li>
                         <li><a href="index.html#faq" class="hover:text-white transition-colors">FAQ</a></li>
                         <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
                     </ul>
