@@ -15,20 +15,11 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- 1. The Import Map: Tells the browser where to find React and Firebase -->
-    <script type="importmap">
-    {
-        "imports": {
-            "react": "https://esm.sh/react@18.2.0",
-            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-            "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
-        }
-    }
-    </script>
+    <!-- 1. Load React & ReactDOM as Globals (More reliable for standalone files) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- 2. Babel: Translates the React code for the browser -->
+    <!-- 2. Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
@@ -43,29 +34,51 @@
                 }
             }
         }
-        // Mock environment variables for standalone file
-        window.__app_id = 'think-pathways-live';
-        // NOTE: In a real production app, never expose raw config like this in a public repo if you can avoid it.
-        // For this static setup, ensure your Firestore rules are set to "allow read/write: if request.auth != null"
-        window.__firebase_config = JSON.stringify({
-             // YOU MUST PASTE YOUR REAL FIREBASE CONFIG HERE FROM THE FIREBASE CONSOLE
-             apiKey: "", 
-             authDomain: "", 
-             projectId: "", 
-             storageBucket: "", 
-             messagingSenderId: "", 
-             appId: ""
-        });
+        
+        // --- CONFIGURATION SECTION ---
+        // PASTE YOUR FIREBASE CONFIG BELOW INSIDE THE QUOTES
+        window.__firebase_config = {
+             apiKey: "AIzaSyDO315mAW8JphkSPqcp8Z9VPakBIUlCrl8", 
+             authDomain: "thinkpathways.firebaseapp.com", 
+             projectId: "thinkpathways", 
+             storageBucket: "thinkpathways.firebasestorage.app", 
+             messagingSenderId: "31616186160", 
+             appId: "1:31616186160:web:646c33b844b999e81efaf5"
+        };
     </script>
+    
+    <style>
+        #error-display { display: none; }
+    </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
+    
+    <!-- Error Catching UI -->
+    <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
+        <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl">
+            <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
+            <p class="text-red-600 mb-4">Something went wrong loading the portal.</p>
+            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500"></pre>
+            <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Reload Page</button>
+        </div>
+    </div>
+
     <div id="root"></div>
 
     <!-- 3. The React Application -->
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useMemo } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { initializeApp } from 'firebase/app';
+        // Error Handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('error-display').style.display = 'flex';
+            document.getElementById('error-message').textContent = `${message}\n\nLine: ${lineno}`;
+        };
+
+        // Use React from window globals
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = ReactDOM;
+
+        // Import Firebase Modules directly from Google's CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
             signInWithEmailAndPassword,
@@ -73,7 +86,7 @@
             onAuthStateChanged, 
             signOut,
             updateProfile
-        } from 'firebase/auth';
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
@@ -81,24 +94,31 @@
             onSnapshot, 
             addDoc, 
             serverTimestamp 
-        } from 'firebase/firestore';
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Config Setup
-        const firebaseConfig = JSON.parse(window.__firebase_config);
-        // Placeholder for app if config is missing
+        // Safe Init
         let app, auth, db;
+        let configMissing = false;
+
         try {
-             app = initializeApp(firebaseConfig);
-             auth = getAuth(app);
-             db = getFirestore(app);
+             const config = window.__firebase_config;
+             if (!config.apiKey || config.apiKey === "") {
+                 configMissing = true;
+             } else {
+                 app = initializeApp(config);
+                 auth = getAuth(app);
+                 db = getFirestore(app);
+             }
         } catch (e) {
-            console.error("Firebase setup failed. Did you add your config?", e);
+            console.error("Firebase setup failed", e);
+            configMissing = true;
         }
 
         const AuthContext = React.createContext();
 
         const formatTimestamp = (timestamp) => {
             if (!timestamp) return 'N/A';
+            // Handle both Firestore timestamp objects and standard dates
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
             return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
         };
@@ -109,7 +129,7 @@
             return d.toISOString().split('T')[0];
         };
 
-        // --- Hook ---
+        // --- Custom Hook ---
         const useAuthAndData = () => {
             const [user, setUser] = useState(null);
             const [isAuthReady, setIsAuthReady] = useState(false);
@@ -117,7 +137,10 @@
             const [isLoadingShifts, setIsLoadingShifts] = useState(false);
 
             useEffect(() => {
-                if(!auth) { setIsAuthReady(true); return; }
+                if (configMissing || !auth) {
+                    setIsAuthReady(true);
+                    return;
+                }
                 const unsubscribe = onAuthStateChanged(auth, (u) => {
                     setUser(u);
                     setIsAuthReady(true);
@@ -147,12 +170,10 @@
                             id: doc.id,
                             ...d,
                             status: statusText,
-                            dateDisplay: d.date || 'Pending', // Use raw date for now
+                            dateDisplay: d.date || 'Pending', 
                         };
                     });
-                    // Simple sort
                     data.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
                     setShifts(data);
                     setIsLoadingShifts(false);
                 });
@@ -185,7 +206,23 @@
             return { user, isAuthReady, shifts, isLoadingShifts, login, signup, logout, bookShift };
         };
 
-        // --- Login Screen ---
+        // --- Config Warning Component ---
+        const ConfigWarning = () => (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400">
+                    <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <i className="fa-solid fa-wrench"></i>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2>
+                    <p className="text-slate-600 mb-6">
+                        The portal needs your Firebase configuration to work. Open <code>portal.html</code> on your computer and paste your API keys in the config section at the top.
+                    </p>
+                    <a href="index.html" className="text-brand-600 font-bold hover:underline">Return to Home</a>
+                </div>
+            </div>
+        );
+
+        // --- Login Component ---
         const Login = () => {
             const { login, signup } = React.useContext(AuthContext);
             const [isSignup, setIsSignup] = useState(false);
@@ -263,6 +300,7 @@
             );
         };
 
+        // --- Dashboard Components ---
         const BookingForm = () => {
             const { bookShift } = React.useContext(AuthContext);
             const [loading, setLoading] = useState(false);
@@ -274,11 +312,20 @@
                 setMsg(null);
                 const d = new FormData(e.target);
                 
-                // Validation
                 if (!d.get('date') || !d.get('service')) {
                     setMsg({ type: 'error', text: 'Please select a date and service.' });
                     setLoading(false);
                     return;
+                }
+                
+                // Simple date check
+                const selectedDate = new Date(d.get('date'));
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate());
+                if(selectedDate < tomorrow) {
+                     setMsg({ type: 'error', text: 'Please select a date tomorrow or later.' });
+                     setLoading(false);
+                     return;
                 }
 
                 const success = await bookShift({
@@ -378,7 +425,7 @@
             return (
                 <div className="min-h-screen bg-slate-50 font-sans pb-12">
                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b border-slate-200">
-                        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                        <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-sm">
                                     <i className="fa-solid fa-hands-holding-circle"></i>
@@ -398,7 +445,7 @@
                         </div>
                     </header>
 
-                    <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <main className="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1 order-2 lg:order-1">
                             <BookingForm />
                             <div className="mt-6 bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm">
@@ -421,8 +468,15 @@
         };
 
         const App = () => {
+            if (configMissing) return <ConfigWarning />;
+            
             const authData = useAuthAndData();
-            if (!authData.isAuthReady) return <LoadingScreen />;
+            if (!authData.isAuthReady) return (
+                <div className="flex h-screen items-center justify-center bg-slate-100">
+                    <i className="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600"></i>
+                </div>
+            );
+
             return (
                 <AuthContext.Provider value={authData}>
                     {authData.user ? <Dashboard /> : <Login />}
