@@ -32,8 +32,8 @@
                         accent: { 500: '#10b981' }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out'
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
                     },
                     keyframes: {
                         fadeIn: {
@@ -63,12 +63,17 @@
         // 2. CLOUDFLARE TURNSTILE SITE KEY
         window.__turnstile_site_key = "0x4AAAAAACCy0zfo2e5QOQoB"; 
 
-        // 3. ADMIN EMAIL
+        // 3. ADMIN EMAIL (Must match the email you sign up with)
         window.__admin_email = "care@thinkpathways.com";
     </script>
     
     <style>
         #error-display { display: none; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
@@ -119,7 +124,8 @@
         }
 
         const AuthContext = React.createContext();
-        const APP_ID = 'thinkpathways'; // Namespace for shared data
+        // Using a shared collection so Admin can see all shifts
+        const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
 
         const formatTimestamp = (timestamp) => {
             if (!timestamp) return 'N/A';
@@ -161,37 +167,29 @@
                     return;
                 }
                 
-                // Use a PUBLIC collection so Admin can read everyone's shifts
-                // Structure: /artifacts/thinkpathways/public/data/shifts
-                const path = `artifacts/${APP_ID}/public/data/shifts`;
-                const q = query(collection(db, path));
-                
+                const q = query(collection(db, COLLECTION_PATH));
                 setIsLoadingShifts(true);
 
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     const data = snapshot.docs.map(doc => {
                         const d = doc.data();
-                        let statusText = d.status;
-                        if (d.status === 'Pending') statusText = 'Request Sent';
-                        if (d.status === 'Confirmed') statusText = 'Scheduled';
-                        if (d.status === 'Cancelled') statusText = 'Unavailable';
-                        if (d.status === 'Declined') statusText = 'Declined';
-
                         return {
                             id: doc.id,
                             ...d,
-                            statusLabel: statusText,
+                            statusLabel: d.status === 'Pending' ? 'Request Sent' : 
+                                         d.status === 'Confirmed' ? 'Scheduled' : 
+                                         d.status === 'Declined' ? 'Declined' : 'Unavailable',
                             dateDisplay: d.date || 'Pending', 
                             rawTimestamp: d.timestamp?.toMillis() || 0
                         };
                     });
                     
-                    // Filter for non-admins (clients only see their own)
+                    // Admin sees all, User sees only theirs
                     const visibleShifts = isAdmin 
                         ? data 
                         : data.filter(s => s.userId === user.uid);
 
-                    visibleShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp); // Newest first
+                    visibleShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp); 
                     
                     setShifts(visibleShifts);
                     setIsLoadingShifts(false);
@@ -203,6 +201,8 @@
             const signup = async (email, password, name) => {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(cred.user, { displayName: name });
+                // Force refresh user object to get displayName immediately
+                setUser({...cred.user, displayName: name});
             };
             const resetPassword = (email) => sendPasswordResetEmail(auth, email);
             const logout = () => signOut(auth);
@@ -210,7 +210,7 @@
             const bookShift = async (data) => {
                 if (!user || !db) return false;
                 try {
-                    await addDoc(collection(db, `artifacts/${APP_ID}/public/data/shifts`), {
+                    await addDoc(collection(db, COLLECTION_PATH), {
                         ...data,
                         userId: user.uid,
                         userName: user.displayName || 'Client',
@@ -228,7 +228,7 @@
             const updateShiftStatus = async (shiftId, newStatus) => {
                 if (!isAdmin) return;
                 try {
-                    const shiftRef = doc(db, `artifacts/${APP_ID}/public/data/shifts`, shiftId);
+                    const shiftRef = doc(db, COLLECTION_PATH, shiftId);
                     await updateDoc(shiftRef, { status: newStatus });
                 } catch (e) {
                     console.error("Error updating shift", e);
@@ -243,9 +243,7 @@
             const containerRef = useRef(null);
             useEffect(() => {
                 if (window.turnstile && window.__turnstile_site_key) {
-                    // Clear previous instance if any
                     if (containerRef.current) containerRef.current.innerHTML = '';
-                    
                     window.turnstile.render(containerRef.current, {
                         sitekey: window.__turnstile_site_key,
                         callback: (token) => onVerify(token),
@@ -265,13 +263,13 @@
             const [successMsg, setSuccessMsg] = useState('');
             const [loading, setLoading] = useState(false);
             const [captchaToken, setCaptchaToken] = useState(null);
+            const [showPassword, setShowPassword] = useState(false);
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setError('');
                 setSuccessMsg('');
                 
-                // Turnstile Check
                 if (mode !== 'forgot' && !captchaToken) {
                     setError('Please complete the security check.');
                     return;
@@ -282,7 +280,12 @@
                 
                 try {
                     if (mode === 'signup') {
-                        await signup(data.get('email'), data.get('password'), data.get('name'));
+                        const p1 = data.get('password');
+                        const p2 = data.get('confirmPassword');
+                        if (p1 !== p2) {
+                            throw new Error("Firebase: Passwords do not match.");
+                        }
+                        await signup(data.get('email'), p1, data.get('name'));
                     } else if (mode === 'login') {
                         await login(data.get('email'), data.get('password'));
                     } else if (mode === 'forgot') {
@@ -292,9 +295,10 @@
                         return; 
                     }
                 } catch (err) {
-                    setError(err.message.replace('Firebase: ', ''));
+                    let msg = err.message.replace('Firebase: ', '');
+                    if(msg.includes('auth/invalid-credential')) msg = 'Incorrect email or password.';
+                    setError(msg);
                     setLoading(false);
-                    // Reset captcha on error so they can try again
                     if(window.turnstile) window.turnstile.reset();
                     setCaptchaToken(null);
                 }
@@ -302,45 +306,71 @@
 
             return (
                 <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 animate-slide-up">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 animate-slide-up transition-all duration-300">
                         
-                        {/* Logo & Title */}
                         <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg transform transition-transform hover:scale-110">
+                            <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg transform hover:rotate-6 transition-transform duration-300">
                                 <i className="fa-solid fa-hands-holding-circle"></i>
                             </div>
-                            <h1 className="text-2xl font-bold text-slate-900">My Pathway Portal</h1>
-                            <p className="text-slate-500 text-sm mt-2">
-                                {mode === 'signup' && 'Create your account'}
-                                {mode === 'login' && 'Sign in to manage your support'}
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Pathway Portal</h1>
+                            <p className="text-slate-500 text-sm mt-2 font-medium">
+                                {mode === 'signup' && 'Join the community'}
+                                {mode === 'login' && 'Welcome back'}
                                 {mode === 'forgot' && 'Reset Password'}
                             </p>
                         </div>
 
-                        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
-                        {successMsg && <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i> {successMsg}</div>}
+                        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center animate-fade-in"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
+                        {successMsg && <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100 flex items-center animate-fade-in"><i className="fa-solid fa-check-circle mr-2"></i> {successMsg}</div>}
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-5">
                             {mode === 'signup' && (
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
-                                    <input name="name" type="text" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Matisse Duffield" />
+                                <div className="animate-fade-in">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Full Name</label>
+                                    <div className="relative">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-user"></i></span>
+                                        <input name="name" type="text" required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="e.g. Jordan Trudgen" />
+                                    </div>
                                 </div>
                             )}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
-                                <input name="email" type="email" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="you@example.com" />
+
+                            <div className="animate-fade-in">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address</label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-envelope"></i></span>
+                                    <input name="email" type="email" required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="you@example.com" />
+                                </div>
                             </div>
+
                             {mode !== 'forgot' && (
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
-                                    <input name="password" type="password" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="••••••••" />
+                                <div className="animate-fade-in space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Password</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
+                                            <input name="password" type={showPassword ? "text" : "password"} required className="w-full pl-10 pr-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="••••••••" />
+                                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-brand-600">
+                                                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {mode === 'signup' && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Confirm Password</label>
+                                            <div className="relative">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
+                                                <input name="confirmPassword" type={showPassword ? "text" : "password"} required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="Repeat password" />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             {mode !== 'forgot' && <TurnstileWidget onVerify={setCaptchaToken} />}
 
-                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-md disabled:opacity-50 hover:shadow-lg transform hover:-translate-y-0.5">
+                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-md disabled:opacity-50 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : null}
                                 {loading ? 'Processing...' : (mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In')}
                             </button>
                         </form>
@@ -348,16 +378,16 @@
                         <div className="mt-6 text-center pt-6 border-t border-slate-100 space-y-3">
                             {mode === 'login' && (
                                 <>
-                                    <button onClick={() => setMode('signup')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium">New Client? Create Account</button>
-                                    <button onClick={() => setMode('forgot')} className="block w-full text-xs text-slate-500 hover:text-slate-700">Forgot Password?</button>
+                                    <button onClick={() => setMode('signup')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">New Client? Create Account</button>
+                                    <button onClick={() => setMode('forgot')} className="block w-full text-xs text-slate-500 hover:text-slate-700 transition-colors">Forgot Password?</button>
                                 </>
                             )}
                             {(mode === 'signup' || mode === 'forgot') && (
-                                <button onClick={() => setMode('login')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium">Back to Login</button>
+                                <button onClick={() => setMode('login')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">Back to Login</button>
                             )}
                         </div>
-                        <div className="mt-4 text-center">
-                             <a href="index.html" className="text-xs text-slate-400 hover:text-slate-600 hover:underline">← Back to Website</a>
+                        <div className="mt-6 text-center">
+                             <a href="index.html" className="text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all">← Back to Website</a>
                         </div>
                     </div>
                 </div>
@@ -376,50 +406,65 @@
                                 <i className="fa-solid fa-user-shield text-xl"></i>
                                 <h1 className="text-xl font-bold tracking-tight">Admin Portal</h1>
                             </div>
-                            <button onClick={logout} className="text-sm text-slate-300 hover:text-white font-bold">Sign Out</button>
+                            <button onClick={logout} className="text-sm text-slate-300 hover:text-white font-bold bg-slate-800 px-4 py-2 rounded hover:bg-slate-700 transition-colors">Sign Out</button>
                         </div>
                     </header>
 
                     <main className="max-w-7xl mx-auto p-4 md:p-8">
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 className="text-2xl font-bold text-slate-900">All Booking Requests</h2>
-                            <div className="text-sm text-slate-500"> Logged in as {user.email} </div>
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                            <h2 className="text-2xl font-bold text-slate-900">Booking Requests</h2>
+                            <div className="bg-white px-4 py-2 rounded-lg shadow-sm text-sm text-slate-600 border border-slate-200">
+                                <i className="fa-solid fa-user-circle mr-2"></i>{user.email}
+                            </div>
                         </div>
 
-                        {isLoadingShifts ? <div className="text-center p-8">Loading requests...</div> : (
+                        {isLoadingShifts ? <div className="text-center p-12 text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading...</div> : (
                             <div className="space-y-4">
-                                {shifts.length === 0 && <div className="p-8 text-center text-slate-500">No requests found.</div>}
+                                {shifts.length === 0 && (
+                                    <div className="p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
+                                        <i className="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
+                                        <p>No booking requests found.</p>
+                                    </div>
+                                )}
                                 {shifts.map(s => (
-                                    <div key={s.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
+                                    <div key={s.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 hover:shadow-md transition-shadow">
+                                        <div className="flex-grow">
+                                            <div className="flex items-center gap-3 mb-2 flex-wrap">
                                                 <span className="font-bold text-lg text-slate-900">{s.userName}</span>
-                                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">{s.userEmail}</span>
+                                                <a href={`mailto:${s.userEmail}`} className="text-xs text-brand-600 bg-brand-50 px-2 py-1 rounded hover:bg-brand-100 transition-colors flex items-center">
+                                                    <i className="fa-regular fa-envelope mr-1"></i> {s.userEmail}
+                                                </a>
+                                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">ID: {s.userId.substring(0,6)}...</span>
                                             </div>
-                                            <div className="text-slate-700 font-medium">
-                                                <i className="fa-regular fa-calendar mr-2 text-brand-500"></i>{s.dateDisplay} 
-                                                <span className="mx-2">•</span> 
-                                                {s.service} ({s.duration} hrs)
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-sm text-slate-700">
+                                                <p><i className="fa-regular fa-calendar mr-2 text-brand-500 w-4"></i> <strong>{s.dateDisplay}</strong></p>
+                                                <p><i className="fa-solid fa-hands-holding mr-2 text-brand-500 w-4"></i> {s.service}</p>
+                                                <p><i className="fa-regular fa-clock mr-2 text-brand-500 w-4"></i> {s.duration} Hours</p>
                                             </div>
-                                            {s.notes && <div className="mt-2 text-sm text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">"{s.notes}"</div>}
+                                            {s.notes && (
+                                                <div className="mt-3 text-sm text-slate-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100 italic">
+                                                    <i className="fa-solid fa-quote-left mr-2 text-yellow-400"></i> {s.notes}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="flex items-center gap-3 w-full md:w-auto">
+                                        <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
                                             {s.status === 'Pending' ? (
                                                 <>
-                                                    <button onClick={() => updateShiftStatus(s.id, 'Confirmed')} className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors">
+                                                    <button onClick={() => updateShiftStatus(s.id, 'Confirmed')} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center">
                                                         <i className="fa-solid fa-check mr-2"></i> Accept
                                                     </button>
-                                                    <button onClick={() => updateShiftStatus(s.id, 'Declined')} className="flex-1 md:flex-none bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors">
+                                                    <button onClick={() => updateShiftStatus(s.id, 'Declined')} className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm">
                                                         Decline
                                                     </button>
                                                 </>
                                             ) : (
-                                                <span className={`px-4 py-2 rounded-lg text-sm font-bold uppercase ${
-                                                    s.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                <div className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide border flex items-center ${
+                                                    s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
                                                 }`}>
+                                                    <i className={`fa-solid ${s.status === 'Confirmed' ? 'fa-check-circle' : 'fa-ban'} mr-2`}></i>
                                                     {s.status === 'Confirmed' ? 'Scheduled' : 'Declined'}
-                                                </span>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -503,18 +548,18 @@
                                 <form onSubmit={handleSubmit} className="space-y-5">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-                                        <input type="date" name="date" required min={getTomorrowDate()} className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                                        <input type="date" name="date" required min={getTomorrowDate()} className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-colors" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Duration</label>
-                                            <select name="duration" className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-brand-500">
+                                            <select name="duration" className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-brand-500 bg-white">
                                                 {[2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} Hours</option>)}
                                             </select>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Service</label>
-                                            <select name="service" required defaultValue="" className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-brand-500">
+                                            <select name="service" required defaultValue="" className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-brand-500 bg-white">
                                                 <option value="" disabled>Select...</option>
                                                 <option>Community Access</option>
                                                 <option>In-Home Support</option>
@@ -527,7 +572,8 @@
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes</label>
                                         <textarea name="notes" rows="2" className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-brand-500" placeholder="Any specific goals?"></textarea>
                                     </div>
-                                    <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-sm disabled:opacity-70">
+                                    <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-sm disabled:opacity-70 flex items-center justify-center gap-2">
+                                        {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>}
                                         {loading ? 'Sending...' : 'Request Booking'}
                                     </button>
                                 </form>
@@ -581,26 +627,20 @@
             );
         };
 
-        // --- Main Router ---
         const App = () => {
             if (configMissing) return <ConfigWarning />;
             
             const authData = useAuthAndData();
-            
-            // Loading State
             if (!authData.isAuthReady) return (
                 <div className="flex h-screen items-center justify-center bg-slate-100">
                     <i className="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600"></i>
                 </div>
             );
 
-            // Not Logged In -> Show Login
             if (!authData.user) return <AuthContext.Provider value={authData}><Login /></AuthContext.Provider>;
 
-            // Logged In (Admin) -> Show Admin Dashboard
             if (authData.isAdmin) return <AuthContext.Provider value={authData}><AdminDashboard /></AuthContext.Provider>;
 
-            // Logged In (Client) -> Show Client Dashboard
             return <AuthContext.Provider value={authData}><ClientDashboard /></AuthContext.Provider>;
         };
 
