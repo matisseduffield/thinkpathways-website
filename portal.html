@@ -69,6 +69,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
     
+    <!-- Error Catching UI -->
     <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
@@ -87,7 +88,7 @@
             document.getElementById('error-message').textContent = `${message}\nLine: ${lineno}\n${error ? error.stack : ''}`;
         };
 
-        // Initialize Firebase
+        // Firebase Init
         let auth, db, configMissing = false;
         try {
             if (window.__firebase_config && window.__firebase_config.apiKey) {
@@ -152,7 +153,7 @@
             const [shifts, setShifts] = useState([]);
             const [workerShifts, setWorkerShifts] = useState([]);
             const [workersList, setWorkersList] = useState([]); 
-            const [isLoadingShifts, setIsLoadingShifts] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
 
             useEffect(() => {
                 if (configMissing || !auth) { setIsAuthReady(true); return; }
@@ -189,7 +190,7 @@
                     return;
                 }
                 
-                setIsLoadingShifts(true);
+                setIsLoading(true);
                 const unsubscribe = db.collection(COLLECTION_PATH).onSnapshot((snapshot) => {
                     const data = snapshot.docs.map(doc => {
                         const d = doc.data();
@@ -220,7 +221,7 @@
                         myShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp);
                         setShifts(myShifts);
                     }
-                    setIsLoadingShifts(false);
+                    setIsLoading(false);
                 });
                 return () => unsubscribe();
             }, [user, isAdmin, isWorker]);
@@ -283,8 +284,8 @@
                 } catch (e) { return false; }
             };
 
-            const registerWorker = async (workerData) => {
-                if (!isAdmin) return { success: false, msg: 'Unauthorized' };
+            const addWorkerToDB = async (workerData) => {
+                if (!isAdmin) return false;
                 try {
                     const check = await db.collection(WORKERS_PATH).where("email", "==", workerData.email.toLowerCase()).get();
                     if (!check.empty) return { success: false, msg: 'Worker email already exists.' };
@@ -301,7 +302,7 @@
                 }
             };
 
-            return { user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoadingShifts, login, signup, resetPassword, logout, bookShift, updateShiftStatus, assignWorker, workerResponse, registerWorker };
+            return { user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoading, login, signup, resetPassword, logout, bookShift, updateShiftStatus, assignWorker, workerResponse, addWorkerToDB };
         };
 
         // --- COMPONENTS ---
@@ -368,40 +369,23 @@
             );
         };
 
-        const BookingModal = ({ onClose }) => {
-            const { bookShift } = useContext(AuthContext);
-            const [loading, setLoading] = useState(false);
-            const [msg, setMsg] = useState(null);
-            const handleSubmit = async (e) => {
-                e.preventDefault(); setLoading(true); setMsg(null);
-                const d = new FormData(e.target);
-                if (new Date(d.get('date')) < new Date(new Date().setDate(new Date().getDate() + 1))) { setMsg({type:'error', text:'Select a date tomorrow or later.'}); setLoading(false); return; }
-                const success = await bookShift({ date: d.get('date'), duration: d.get('duration'), service: d.get('service'), recurrence: d.get('recurrence'), notes: d.get('notes') });
-                if(success) { setMsg({type:'success', text:'Request Sent!'}); setTimeout(onClose, 1000); } else { setMsg({type:'error', text:'Failed.'}); setLoading(false); }
-            };
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5"><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 border rounded-lg outline-none focus:border-brand-500" /><div className="grid grid-cols-2 gap-4"><select name="duration" className="w-full p-3 border rounded-lg bg-white">{[2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} Hours</option>)}</select><select name="recurrence" className="w-full p-3 border rounded-lg bg-white"><option value="none">One-off</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option></select></div><select name="service" required defaultValue="" className="w-full p-3 border rounded-lg bg-white"><option value="" disabled>Select Service...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select><textarea name="notes" rows="3" className="w-full p-3 border rounded-lg resize-none" placeholder="Notes..."></textarea><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70">Submit Request</button></form></div></div>
-            );
-        };
-
-        const CancellationModal = ({ shift, onClose, onConfirm }) => {
-            const [reason, setReason] = useState('');
-            const [loading, setLoading] = useState(false);
-            const handleConfirm = async () => { setLoading(true); await onConfirm(shift.id, reason); setLoading(false); onClose(); };
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border rounded-lg mb-4 text-sm outline-none focus:border-red-500" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
-            );
-        };
-
-        // --- CARDS ---
         const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign }) => {
             const pendingCount = client.stats.pending;
             const upcomingCount = client.stats.upcoming;
             return (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md mb-4">
                     <div className="p-5 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50" onClick={onExpand}>
-                        <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto"><div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${pendingCount > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>{client.name.charAt(0).toUpperCase()}</div><div><h3 className="font-bold text-slate-900 text-lg">{client.name}</h3><p className="text-xs text-slate-500">{client.email}</p></div></div>
-                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end"><div className="flex gap-3"><div className="text-center px-3 py-1 bg-slate-100 rounded-lg"><span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span><span className="font-bold text-brand-600">{upcomingCount}</span></div><div className={`text-center px-3 py-1 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}><span className="block text-xs text-slate-400 font-bold uppercase">Pending</span><span className={`font-bold ${pendingCount > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{pendingCount}</span></div></div><i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i></div>
+                        <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${pendingCount > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>{client.name.charAt(0).toUpperCase()}</div>
+                            <div><h3 className="font-bold text-slate-900 text-lg">{client.name}</h3><p className="text-xs text-slate-500">{client.email}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                            <div className="flex gap-3">
+                                <div className="text-center px-3 py-1 bg-slate-100 rounded-lg"><span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span><span className="font-bold text-brand-600">{upcomingCount}</span></div>
+                                <div className={`text-center px-3 py-1 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}><span className="block text-xs text-slate-400 font-bold uppercase">Pending</span><span className={`font-bold ${pendingCount > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{pendingCount}</span></div>
+                            </div>
+                            <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i>
+                        </div>
                     </div>
                     {isExpanded && (
                         <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-2 animate-fade-in">
@@ -616,9 +600,13 @@
             if (configMissing) return <div className="min-h-screen flex items-center justify-center p-4"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400"><h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2><p className="text-slate-600">Configure Firebase keys in portal.html</p></div></div>;
             const authData = useAuthAndData();
             if (!authData.isAuthReady) return <div className="flex h-screen items-center justify-center bg-slate-100"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600"></i></div>;
+
             if (!authData.user) return <AuthContext.Provider value={authData}><Login /></AuthContext.Provider>;
+
             if (authData.isAdmin) return <AuthContext.Provider value={authData}><AdminDashboard /></AuthContext.Provider>;
+
             if (authData.isWorker) return <AuthContext.Provider value={authData}><WorkerDashboard /></AuthContext.Provider>;
+
             return <AuthContext.Provider value={authData}><ClientDashboard /></AuthContext.Provider>;
         };
 
