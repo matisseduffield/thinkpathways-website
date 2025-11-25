@@ -169,7 +169,6 @@
         const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
         const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
-        // Sorting Helper: Combines Date and Start Time strings for comparison
         const getSortValue = (shift) => {
             const datePart = shift.date || '9999-99-99';
             const timePart = shift.startTime || '00:00';
@@ -348,7 +347,27 @@
                 } catch (e) { return { success: false, msg: e.message }; }
             };
 
-            return { user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoading, login, signup, resetPassword, logout, bookShift, updateShiftStatus, assignWorker, removeWorker, workerResponse, addWorkerToDB };
+            const deleteWorkerFromDB = async (id) => {
+                if (!isAdmin) return;
+                try {
+                    await db.collection(WORKERS_PATH).doc(id).delete();
+                    return { success: true };
+                } catch (e) { return { success: false, msg: e.message }; }
+            };
+
+            const updateWorkerInDB = async (id, data) => {
+                if (!isAdmin) return;
+                try {
+                    await db.collection(WORKERS_PATH).doc(id).update(data);
+                    return { success: true };
+                } catch (e) { return { success: false, msg: e.message }; }
+            };
+
+            return { 
+                user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoading, 
+                login, signup, resetPassword, logout, bookShift, updateShiftStatus, 
+                assignWorker, removeWorker, workerResponse, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB 
+            };
         };
 
         // --- COMPONENTS ---
@@ -367,7 +386,6 @@
         };
 
         // --- SHARED LOGIC: RECURRING PROJECTION ---
-        // Can be used by both List and Calendar
         const useRecurringProjection = (rawShifts, lookAheadMonths = 3) => {
             return useMemo(() => {
                 let allShifts = [...rawShifts];
@@ -387,9 +405,7 @@
 
                     while(current <= limit) {
                         const dateStr = current.toISOString().split('T')[0];
-                        // Avoid duplicates if a specific date was manually created/overridden
                         const exists = rawShifts.some(ex => ex.date === dateStr && ex.userId === s.userId);
-                        
                         if (!exists) {
                             allShifts.push({
                                 ...s,
@@ -402,54 +418,53 @@
                         current.setDate(current.getDate() + interval);
                     }
                 });
-                
-                // Sort chronologically by date + start time
                 return allShifts.sort((a, b) => getSortValue(a) - getSortValue(b));
             }, [rawShifts, lookAheadMonths]);
         };
 
         // --- LOGIC FOR LIST VIEW: ONLY NEXT RECURRING ---
-        // Filters recurring shifts to show only the *next* instance relative to today
         const useNextRecurringList = (rawShifts) => {
             return useMemo(() => {
                 const now = new Date();
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 let resultList = [];
 
+                // 1. Add all standard confirmed/pending shifts that are >= today
                 rawShifts.forEach(s => {
                     if (s.status === 'Cancelled' || s.status === 'Declined') return;
-
                     const shiftDate = new Date(s.date);
-                    
-                    // If standard one-off is upcoming
                     if (shiftDate >= today && (!s.recurrence || s.recurrence === 'none')) {
                         resultList.push(s);
                     }
-                    // If recurring (start date can be past or future)
-                    else if ((s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && s.status === 'Confirmed') {
-                        const interval = s.recurrence === 'weekly' ? 7 : 14;
-                        let nextDate = new Date(shiftDate);
-                        
-                        // Fast forward to next occurrence
-                        while (nextDate < today) {
-                            nextDate.setDate(nextDate.getDate() + interval);
-                        }
-                        
-                        // Add THIS specific next instance
-                        const dateStr = nextDate.toISOString().split('T')[0];
-                        const exists = rawShifts.some(r => r.date === dateStr && r.userId === s.userId);
-                        
-                        if (!exists) {
-                            resultList.push({
-                                ...s,
-                                id: `next-recur-${s.id}`,
-                                date: dateStr,
-                                dateDisplay: formatBookingDate(dateStr),
-                                isProjection: true
-                            });
-                        } else {
-                            // If the specific date exists as a real record, it will be picked up by standard logic if it's >= today
-                        }
+                });
+
+                // 2. Process recurring shifts to find JUST the next one
+                const recurring = rawShifts.filter(s => (s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && s.status === 'Confirmed');
+                
+                recurring.forEach(s => {
+                    const shiftDate = new Date(s.date);
+                    const interval = s.recurrence === 'weekly' ? 7 : 14;
+                    let nextDate = new Date(shiftDate);
+                    
+                    // Find next occurrence >= today
+                    while (nextDate < today) {
+                        nextDate.setDate(nextDate.getDate() + interval);
+                    }
+                    
+                    // Check if this specific date already exists as a real overridden shift
+                    const dateStr = nextDate.toISOString().split('T')[0];
+                    const exists = rawShifts.some(r => r.date === dateStr && r.userId === s.userId);
+                    
+                    // If it doesn't exist as a real shift, add this projection. 
+                    // If it DOES exist, it was already added in step 1 (if >= today).
+                    if (!exists) {
+                        resultList.push({
+                            ...s,
+                            id: `next-recur-${s.id}`,
+                            date: dateStr,
+                            dateDisplay: formatBookingDate(dateStr),
+                            isProjection: true
+                        });
                     }
                 });
                 
@@ -531,12 +546,40 @@
             );
         };
 
+        // EDIT WORKER MODAL
+        const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => {
+            const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes });
+            const [loading, setLoading] = useState(false);
+            
+            const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); };
+            const handleDelete = async () => { if(confirm('Are you sure you want to delete this worker? This cannot be undone.')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                        <h3 className="text-xl font-bold text-slate-900 mb-4">Edit Team Member</h3>
+                        <div className="space-y-4">
+                            <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Name</label><input className="w-full p-2 border border-slate-300 rounded outline-none" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div>
+                            <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input className="w-full p-2 border border-slate-300 rounded outline-none bg-slate-100" value={data.email} disabled /></div>
+                            <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes</label><textarea className="w-full p-2 border border-slate-300 rounded outline-none" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div>
+                            
+                            <div className="flex gap-3 pt-4">
+                                <button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-2 rounded font-bold hover:bg-red-100"><i className="fa-solid fa-trash mr-2"></i> Delete</button>
+                                <button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => {
             const [email, setEmail] = useState('');
             const [loading, setLoading] = useState(false);
             const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email); setLoading(false); onClose(); };
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3><p className="text-sm text-slate-500 mb-4">Select a worker for this shift:</p><form onSubmit={handleSubmit}><select required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select><div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button></div></form></div></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3><p className="text-sm text-slate-500 mb-4">Select a worker for this shift:</p><p className="text-xs text-red-500 mb-4 italic">Note: This is a demo environment. No actual email will be sent. The worker must log in to accept.</p><form onSubmit={handleSubmit}><select required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select><div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button></div></form></div></div>
             );
         };
 
@@ -595,16 +638,17 @@
                                 <div className="font-medium text-slate-700 text-sm">{s.service} {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wide">{s.recurrence}</span>}</div>
                                 <div className="mt-1 flex flex-wrap gap-2">
                                     {s.assignedWorkerEmail ? (
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 items-center">
                                             <button onClick={(e) => { e.stopPropagation(); onViewWorker(s.assignedWorkerEmail); }} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 text-[10px] flex items-center w-fit hover:bg-blue-100"><i className="fa-solid fa-user-check mr-1"></i> {workerDisplayName}</button>
-                                            <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-100 text-[10px] hover:bg-red-100" title="Unassign Worker"><i className="fa-solid fa-user-minus"></i></button>
+                                            <span className={`text-[10px] font-bold uppercase ${s.workerStatus === 'Accepted' ? 'text-green-600' : 'text-orange-500'}`}>{s.workerStatus || 'Pending'}</span>
+                                            <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="text-red-400 hover:text-red-600 ml-1" title="Unassign Worker"><i className="fa-solid fa-user-minus"></i></button>
                                         </div>
                                     ) : (
                                         <span className="text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded font-bold uppercase tracking-wider"><i className="fa-solid fa-user-xmark mr-1"></i> Unassigned</span>
                                     )}
                                 </div>
                                 {s.notes && <div className="text-xs text-slate-400 truncate mt-1" title={s.notes}><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
-                                {(type === 'history' && s.cancellationReason) && <div className="text-xs text-red-500 font-medium mt-0.5">Reason: {s.cancellationReason}</div>}
+                                {(type === 'history' && s.cancellationReason) && <div className="text-xs text-red-500 font-medium mt-0.5 bg-red-50 p-1 rounded border border-red-100"><i className="fa-solid fa-circle-info mr-1"></i> Reason: {s.cancellationReason}</div>}
                             </div>
                             <div className="md:col-span-3 flex justify-end items-center gap-2">
                                 {s.status === 'Pending' ? (
@@ -662,7 +706,7 @@
 
         // --- DASHBOARDS ---
         const AdminDashboard = () => {
-            const { shifts, workersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB } = useContext(AuthContext);
+            const { shifts, workersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB } = useContext(AuthContext);
             const [expandedClientId, setExpandedClientId] = useState(null);
             const [assignModalShift, setAssignModalShift] = useState(null);
             const [actionModal, setActionModal] = useState(null); 
@@ -672,6 +716,7 @@
             const [viewMode, setViewMode] = useState('list'); 
             const [selectedDayShifts, setSelectedDayShifts] = useState(null);
             const [selectedWorker, setSelectedWorker] = useState(null); 
+            const [editingWorker, setEditingWorker] = useState(null); // For editing
 
             // Group and Sort Clients
             const clients = useMemo(() => {
@@ -716,6 +761,7 @@
             return (
                 <div className="min-h-screen bg-slate-100 font-sans pb-12">
                     {showWorkerModal && <AddWorkerModal onClose={() => setShowWorkerModal(false)} onAdd={addWorkerToDB} />}
+                    {editingWorker && <EditWorkerModal worker={editingWorker} onClose={() => setEditingWorker(null)} onUpdate={updateWorkerInDB} onDelete={deleteWorkerFromDB} />}
                     {assignModalShift && <AssignWorkerModal shift={assignModalShift} workersList={workersList} onClose={() => setAssignModalShift(null)} onAssign={assignWorker} />}
                     {actionModal && <AdminActionModal shift={actionModal.shift} actionType={actionModal.type} onClose={() => setActionModal(null)} onConfirm={updateShiftStatus} />}
                     {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
@@ -775,7 +821,7 @@
                         {activeTab === 'team' && (
                             <div className="animate-fade-in">
                                 <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-slate-900">Team Members</h2><button onClick={() => setShowWorkerModal(true)} className="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-brand-700 transition-colors"><i className="fa-solid fa-plus mr-2"></i> Add Worker</button></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{workersList.map(w => (<div key={w.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center font-bold text-lg">{w.name.charAt(0).toUpperCase()}</div><div><h3 className="font-bold text-slate-900">{w.name}</h3><p className="text-xs text-slate-500">{w.email}</p></div></div>{w.notes && <div className="text-xs bg-slate-50 p-2 rounded border border-slate-100 text-slate-600 mt-2"><i className="fa-regular fa-note-sticky mr-1"></i> {w.notes}</div>}</div>))}</div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{workersList.map(w => (<div key={w.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative group"><button onClick={() => setEditingWorker(w)} className="absolute top-4 right-4 text-slate-300 hover:text-brand-600"><i className="fa-solid fa-pen-to-square"></i></button><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center font-bold text-lg">{w.name.charAt(0).toUpperCase()}</div><div><h3 className="font-bold text-slate-900">{w.name}</h3><p className="text-xs text-slate-500">{w.email}</p></div></div>{w.notes && <div className="text-xs bg-slate-50 p-2 rounded border border-slate-100 text-slate-600 mt-2"><i className="fa-regular fa-note-sticky mr-1"></i> {w.notes}</div>}</div>))}</div>
                             </div>
                         )}
                     </main>
@@ -1114,6 +1160,7 @@
                                                                 <div className={`text-xs font-bold uppercase ${s.status === 'Confirmed' ? 'text-slate-500' : 'text-red-500'}`}>
                                                                     {s.status === 'Confirmed' ? 'Completed' : s.status}
                                                                 </div>
+                                                                {s.cancellationReason && <div className="text-xs text-red-500 font-medium mt-0.5 bg-red-50 p-1 rounded border border-red-100 block w-full"><i className="fa-solid fa-circle-info mr-1"></i> Note: {s.cancellationReason}</div>}
                                                             </div>
                                                         ))}
                                                     </div>}
