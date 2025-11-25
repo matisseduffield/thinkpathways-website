@@ -627,40 +627,48 @@
                 const workerDisplayName = assignedWorker ? assignedWorker.name : s.assignedWorkerEmail;
                 
                 return (
-                    <div className="group bg-white rounded-lg border border-slate-200 flex flex-col md:flex-row items-start md:items-center overflow-hidden transition-all hover:border-brand-300 relative">
+                    <div className="group bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden hover:border-brand-300 relative">
                         <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.status === 'Pending' ? 'bg-yellow-400' : s.status === 'Confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></div>
-                        <div className="p-3 pl-5 flex-grow grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-center">
-                            <div className="md:col-span-4">
-                                <div className="font-bold text-slate-800 text-sm flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-2 w-4"></i>{s.dateDisplay}</div>
-                                <div className="text-xs text-slate-500 ml-6 mt-0.5"><i className="fa-regular fa-clock mr-1"></i> {s.startTime} - {s.endTime} ({s.duration}h)</div>
-                            </div>
-                            <div className="md:col-span-5">
-                                <div className="font-medium text-slate-700 text-sm">{s.service} {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wide">{s.recurrence}</span>}</div>
-                                <div className="mt-1 flex flex-wrap gap-2">
-                                    {s.assignedWorkerEmail ? (
-                                        <div className="flex gap-2 items-center">
-                                            <button onClick={(e) => { e.stopPropagation(); onViewWorker(s.assignedWorkerEmail); }} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 text-[10px] flex items-center w-fit hover:bg-blue-100"><i className="fa-solid fa-user-check mr-1"></i> {workerDisplayName}</button>
-                                            <span className={`text-[10px] font-bold uppercase ${s.workerStatus === 'Accepted' ? 'text-green-600' : 'text-orange-500'}`}>{s.workerStatus || 'Pending'}</span>
-                                            <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="text-red-400 hover:text-red-600 ml-1" title="Unassign Worker"><i className="fa-solid fa-user-minus"></i></button>
-                                        </div>
+                        <div className="p-3 pl-5">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="md:w-1/3">
+                                    <div className="font-bold text-slate-800 text-sm flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-2 w-4"></i>{s.dateDisplay}</div>
+                                    <div className="text-xs text-slate-500 ml-6 mt-0.5"><i className="fa-regular fa-clock mr-1"></i> {s.startTime} - {s.endTime} ({s.duration}h)</div>
+                                </div>
+                                <div className="md:w-1/3">
+                                    <div className="font-medium text-slate-700 text-sm">{s.service} {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wide">{s.recurrence}</span>}</div>
+                                    <div className="mt-1 flex flex-wrap gap-2">
+                                        {s.assignedWorkerEmail ? (
+                                            <div className="flex gap-2 items-center">
+                                                <button onClick={(e) => { e.stopPropagation(); onViewWorker(s.assignedWorkerEmail); }} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 text-[10px] flex items-center w-fit hover:bg-blue-100"><i className="fa-solid fa-user-check mr-1"></i> {workerDisplayName}</button>
+                                                <span className={`text-[10px] font-bold uppercase ${s.workerStatus === 'Accepted' ? 'text-green-600' : 'text-orange-500'}`}>{s.workerStatus || 'Pending'}</span>
+                                                <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="text-red-400 hover:text-red-600 ml-1" title="Unassign Worker"><i className="fa-solid fa-user-minus"></i></button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded font-bold uppercase tracking-wider"><i className="fa-solid fa-user-xmark mr-1"></i> Unassigned</span>
+                                        )}
+                                    </div>
+                                    {s.notes && <div className="text-xs text-slate-400 truncate mt-1" title={s.notes}><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
+                                </div>
+                                <div className="md:w-1/3 flex justify-end items-center gap-2">
+                                    {s.status === 'Pending' ? (
+                                        <><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="p-1.5 rounded text-green-600 hover:bg-green-50"><i className="fa-solid fa-check-circle text-xl"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="p-1.5 rounded text-red-400 hover:bg-red-50 hover:text-red-600"><i className="fa-solid fa-circle-xmark text-xl"></i></button></>
                                     ) : (
-                                        <span className="text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded font-bold uppercase tracking-wider"><i className="fa-solid fa-user-xmark mr-1"></i> Unassigned</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{s.statusLabel}</span>
+                                            {s.status === 'Confirmed' && !s.assignedWorkerEmail && <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="bg-brand-100 text-brand-700 p-1.5 rounded hover:bg-brand-200" title="Assign Worker"><i className="fa-solid fa-user-plus"></i></button>}
+                                            {s.status === 'Confirmed' && <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-slate-300 hover:text-red-500" title="Cancel Shift"><i className="fa-solid fa-ban"></i></button>}
+                                        </div>
                                     )}
                                 </div>
-                                {s.notes && <div className="text-xs text-slate-400 truncate mt-1" title={s.notes}><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
-                                {(type === 'history' && s.cancellationReason) && <div className="text-xs text-red-500 font-medium mt-0.5 bg-red-50 p-1 rounded border border-red-100"><i className="fa-solid fa-circle-info mr-1"></i> Reason: {s.cancellationReason}</div>}
                             </div>
-                            <div className="md:col-span-3 flex justify-end items-center gap-2">
-                                {s.status === 'Pending' ? (
-                                    <><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="p-1.5 rounded text-green-600 hover:bg-green-50"><i className="fa-solid fa-check-circle text-xl"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="p-1.5 rounded text-red-400 hover:bg-red-50 hover:text-red-600"><i className="fa-solid fa-circle-xmark text-xl"></i></button></>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{s.statusLabel}</span>
-                                        {s.status === 'Confirmed' && !s.assignedWorkerEmail && <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="bg-brand-100 text-brand-700 p-1.5 rounded hover:bg-brand-200" title="Assign Worker"><i className="fa-solid fa-user-plus"></i></button>}
-                                        {s.status === 'Confirmed' && <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-slate-300 hover:text-red-500" title="Cancel Shift"><i className="fa-solid fa-ban"></i></button>}
-                                    </div>
-                                )}
-                            </div>
+                            {/* Cancellation Note Block */}
+                            {(type === 'history' && s.cancellationReason) && (
+                                <div className="mt-3 text-xs text-red-700 bg-red-50 p-3 rounded border border-red-100 flex items-start">
+                                    <i className="fa-solid fa-circle-info mr-2 mt-0.5 text-red-500"></i>
+                                    <span><strong>Note:</strong> {s.cancellationReason}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -1152,15 +1160,23 @@
                                                     {historyShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic">No history found.</div> : 
                                                     <div className="space-y-3 opacity-75">
                                                         {historyShifts.map(s => (
-                                                            <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
-                                                                <div>
-                                                                    <div className="font-bold text-slate-700 text-sm">{s.dateDisplay}</div>
-                                                                    <div className="text-xs text-slate-500">{s.service}</div>
+                                                            <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                                <div className="flex justify-between items-center">
+                                                                    <div>
+                                                                        <div className="font-bold text-slate-700 text-sm">{s.dateDisplay}</div>
+                                                                        <div className="text-xs text-slate-500">{s.service}</div>
+                                                                    </div>
+                                                                    <div className={`text-xs font-bold uppercase ${s.status === 'Confirmed' ? 'text-slate-500' : 'text-red-500'}`}>
+                                                                        {s.status === 'Confirmed' ? 'Completed' : s.status}
+                                                                    </div>
                                                                 </div>
-                                                                <div className={`text-xs font-bold uppercase ${s.status === 'Confirmed' ? 'text-slate-500' : 'text-red-500'}`}>
-                                                                    {s.status === 'Confirmed' ? 'Completed' : s.status}
-                                                                </div>
-                                                                {s.cancellationReason && <div className="text-xs text-red-500 font-medium mt-0.5 bg-red-50 p-1 rounded border border-red-100 block w-full"><i className="fa-solid fa-circle-info mr-1"></i> Note: {s.cancellationReason}</div>}
+                                                                {/* Moved note to its own line */}
+                                                                {s.cancellationReason && (
+                                                                    <div className="mt-3 text-xs text-red-700 bg-red-50 p-3 rounded border border-red-100 flex items-start">
+                                                                        <i className="fa-solid fa-circle-info mr-2 mt-0.5 text-red-500"></i>
+                                                                        <span><strong>Note:</strong> {s.cancellationReason}</span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>}
