@@ -8,20 +8,12 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
     
-    <!-- Tailwind CSS -->
+    <!-- CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-    <!-- React & Babel -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+    
+    <!-- Config -->
     <script>
         tailwind.config = {
             theme: {
@@ -31,31 +23,17 @@
                         brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
                         accent: { 500: '#10b981' }
                     },
-                    animation: {
-                        'fade-in': 'fadeIn 0.4s ease-out',
-                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'pop-in': 'popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-                    },
+                    animation: { 'fade-in': 'fadeIn 0.4s ease-out', 'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)', 'pop-in': 'popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)' },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        },
-                        popIn: {
-                            '0%': { transform: 'scale(0.95)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' },
-                        }
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        popIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } }
                     }
                 }
             }
         }
         
         // --- CONFIGURATION SECTION ---
-        // 1. FIREBASE CONFIG
         window.__firebase_config = {
              apiKey: "AIzaSyDO315mAW8JphkSPqcp8Z9VPakBIUlCrl8", 
              authDomain: "thinkpathways.firebaseapp.com", 
@@ -65,10 +43,7 @@
              appId: "1:31616186160:web:646c33b844b999e81efaf5"
         };
 
-        // 2. CLOUDFLARE TURNSTILE SITE KEY
         window.__turnstile_site_key = "0x4AAAAAACCy0zfo2e5QOQoB"; 
-
-        // 3. ADMIN EMAIL
         window.__admin_email = "care@thinkpathways.com";
     </script>
     
@@ -82,60 +57,61 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
     
-    <!-- Error UI -->
     <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
-        <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl">
+        <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
-            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500"></pre>
-            <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Reload Page</button>
+            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4"></pre>
+            <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
         </div>
     </div>
 
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module">
+    <!-- DEPENDENCIES -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- MAIN APP -->
+    <script type="text/babel">
+        // Error Handler
         window.onerror = function(message, source, lineno, colno, error) {
             document.getElementById('error-display').style.display = 'flex';
-            document.getElementById('error-message').textContent = `${message}\n\nLine: ${lineno}`;
+            document.getElementById('error-message').textContent = `${message}\nLine: ${lineno}\n${error ? error.stack : ''}`;
         };
 
-        const { useState, useEffect, useMemo, useRef } = React;
-        const { createRoot } = ReactDOM;
-
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-            sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getFirestore, collection, query, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, where 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        let app, auth, db;
-        let configMissing = false;
-
+        // Firebase Init
+        let auth, db, configMissing = false;
         try {
-             const config = window.__firebase_config;
-             if (!config.apiKey || config.apiKey === "") {
-                 configMissing = true;
-             } else {
-                 app = initializeApp(config);
-                 auth = getAuth(app);
-                 db = getFirestore(app);
-             }
-        } catch (e) {
-            console.error("Firebase setup failed", e);
+            if (window.__firebase_config && window.__firebase_config.apiKey) {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(window.__firebase_config);
+                }
+                auth = firebase.auth();
+                db = firebase.firestore();
+            } else {
+                configMissing = true;
+            }
+        } catch(e) { 
+            console.error("Firebase Init Error", e);
             configMissing = true;
         }
 
-        const AuthContext = React.createContext();
-        const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
+        const { useState, useEffect, useMemo, useRef, useContext, createContext } = React;
+        const { createRoot } = ReactDOM;
 
-        // --- Custom Date Formatter ---
+        const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
+        const WORKERS_PATH = 'artifacts/thinkpathways/public/data/workers';
+        const ADMIN_EMAIL = window.__admin_email;
+
+        // --- HELPERS ---
         const formatBookingDate = (dateString) => {
             if (!dateString) return 'Pending Date';
             const date = new Date(dateString);
-            
             const day = date.getDate();
             const month = date.toLocaleDateString('en-AU', { month: 'long' });
             const weekday = date.toLocaleDateString('en-AU', { weekday: 'long' });
@@ -162,25 +138,41 @@
             return diffHours < 48 && diffHours > 0;
         };
 
-        // --- Custom Hook ---
+        const AuthContext = createContext();
+
+        // --- HOOK ---
         const useAuthAndData = () => {
             const [user, setUser] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
+            const [isWorker, setIsWorker] = useState(false);
             const [isAuthReady, setIsAuthReady] = useState(false);
-            
-            // Data states
-            const [shifts, setShifts] = useState([]); // All shifts (for Admin) or User shifts
-            const [workerShifts, setWorkerShifts] = useState([]); // Shifts assigned to user as Worker
-            const [isLoadingShifts, setIsLoadingShifts] = useState(false);
+            const [shifts, setShifts] = useState([]);
+            const [workerShifts, setWorkerShifts] = useState([]);
+            const [workersList, setWorkersList] = useState([]); 
+            const [isLoading, setIsLoading] = useState(false);
 
             useEffect(() => {
                 if (configMissing || !auth) { setIsAuthReady(true); return; }
-                const unsubscribe = onAuthStateChanged(auth, (u) => {
-                    setUser(u);
-                    if (u && u.email && u.email.toLowerCase() === window.__admin_email.toLowerCase()) {
-                        setIsAdmin(true);
+                const unsubscribe = auth.onAuthStateChanged(async (u) => {
+                    if (u) {
+                        setUser(u);
+                        const email = u.email.toLowerCase();
+                        
+                        if (email === ADMIN_EMAIL.toLowerCase()) {
+                            setIsAdmin(true);
+                            setIsWorker(false);
+                        } else {
+                            setIsAdmin(false);
+                            try {
+                                const q = db.collection(WORKERS_PATH).where("email", "==", email);
+                                const snapshot = await q.get();
+                                setIsWorker(!snapshot.empty);
+                            } catch (err) { setIsWorker(false); }
+                        }
                     } else {
+                        setUser(null);
                         setIsAdmin(false);
+                        setIsWorker(false);
                     }
                     setIsAuthReady(true);
                 });
@@ -188,576 +180,440 @@
             }, []);
 
             useEffect(() => {
-                if (!user || !db) {
+                if (!user) {
                     setShifts([]);
                     setWorkerShifts([]);
                     return;
                 }
                 
-                setIsLoadingShifts(true);
-
-                // 1. Fetch All Shifts (We filter in memory for simplicity in this file structure)
-                // In production, use separate queries for security.
-                const q = query(collection(db, COLLECTION_PATH));
-                
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const allData = snapshot.docs.map(doc => {
+                setIsLoading(true);
+                const unsubscribe = db.collection(COLLECTION_PATH).onSnapshot((snapshot) => {
+                    const data = snapshot.docs.map(doc => {
                         const d = doc.data();
-                        // Status Logic
-                        let displayStatus = d.status;
-                        if (d.status === 'Pending') displayStatus = 'Request Sent';
-                        if (d.status === 'Confirmed') displayStatus = 'Scheduled';
-                        
+                        let statusText = d.status;
+                        if (d.status === 'Pending') statusText = 'Request Sent';
+                        if (d.status === 'Confirmed') statusText = 'Scheduled';
+                        if (d.status === 'Cancelled') statusText = 'Unavailable';
+                        if (d.status === 'Declined') statusText = 'Declined';
+
                         return {
                             id: doc.id,
                             ...d,
-                            statusLabel: displayStatus,
+                            statusLabel: statusText,
                             dateDisplay: d.date ? formatBookingDate(d.date) : 'Pending',
                             rawTimestamp: d.timestamp?.toMillis() || 0
                         };
                     });
 
-                    // Filter for Client View
-                    const myShifts = allData.filter(s => s.userId === user.uid);
-                    myShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp);
-                    setShifts(isAdmin ? allData : myShifts);
-
-                    // Filter for Worker View (Am I the assigned worker?)
-                    const assignedToMe = allData.filter(s => s.assignedWorkerEmail && s.assignedWorkerEmail.toLowerCase() === user.email.toLowerCase());
-                    // Sort workers shifts chronologically (closest upcoming first)
-                    assignedToMe.sort((a, b) => new Date(a.date) - new Date(b.date));
-                    setWorkerShifts(assignedToMe);
-
-                    setIsLoadingShifts(false);
+                    if (isAdmin) {
+                        data.sort((a, b) => b.rawTimestamp - a.rawTimestamp);
+                        setShifts(data);
+                    } else if (isWorker) {
+                        const assigned = data.filter(s => s.assignedWorkerEmail && s.assignedWorkerEmail.toLowerCase() === user.email.toLowerCase());
+                        assigned.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        setWorkerShifts(assigned);
+                    } else {
+                        const myShifts = data.filter(s => s.userId === user.uid);
+                        myShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp);
+                        setShifts(myShifts);
+                    }
+                    setIsLoading(false);
                 });
-
                 return () => unsubscribe();
-            }, [user, isAdmin]);
+            }, [user, isAdmin, isWorker]);
 
-            // Auth actions
-            const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
+            useEffect(() => {
+                if (!isAdmin) return;
+                const unsubscribe = db.collection(WORKERS_PATH).onSnapshot((snapshot) => {
+                    const wList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setWorkersList(wList);
+                });
+                return () => unsubscribe();
+            }, [isAdmin]);
+
+            const login = (email, password) => auth.signInWithEmailAndPassword(email, password);
             const signup = async (email, password, name) => {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(cred.user, { displayName: name });
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                await cred.user.updateProfile({ displayName: name });
                 setUser({...cred.user, displayName: name});
             };
-            const resetPassword = (email) => sendPasswordResetEmail(auth, email);
-            const logout = () => signOut(auth);
+            const resetPassword = (email) => auth.sendPasswordResetEmail(email);
+            const logout = () => auth.signOut();
             
-            // DB actions
             const bookShift = async (data) => {
-                if (!user || !db) return false;
                 try {
-                    await addDoc(collection(db, COLLECTION_PATH), {
+                    await db.collection(COLLECTION_PATH).add({
                         ...data,
                         userId: user.uid,
                         userName: user.displayName || 'Client',
                         userEmail: user.email,
                         status: 'Pending',
-                        workerStatus: 'Unassigned',
-                        timestamp: serverTimestamp(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     });
                     return true;
-                } catch (e) {
-                    console.error(e);
-                    return false;
-                }
+                } catch (e) { return false; }
             };
 
             const updateShiftStatus = async (shiftId, newStatus, reason = null) => {
                 try {
-                    const shiftRef = doc(db, COLLECTION_PATH, shiftId);
                     const updateData = { status: newStatus };
                     if (reason) updateData.cancellationReason = reason;
-                    await updateDoc(shiftRef, updateData);
+                    await db.collection(COLLECTION_PATH).doc(shiftId).update(updateData);
                     return true;
-                } catch (e) {
-                    console.error("Error updating shift", e);
-                    return false;
-                }
+                } catch (e) { return false; }
             };
 
             const assignWorker = async (shiftId, workerEmail) => {
                 try {
-                    const shiftRef = doc(db, COLLECTION_PATH, shiftId);
-                    await updateDoc(shiftRef, { 
+                    await db.collection(COLLECTION_PATH).doc(shiftId).update({ 
                         assignedWorkerEmail: workerEmail,
                         workerStatus: 'Pending Acceptance'
                     });
                     return true;
-                } catch (e) {
-                    console.error("Error assigning worker", e);
-                    return false;
-                }
+                } catch (e) { return false; }
             };
 
             const workerResponse = async (shiftId, response) => {
-                // response = 'Accepted' or 'Declined'
                 try {
-                    const shiftRef = doc(db, COLLECTION_PATH, shiftId);
-                    await updateDoc(shiftRef, { workerStatus: response });
+                    await db.collection(COLLECTION_PATH).doc(shiftId).update({ workerStatus: response });
                     return true;
-                } catch (e) {
-                    console.error("Error responding", e);
-                    return false;
+                } catch (e) { return false; }
+            };
+
+            const addWorkerToDB = async (workerData) => {
+                if (!isAdmin) return false;
+                try {
+                    const check = await db.collection(WORKERS_PATH).where("email", "==", workerData.email.toLowerCase()).get();
+                    if (!check.empty) return { success: false, msg: 'Worker email already exists.' };
+
+                    await db.collection(WORKERS_PATH).add({
+                        name: workerData.name,
+                        email: workerData.email.toLowerCase(),
+                        notes: workerData.notes,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    return { success: true };
+                } catch (e) { 
+                    return { success: false, msg: e.message }; 
                 }
             };
 
-            return { 
-                user, isAdmin, isAuthReady, shifts, workerShifts, isLoadingShifts, 
-                login, signup, resetPassword, logout, 
-                bookShift, updateShiftStatus, assignWorker, workerResponse 
-            };
+            return { user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoading, login, signup, resetPassword, logout, bookShift, updateShiftStatus, assignWorker, workerResponse, addWorkerToDB };
         };
 
-        // --- Login Component (Unchanged from previous) ---
-        const Login = () => {
-            const { login, signup, resetPassword } = React.useContext(AuthContext);
-            const [mode, setMode] = useState('login'); 
-            const [error, setError] = useState('');
-            const [successMsg, setSuccessMsg] = useState('');
-            const [loading, setLoading] = useState(false);
-            const [showPassword, setShowPassword] = useState(false);
-
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                setError('');
-                setSuccessMsg('');
-                setLoading(true);
-                const data = new FormData(e.target);
-                
-                try {
-                    if (mode === 'signup') {
-                        const p1 = data.get('password');
-                        const p2 = data.get('confirmPassword');
-                        if (p1 !== p2) throw new Error("Firebase: Passwords do not match.");
-                        await signup(data.get('email'), p1, data.get('name'));
-                    } else if (mode === 'login') {
-                        await login(data.get('email'), data.get('password'));
-                    } else if (mode === 'forgot') {
-                        await resetPassword(data.get('email'));
-                        setSuccessMsg('Password reset email sent!');
-                        setLoading(false);
-                        return; 
-                    }
-                } catch (err) {
-                    let msg = err.message.replace('Firebase: ', '');
-                    if(msg.includes('auth/invalid-credential')) msg = 'Incorrect email or password.';
-                    setError(msg);
-                    setLoading(false);
+        // --- COMPONENTS ---
+        const TurnstileWidget = ({ onVerify }) => {
+            const containerRef = useRef(null);
+            useEffect(() => {
+                if (window.turnstile && TURNSTILE_SITE_KEY) {
+                    if (containerRef.current) containerRef.current.innerHTML = '';
+                    window.turnstile.render(containerRef.current, {
+                        sitekey: TURNSTILE_SITE_KEY,
+                        callback: (token) => onVerify(token),
+                    });
                 }
-            };
+            }, []);
+            return <div ref={containerRef} className="my-4 flex justify-center"></div>;
+        };
 
+        const AddWorkerModal = ({ onClose, onAdd }) => {
+            const [data, setData] = useState({ name: '', email: '', notes: '' });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const handleSubmit = async (e) => { 
+                e.preventDefault(); 
+                setLoading(true); 
+                setError(''); 
+                const res = await onAdd(data); 
+                setLoading(false); 
+                if(res.success) onClose(); else setError(res.msg); 
+            };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 mb-2">Add New Worker</h3><p className="text-sm text-slate-500 mb-4">Authorize a user to access the Worker Portal.</p>{error && <div className="p-2 bg-red-50 text-red-600 text-xs rounded mb-3">{error}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Name</label><input required className="w-full p-2 border border-slate-300 rounded focus:border-brand-500 outline-none" placeholder="e.g. Sarah Smith" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" required className="w-full p-2 border border-slate-300 rounded focus:border-brand-500 outline-none" placeholder="worker@thinkpathways.com" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes</label><textarea className="w-full p-2 border border-slate-300 rounded focus:border-brand-500 outline-none" rows="2" placeholder="e.g. Has First Aid..." value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>
+            );
+        };
+
+        const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => {
+            const [email, setEmail] = useState('');
+            const [loading, setLoading] = useState(false);
+            const handleSubmit = async (e) => { 
+                e.preventDefault(); 
+                if (!email) return; 
+                setLoading(true); 
+                await onAssign(shift.id, email); 
+                setLoading(false); 
+                onClose(); 
+            };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3><p className="text-sm text-slate-500 mb-4">Select a worker for this shift:</p><form onSubmit={handleSubmit}>
+                    <select required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white" value={email} onChange={(e) => setEmail(e.target.value)}>
+                        <option value="" disabled>Select a Worker</option>
+                        {workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}
+                    </select>
+                    <div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button></div></form></div></div>
+            );
+        };
+
+        const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
+            const [reason, setReason] = useState('');
+            const [loading, setLoading] = useState(false);
+            const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason); setLoading(false); onClose(); };
+            const isDecline = actionType === 'Declined';
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className={`text-xl font-bold mb-4 ${isDecline ? 'text-red-600' : 'text-red-600'} flex items-center`}><i className="fa-solid fa-triangle-exclamation mr-2"></i> {isDecline ? 'Decline Request' : 'Cancel Shift'}</h3><p className="text-slate-600 mb-4">Reason (visible to client):</p><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4" rows="3"></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button></div></div></div>
+            );
+        };
+
+        const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign }) => {
+            const pendingCount = client.stats.pending;
+            const upcomingCount = client.stats.upcoming;
+            return (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md mb-4">
+                    <div className="p-5 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50" onClick={onExpand}>
+                        <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${pendingCount > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>{client.name.charAt(0).toUpperCase()}</div>
+                            <div><h3 className="font-bold text-slate-900 text-lg">{client.name}</h3><p className="text-xs text-slate-500">{client.email}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                            <div className="flex gap-3">
+                                <div className="text-center px-3 py-1 bg-slate-100 rounded-lg"><span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span><span className="font-bold text-brand-600">{upcomingCount}</span></div>
+                                <div className={`text-center px-3 py-1 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}><span className="block text-xs text-slate-400 font-bold uppercase">Pending</span><span className={`font-bold ${pendingCount > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{pendingCount}</span></div>
+                            </div>
+                            <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i>
+                        </div>
+                    </div>
+                    {isExpanded && (
+                        <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-2 animate-fade-in">
+                            {client.shifts.length === 0 && <div className="text-center text-sm text-slate-400 italic py-2">No history found.</div>}
+                            {client.shifts.map(s => (
+                                <div key={s.id} className="group bg-white rounded-lg border border-slate-200 flex flex-col md:flex-row items-start md:items-center overflow-hidden transition-all hover:border-brand-300 relative">
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.status === 'Pending' ? 'bg-yellow-400' : s.status === 'Confirmed' ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                                    <div className="p-3 pl-5 flex-grow grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-center">
+                                        <div className="md:col-span-4"><div className="font-bold text-slate-800 text-sm flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-2 w-4"></i>{s.dateDisplay}</div><div className="text-xs text-slate-500 ml-6 mt-0.5"><i className="fa-regular fa-clock mr-1"></i> {s.duration} Hours</div></div>
+                                        <div className="md:col-span-5"><div className="font-medium text-slate-700 text-sm">{s.service} {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wide">{s.recurrence}</span>}</div><div className="mt-1 flex flex-wrap gap-2">{s.assignedWorkerEmail ? <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 text-[10px] flex items-center w-fit"><i className="fa-solid fa-user-check mr-1"></i> {s.assignedWorkerEmail} <span className={`ml-1 font-bold ${s.workerStatus === 'Accepted' ? 'text-green-600' : 'text-orange-600'}`}>({s.workerStatus || 'Pending'})</span></span> : <span className="text-[10px] text-slate-400 italic">No worker assigned</span>}</div>{s.notes && <div className="text-xs text-slate-400 truncate mt-1" title={s.notes}><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}{(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' || s.statusLabel === 'Cancelled') && s.cancellationReason && <div className="text-xs text-red-500 font-medium mt-0.5">Reason: {s.cancellationReason}</div>}</div>
+                                        <div className="md:col-span-3 flex justify-end items-center gap-2">
+                                            {s.status === 'Pending' ? (<><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="p-1.5 rounded text-green-600 hover:bg-green-50 transition-colors" title="Accept"><i className="fa-solid fa-check-circle text-xl"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="p-1.5 rounded text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Decline"><i className="fa-solid fa-circle-xmark text-xl"></i></button></>) : (<div className="flex items-center gap-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{s.statusLabel}</span>{s.status === 'Confirmed' && <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="bg-brand-100 text-brand-700 p-1.5 rounded hover:bg-brand-200 transition-colors" title="Assign Worker"><i className="fa-solid fa-user-plus"></i></button>}{s.status === 'Confirmed' && <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-slate-300 hover:text-red-500 transition-colors" title="Cancel Shift"><i className="fa-solid fa-ban"></i></button>}</div>)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- DASHBOARDS ---
+        const AdminDashboard = () => {
+            const { shifts, workersList, user, logout, updateShiftStatus, assignWorker, addWorkerToDB } = useContext(AuthContext);
+            const [expandedClientId, setExpandedClientId] = useState(null);
+            const [assignModalShift, setAssignModalShift] = useState(null);
+            const [actionModal, setActionModal] = useState(null); 
+            const [showWorkerModal, setShowWorkerModal] = useState(false);
+            const [activeTab, setActiveTab] = useState('bookings');
+
+            const clients = useMemo(() => {
+                const groups = {};
+                shifts.forEach(s => {
+                    if (!groups[s.userId]) groups[s.userId] = { id: s.userId, name: s.userName || 'Unknown', email: s.userEmail || 'No Email', shifts: [], stats: { upcoming: 0, pending: 0 } };
+                    groups[s.userId].shifts.push(s);
+                    if (s.status === 'Pending') groups[s.userId].stats.pending++;
+                    if ((s.status === 'Confirmed' || s.status === 'Pending') && new Date(s.date) >= new Date()) groups[s.userId].stats.upcoming++;
+                });
+                return Object.values(groups);
+            }, [shifts]);
+            
+            const alerts = useMemo(() => shifts.filter(s => s.status === 'Pending'), [shifts]);
+            const openActionModal = (shift, type) => setActionModal({ shift, type });
+
+            return (
+                <div className="min-h-screen bg-slate-100 font-sans pb-12">
+                    {showWorkerModal && <AddWorkerModal onClose={() => setShowWorkerModal(false)} onAdd={addWorkerToDB} />}
+                    {assignModalShift && <AssignWorkerModal shift={assignModalShift} workersList={workersList} onClose={() => setAssignModalShift(null)} onAssign={assignWorker} />}
+                    {actionModal && <AdminActionModal shift={actionModal.shift} actionType={actionModal.type} onClose={() => setActionModal(null)} onConfirm={updateShiftStatus} />}
+                    
+                    <header className="bg-slate-900 shadow-md p-4 sticky top-0 z-20">
+                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-white"><i className="fa-solid fa-user-shield text-xl"></i><h1 className="text-xl font-bold tracking-tight">Admin Portal</h1></div>
+                            <div className="flex gap-4">
+                                <button onClick={() => setActiveTab('bookings')} className={`text-sm ${activeTab === 'bookings' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Bookings</button>
+                                <button onClick={() => setActiveTab('team')} className={`text-sm ${activeTab === 'team' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Team</button>
+                                <div className="w-px h-5 bg-slate-700 mx-2"></div>
+                                <button onClick={logout} className="text-sm text-red-400 font-bold hover:text-red-300">Sign Out</button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto p-4 md:p-8">
+                        {activeTab === 'bookings' && (
+                            <>
+                                {alerts.length > 0 && (
+                                    <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6 shadow-sm animate-fade-in">
+                                        <h3 className="text-yellow-800 font-bold text-lg mb-4"><i className="fa-solid fa-bell mr-2"></i> Action Required ({alerts.length})</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{alerts.map(s => <div key={s.id} className="bg-white p-4 rounded-lg border border-yellow-100 shadow-sm flex justify-between items-center"><div><p className="font-bold text-slate-900">{s.userName}</p><p className="text-xs text-slate-500">{s.service} • {s.dateDisplay}</p></div><button onClick={() => setExpandedClientId(s.userId)} className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold hover:bg-yellow-200">Review</button></div>)}</div>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-slate-900">Client Management</h2><div className="text-sm text-slate-500">Total Clients: {clients.length}</div></div>
+                                <div>{clients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} />)}</div>
+                            </>
+                        )}
+                        {activeTab === 'team' && (
+                            <div className="animate-fade-in">
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-slate-900">Team Members</h2><button onClick={() => setShowWorkerModal(true)} className="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-brand-700 transition-colors"><i className="fa-solid fa-plus mr-2"></i> Add Worker</button></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{workersList.map(w => (<div key={w.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"><div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center font-bold text-lg">{w.name.charAt(0).toUpperCase()}</div><div><h3 className="font-bold text-slate-900">{w.name}</h3><p className="text-xs text-slate-500">{w.email}</p></div></div>{w.notes && <div className="text-xs bg-slate-50 p-2 rounded border border-slate-100 text-slate-600 mt-2"><i className="fa-regular fa-note-sticky mr-1"></i> {w.notes}</div>}</div>))}</div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const Login = () => {
+            const { login, signup, resetPassword } = useContext(AuthContext);
+            const [mode, setMode] = useState('login');
+            const [error, setError] = useState('');
+            const [captchaToken, setCaptchaToken] = useState(null);
+            const [showPassword, setShowPassword] = useState(false);
+            const [loading, setLoading] = useState(false);
+            const handleSubmit = async (e) => { e.preventDefault(); setError(''); if(mode !== 'forgot' && !captchaToken) { setError('Please complete security check.'); return; } setLoading(true); const d = new FormData(e.target); try { if(mode === 'signup') { if(d.get('password') !== d.get('confirmPassword')) throw new Error("Firebase: Passwords do not match."); await signup(d.get('email'), d.get('password'), d.get('name')); } else if(mode === 'login') await login(d.get('email'), d.get('password')); else { await resetPassword(d.get('email')); setError('Reset email sent!'); setLoading(false); return; } } catch(err) { setError(err.message.replace('Firebase: ','')); setLoading(false); if(window.turnstile) window.turnstile.reset(); setCaptchaToken(null); } };
             return (
                 <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
                     <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200 animate-slide-up">
-                        <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg">
-                                <i className="fa-solid fa-hands-holding-circle"></i>
-                            </div>
-                            <h1 className="text-2xl font-bold text-slate-900">My Pathway Portal</h1>
-                            <p className="text-slate-500 text-sm mt-2">{mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Join the community' : 'Reset Password'}</p>
-                        </div>
-
-                        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
-                        {successMsg && <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg flex items-center"><i className="fa-solid fa-check-circle mr-2"></i> {successMsg}</div>}
-
+                        <div className="text-center mb-8"><div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-2xl font-bold text-slate-900">My Pathway Portal</h1><p className="text-slate-500 text-sm mt-2">{mode === 'signup' ? 'Create Account' : mode === 'login' ? 'Welcome Back' : 'Reset Password'}</p></div>
+                        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded flex items-center"><i className="fa-solid fa-circle-exclamation mr-2"></i>{error}</div>}
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {mode === 'signup' && (
-                                <input name="name" type="text" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Full Name" />
-                            )}
-                            <input name="email" type="email" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Email Address" />
-                            
-                            {mode !== 'forgot' && (
-                                <div className="relative">
-                                    <input name="password" type={showPassword ? "text" : "password"} required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Password" />
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-3 flex items-center text-slate-400"><i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i></button>
-                                </div>
-                            )}
-                            {mode === 'signup' && (
-                                <input name="confirmPassword" type="password" required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Confirm Password" />
-                            )}
-
-                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-md disabled:opacity-50">
-                                {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : (mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Link' : 'Sign In')}
-                            </button>
+                            {mode === 'signup' && <input name="name" required className="w-full px-4 py-2 border rounded-lg outline-none focus:border-brand-500" placeholder="Full Name" />}
+                            <input name="email" type="email" required className="w-full px-4 py-2 border rounded-lg outline-none focus:border-brand-500" placeholder="Email" />
+                            {mode !== 'forgot' && <div className="relative"><input name="password" type={showPassword?"text":"password"} required className="w-full px-4 py-2 border rounded-lg outline-none focus:border-brand-500" placeholder="Password" /><button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-3 top-2 text-slate-400"><i className={`fa-solid ${showPassword?'fa-eye-slash':'fa-eye'}`}></i></button></div>}
+                            {mode === 'signup' && <input name="confirmPassword" type={showPassword?"text":"password"} required className="w-full px-4 py-2 border rounded-lg outline-none focus:border-brand-500" placeholder="Confirm Password" />}
+                            {mode !== 'forgot' && <TurnstileWidget onVerify={setCaptchaToken} />}
+                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Processing...' : (mode === 'signup' ? 'Create Account' : mode === 'login' ? 'Sign In' : 'Send Link')}</button>
                         </form>
-
-                        <div className="mt-6 text-center pt-6 border-t border-slate-100 space-y-2">
-                            {mode === 'login' && (
-                                <>
-                                    <button onClick={() => setMode('signup')} className="block w-full text-sm text-brand-600 font-medium hover:underline">New Client? Create Account</button>
-                                    <button onClick={() => setMode('forgot')} className="block w-full text-xs text-slate-500 hover:text-slate-700">Forgot Password?</button>
-                                </>
-                            )}
-                            {(mode === 'signup' || mode === 'forgot') && <button onClick={() => setMode('login')} className="block w-full text-sm text-brand-600 font-medium hover:underline">Back to Login</button>}
-                        </div>
+                        <div className="mt-6 text-center pt-6 border-t border-slate-100 space-y-2">{mode === 'login' && <><button onClick={()=>setMode('signup')} className="block w-full text-sm text-brand-600 font-medium">New Client? Create Account</button><button onClick={()=>setMode('forgot')} className="block w-full text-xs text-slate-500">Forgot Password?</button></>}{(mode === 'signup' || mode === 'forgot') && <button onClick={()=>setMode('login')} className="block w-full text-sm text-brand-600 font-medium">Back to Login</button>}</div>
                         <div className="mt-4 text-center"><a href="index.html" className="text-xs text-slate-400 hover:text-slate-600">← Back to Website</a></div>
                     </div>
                 </div>
             );
         };
 
-        // --- Admin Dashboard ---
-        const AdminDashboard = () => {
-            const { shifts, isLoadingShifts, user, logout, updateShiftStatus, assignWorker } = React.useContext(AuthContext);
-            const [assignModalShift, setAssignModalShift] = useState(null); // Shift being assigned
-            const [workerEmailInput, setWorkerEmailInput] = useState('');
+        const BookingModal = ({ onClose }) => {
+            const { bookShift } = useContext(AuthContext);
+            const [loading, setLoading] = useState(false);
+            const [msg, setMsg] = useState(null);
+            const handleSubmit = async (e) => {
+                e.preventDefault(); setLoading(true); setMsg(null);
+                const d = new FormData(e.target);
+                if (new Date(d.get('date')) < new Date(new Date().setDate(new Date().getDate() + 1))) { setMsg({type:'error', text:'Select a date tomorrow or later.'}); setLoading(false); return; }
+                const success = await bookShift({ date: d.get('date'), duration: d.get('duration'), service: d.get('service'), recurrence: d.get('recurrence'), notes: d.get('notes') });
+                if(success) { setMsg({type:'success', text:'Request Sent!'}); setTimeout(onClose, 1000); } else { setMsg({type:'error', text:'Failed.'}); setLoading(false); }
+            };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5"><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 border rounded-lg outline-none focus:border-brand-500" /><div className="grid grid-cols-2 gap-4"><select name="duration" className="w-full p-3 border rounded-lg bg-white">{[2,3,4,5,6,7,8].map(n=><option key={n} value={n}>{n} Hours</option>)}</select><select name="recurrence" className="w-full p-3 border rounded-lg bg-white"><option value="none">One-off</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option></select></div><select name="service" required defaultValue="" className="w-full p-3 border rounded-lg bg-white"><option value="" disabled>Select Service...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select><textarea name="notes" rows="3" className="w-full p-3 border rounded-lg resize-none" placeholder="Notes..."></textarea><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70">Submit Request</button></form></div></div>
+            );
+        };
 
-            // Action Modal State (Cancel/Decline)
-            const [actionModal, setActionModal] = useState(null); 
+        const CancellationModal = ({ shift, onClose, onConfirm }) => {
             const [reason, setReason] = useState('');
-
-            const handleActionConfirm = async () => {
-                if (!actionModal || !reason) return;
-                await updateShiftStatus(actionModal.shift.id, actionModal.type, reason);
-                setActionModal(null);
-                setReason('');
-            };
-
-            const handleAssign = async (e) => {
-                e.preventDefault();
-                if(!workerEmailInput) return;
-                await assignWorker(assignModalShift.id, workerEmailInput);
-                setAssignModalShift(null);
-                setWorkerEmailInput('');
-            };
-
+            const [loading, setLoading] = useState(false);
+            const handleConfirm = async () => { setLoading(true); await onConfirm(shift.id, reason); setLoading(false); onClose(); };
             return (
-                <div className="min-h-screen bg-slate-100 font-sans pb-12">
-                    {/* Assign Worker Modal */}
-                    {assignModalShift && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in">
-                                <h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3>
-                                <p className="text-sm text-slate-500 mb-4">Enter the email address of the worker for this shift.</p>
-                                <form onSubmit={handleAssign}>
-                                    <input 
-                                        type="email" 
-                                        required 
-                                        placeholder="worker@thinkpathways.com"
-                                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none"
-                                        value={workerEmailInput}
-                                        onChange={(e) => setWorkerEmailInput(e.target.value)}
-                                    />
-                                    <div className="flex gap-3 justify-end">
-                                        <button type="button" onClick={() => setAssignModalShift(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                                        <button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Action Modal (Cancel/Decline) */}
-                    {actionModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in">
-                                <h3 className="text-xl font-bold mb-4 text-red-600">{actionModal.type === 'Declined' ? 'Decline Request' : 'Cancel Shift'}</h3>
-                                <p className="text-sm text-slate-500 mb-4">Please provide a reason (visible to client):</p>
-                                <textarea 
-                                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 mb-4 outline-none"
-                                    rows="3"
-                                    value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
-                                ></textarea>
-                                <div className="flex gap-3 justify-end">
-                                    <button onClick={() => setActionModal(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Back</button>
-                                    <button onClick={handleActionConfirm} disabled={!reason} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <header className="bg-slate-900 shadow-md p-4 sticky top-0 z-20">
-                        <div className="max-w-7xl mx-auto flex justify-between items-center">
-                            <div className="flex items-center gap-3 text-white">
-                                <i className="fa-solid fa-user-shield text-xl"></i>
-                                <h1 className="text-xl font-bold tracking-tight">Admin Portal</h1>
-                            </div>
-                            <button onClick={logout} className="text-sm text-slate-300 hover:text-white font-bold bg-slate-800 px-4 py-2 rounded">Sign Out</button>
-                        </div>
-                    </header>
-
-                    <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
-                        {shifts.map(s => (
-                            <div key={s.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <span className="font-bold text-slate-900">{s.userName}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded border ${
-                                            s.status === 'Pending' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
-                                            s.status === 'Confirmed' ? 'bg-green-50 border-green-200 text-green-700' :
-                                            'bg-red-50 border-red-200 text-red-700'
-                                        }`}>{s.statusLabel}</span>
-                                    </div>
-                                    <div className="text-sm text-slate-600">
-                                        <strong>{s.dateDisplay}</strong> • {s.service} • {s.duration}h
-                                    </div>
-                                    <div className="mt-2 flex items-center gap-2 text-xs">
-                                        {s.assignedWorkerEmail ? (
-                                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 flex items-center gap-1">
-                                                <i className="fa-solid fa-user-check"></i> {s.assignedWorkerEmail}
-                                                <span className={`ml-1 font-bold ${s.workerStatus === 'Accepted' ? 'text-green-600' : 'text-orange-600'}`}>({s.workerStatus || 'Pending'})</span>
-                                            </span>
-                                        ) : (
-                                            <span className="text-slate-400 italic">No worker assigned</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {s.status === 'Pending' && (
-                                        <>
-                                            <button onClick={() => updateShiftStatus(s.id, 'Confirmed')} className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold">Accept</button>
-                                            <button onClick={() => setActionModal({shift: s, type: 'Declined'})} className="bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded text-xs font-bold">Decline</button>
-                                        </>
-                                    )}
-                                    {s.status === 'Confirmed' && (
-                                        <>
-                                            <button onClick={() => setAssignModalShift(s)} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700">
-                                                {s.assignedWorkerEmail ? 'Reassign' : 'Assign Worker'}
-                                            </button>
-                                            <button onClick={() => setActionModal({shift: s, type: 'Cancelled'})} className="text-red-400 hover:text-red-600 px-2" title="Cancel Shift"><i className="fa-solid fa-ban"></i></button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </main>
-                </div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border rounded-lg mb-4 text-sm outline-none focus:border-red-500" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
             );
         };
 
-        // --- Worker Dashboard ---
         const WorkerDashboard = () => {
-            const { user, logout, workerShifts, workerResponse } = React.useContext(AuthContext);
-            const [loadingId, setLoadingId] = useState(null);
+             const { user, logout, workerShifts, workerResponse } = useContext(AuthContext);
+             const [loadingId, setLoadingId] = useState(null);
+             const handleResponse = async (id, response) => { setLoadingId(id); await workerResponse(id, response); setLoadingId(null); };
+             return (
+                 <div className="min-h-screen bg-slate-100 font-sans pb-12">
+                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
+                         <div className="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
+                             <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900">Worker Portal</h1></div>
+                             <button onClick={logout} className="text-sm text-red-600 font-bold">Sign Out</button>
+                         </div>
+                     </header>
+                     <main className="max-w-4xl mx-auto p-4 md:p-8">
+                         <h2 className="text-2xl font-bold text-slate-900 mb-6">Assigned Shifts</h2>
+                         {workerShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">No shifts assigned.</div> : (
+                             <div className="space-y-4">{workerShifts.map(s => (
+                                 <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+                                     <div>
+                                         <div className="flex items-center gap-2 mb-1"><span className="font-bold text-lg text-slate-900">{s.dateDisplay}</span><span className="text-xs px-2 py-0.5 rounded border bg-slate-100">{s.workerStatus || 'Pending Action'}</span></div>
+                                         <div className="text-sm text-slate-600"><p><strong>Client:</strong> {s.userName}</p><p>{s.service} • {s.duration} Hours</p></div>
+                                     </div>
+                                     {(s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold">Decline</button></div>}
+                                 </div>
+                             ))}</div>
+                         )}
+                     </main>
+                 </div>
+             );
+         };
 
-            const handleResponse = async (id, response) => {
-                setLoadingId(id);
-                await workerResponse(id, response);
-                setLoadingId(null);
-            };
+        const ClientDashboard = () => {
+            const { user, logout, shifts, isLoadingShifts, updateShiftStatus } = useContext(AuthContext);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [cancelModalShift, setCancelModalShift] = useState(null);
 
             return (
                 <div className="min-h-screen bg-slate-50 font-sans pb-12">
-                    <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
-                        <div className="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                                    <i className="fa-solid fa-hands-holding-circle"></i>
-                                </div>
-                                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Worker Portal</h1>
-                            </div>
-                            <button onClick={logout} className="text-sm text-red-600 font-bold">Sign Out</button>
-                        </div>
-                    </header>
-                    
-                    <main className="max-w-4xl mx-auto p-4 md:p-8">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Assigned Shifts</h2>
-                        {workerShifts.length === 0 ? (
-                            <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
-                                No shifts currently assigned to you.
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {workerShifts.map(s => (
-                                    <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-lg text-slate-900">{s.dateDisplay}</span>
-                                                <span className={`text-xs px-2 py-0.5 rounded border ${
-                                                    s.workerStatus === 'Accepted' ? 'bg-green-50 border-green-200 text-green-700' : 
-                                                    s.workerStatus === 'Declined' ? 'bg-red-50 border-red-200 text-red-700' : 
-                                                    'bg-yellow-50 border-yellow-200 text-yellow-700'
-                                                }`}>{s.workerStatus || 'Pending Action'}</span>
-                                            </div>
-                                            <div className="text-sm text-slate-600">
-                                                <p><strong>Client:</strong> {s.userName}</p>
-                                                <p>{s.service} • {s.duration} Hours</p>
-                                            </div>
-                                        </div>
+                    {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
+                    {cancelModalShift && <CancellationModal shift={cancelModalShift} onClose={() => setCancelModalShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
 
-                                        {(s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && (
-                                            <div className="flex gap-3 w-full sm:w-auto">
-                                                <button onClick={() => handleResponse(s.id, 'Accepted')} disabled={loadingId === s.id} className="flex-1 sm:flex-none bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50">
-                                                    Accept
-                                                </button>
-                                                <button onClick={() => handleResponse(s.id, 'Declined')} disabled={loadingId === s.id} className="flex-1 sm:flex-none bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 disabled:opacity-50">
-                                                    Decline
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </main>
-                </div>
-            );
-        };
-
-        // --- Combined Dashboard (Client + Worker Link) ---
-        const ClientPortalLayout = () => {
-            const { user, logout, shifts, workerShifts } = React.useContext(AuthContext);
-            const [viewMode, setViewMode] = useState('client'); // 'client' or 'worker'
-
-            // If user has worker shifts, show toggle
-            const isWorker = workerShifts.length > 0;
-
-            if (viewMode === 'worker' && isWorker) return <WorkerDashboard />;
-
-            // Default Client View (Booking Form + List)
-            return (
-                <div className="min-h-screen bg-slate-50 font-sans pb-12">
-                    {/* Re-using components from previous implementation - minimized for brevity but fully functional */}
-                    {/* Header with Toggle */}
                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                                    <i className="fa-solid fa-hands-holding-circle"></i>
-                                </div>
-                                <h1 className="text-xl font-bold text-slate-900 tracking-tight hidden md:inline">My Pathway Portal</h1>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                {isWorker && (
-                                    <button onClick={() => setViewMode('worker')} className="text-xs bg-brand-100 text-brand-700 px-3 py-1.5 rounded-full font-bold hover:bg-brand-200 transition-colors">
-                                        <i className="fa-solid fa-briefcase mr-1"></i> Worker View
-                                    </button>
-                                )}
-                                <span className="text-sm text-slate-500 hidden md:inline">Welcome, <span className="text-slate-900 font-bold">{user.displayName || 'Client'}</span></span>
-                                <button onClick={logout} className="text-sm text-red-600 font-bold hover:text-red-800 flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                                    <i className="fa-solid fa-sign-out-alt"></i> Sign Out
-                                </button>
-                            </div>
+                            <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 hidden md:inline">My Pathway Portal</h1></div>
+                            <div className="flex items-center gap-6"><span className="text-sm text-slate-500 hidden md:inline">Welcome, <span className="text-slate-900 font-bold">{user.displayName || 'Client'}</span></span><button onClick={logout} className="text-sm text-red-600 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50">Sign Out</button></div>
                         </div>
                     </header>
 
-                    {/* Client Main Content (Booking + List) */}
-                    <ClientDashboardContent />
+                    <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
+                            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 text-center">
+                                <div className="w-14 h-14 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-regular fa-calendar-plus text-2xl"></i></div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">Book a Session</h3>
+                                <button onClick={() => setIsModalOpen(true)} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 shadow-lg transform hover:-translate-y-0.5 transition-all">Request New Session</button>
+                            </div>
+                            <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm"><h4 className="font-bold text-blue-900 text-sm mb-2"><i className="fa-solid fa-headset mr-2"></i>Need Help?</h4><p className="text-xs text-blue-700">Call <span className="font-bold">+61 420 673 303</span> for urgent issues.</p></div>
+                        </div>
+                        <div className="lg:col-span-2 order-1 lg:order-2">
+                            <div className="flex justify-between mb-6 border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-900">Your Schedule</h2><button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600"><i className="fa-solid fa-rotate-right"></i></button></div>
+                            {isLoadingShifts ? <div className="p-12 text-center text-slate-400">Loading...</div> : (
+                                <div className="space-y-3">
+                                    {shifts.map(s => (
+                                        <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 transition-all">
+                                            <div className="mb-3 md:mb-0">
+                                                <div className="font-bold text-slate-800 text-lg flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-3"></i> {s.dateDisplay}</div>
+                                                <div className="text-sm text-slate-500 ml-7 flex gap-3"><span>{s.service} • {s.duration} hrs</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase border ${s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : s.statusLabel === 'Unavailable' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`}>{s.statusLabel}</span>
+                                                {(s.statusLabel === 'Request Sent' || s.statusLabel === 'Scheduled') && <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 p-2" title="Cancel"><i className="fa-solid fa-ban"></i></button>}
+                                                {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined') && s.cancellationReason && <div className="group relative"><i className="fa-solid fa-circle-info text-red-500 cursor-help"></i><div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-white border border-red-200 rounded shadow-lg text-xs text-red-700 hidden group-hover:block z-10">{s.cancellationReason}</div></div>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </main>
                 </div>
             );
         };
-        
-        // Helper to split ClientDashboard for reuse
-        const ClientDashboardContent = () => {
-             const { shifts, isLoadingShifts, updateShiftStatus } = React.useContext(AuthContext);
-             const [isModalOpen, setIsModalOpen] = useState(false);
-             const [cancelModalShift, setCancelModalShift] = useState(null);
-             
-             // ... (Logic from previous ClientDashboard render) ...
-             // Simplified for output: essentially renders the booking button and shift list
-             // Note: Full implementation requires copying the render logic from the previous step's ClientDashboard here.
-             // For safety, I will paste the FULL previous logic here to ensure it works.
-             
-             return (
-                <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
-                        {cancelModalShift && (
-                            <CancellationModal 
-                                shift={cancelModalShift} 
-                                onClose={() => setCancelModalShift(null)} 
-                                onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)}
-                            />
-                        )}
-                        
-                        <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 text-center">
-                                <div className="w-14 h-14 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i className="fa-regular fa-calendar-plus text-2xl"></i>
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-900 mb-2">Book a Session</h3>
-                                <p className="text-sm text-slate-500 mb-6">Ready to schedule your next support shift? Click below to get started.</p>
-                                <button onClick={() => setIsModalOpen(true)} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                                    Request New Session
-                                </button>
-                            </div>
-                            <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm">
-                                <h4 className="font-bold text-blue-900 text-sm mb-2 flex items-center"><i className="fa-solid fa-headset mr-2"></i>Need Help?</h4>
-                                <p className="text-xs text-blue-700 leading-relaxed">For urgent changes or cancellations within 24 hours, please call us directly on <span className="font-mono font-bold text-blue-900 block mt-1 text-base">+61 420 673 303</span></p>
-                            </div>
-                        </div>
-                        
-                        <div className="lg:col-span-2 order-1 lg:order-2">
-                            <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
-                                <h2 className="text-2xl font-bold text-slate-900">Your Schedule</h2>
-                                <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600 transition-colors"><i className="fa-solid fa-rotate-right"></i></button>
-                            </div>
-                            
-                            {isLoadingShifts ? <div className="p-12 text-center text-slate-400"><i className="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i> Loading...</div> : (
-                                shifts.length === 0 ? (
-                                    <div className="p-12 text-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-                                        <i className="fa-regular fa-calendar-xmark text-4xl text-slate-300 mb-3"></i>
-                                        <p className="text-slate-500 font-medium">No shifts found.</p>
-                                        <p className="text-xs text-slate-400 mt-1">Use the button to request your first session!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {shifts.map(s => (
-                                            <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center hover:border-brand-200 transition-all hover:shadow-md">
-                                                <div className="mb-3 md:mb-0">
-                                                    <div className="font-bold text-slate-800 text-lg flex items-center">
-                                                        <i className="fa-regular fa-calendar text-brand-400 mr-3"></i> {s.dateDisplay}
-                                                    </div>
-                                                    <div className="text-sm text-slate-500 ml-7 flex items-center gap-3">
-                                                        <span>{s.service} • {s.duration} hrs</span>
-                                                        {s.recurrence && s.recurrence !== 'none' && (
-                                                            <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded border border-blue-100 flex items-center"><i className="fa-solid fa-rotate mr-1"></i> {s.recurrence}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                                                        s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : 
-                                                        s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' ? 'bg-red-50 text-red-700 border-red-200' : 
-                                                        'bg-yellow-50 text-yellow-800 border-yellow-200'
-                                                    }`}>
-                                                        {s.statusLabel}
-                                                    </span>
-                                                    
-                                                    {(s.statusLabel === 'Request Sent' || s.statusLabel === 'Scheduled') && (
-                                                        <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 transition-colors p-2" title="Cancel Session">
-                                                            <i className="fa-solid fa-ban"></i>
-                                                        </button>
-                                                    )}
 
-                                                    {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined') && s.cancellationReason && (
-                                                        <div className="group relative">
-                                                            <i className="fa-solid fa-circle-info text-red-500 cursor-help"></i>
-                                                            <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-white border border-red-200 rounded shadow-lg text-xs text-red-700 hidden group-hover:block z-10">
-                                                                {s.cancellationReason}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )
-                            )}
-                        </div>
-                </main>
-             );
-        }
-
-        // --- Main App Switcher ---
         const App = () => {
-            if (configMissing) return <div className="min-h-screen flex items-center justify-center p-4"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400"><h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2><p className="text-slate-600">Please configure Firebase keys in portal.html.</p></div></div>;
-            
+            if (configMissing) return <div className="min-h-screen flex items-center justify-center p-4"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400"><h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2><p className="text-slate-600">Configure Firebase keys in portal.html</p></div></div>;
             const authData = useAuthAndData();
-            
             if (!authData.isAuthReady) return <div className="flex h-screen items-center justify-center bg-slate-100"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600"></i></div>;
-
             if (!authData.user) return <AuthContext.Provider value={authData}><Login /></AuthContext.Provider>;
-
             if (authData.isAdmin) return <AuthContext.Provider value={authData}><AdminDashboard /></AuthContext.Provider>;
-
-            return <AuthContext.Provider value={authData}><ClientPortalLayout /></AuthContext.Provider>;
+            if (authData.isWorker) return <AuthContext.Provider value={authData}><WorkerDashboard /></AuthContext.Provider>;
+            return <AuthContext.Provider value={authData}><ClientDashboard /></AuthContext.Provider>;
         };
 
         const root = createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
-</html>no
+</html>
