@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CRITICAL: Content Security Policy to allow single-file React/Babel execution -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    
     <title>My Pathway Portal - Think Pathways</title>
     
     <!-- Favicon -->
@@ -13,6 +17,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Global Error Handler (Runs before anything else) -->
+    <script>
+        window.addEventListener('error', function(e) {
+            const display = document.getElementById('global-error-display');
+            const msg = document.getElementById('global-error-message');
+            if (display && msg) {
+                display.style.display = 'flex';
+                msg.textContent = `System Error: ${e.message}`;
+                console.error("Global Error:", e);
+            }
+        });
+    </script>
+
     <!-- Config -->
     <script>
         tailwind.config = {
@@ -48,7 +65,7 @@
     </script>
     
     <style>
-        #error-display { display: none; }
+        #global-error-display { display: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -57,12 +74,13 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
     
-    <!-- Error Catching UI -->
-    <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
+    <!-- Global Error UI -->
+    <div id="global-error-display" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
-            <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
-            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4"></pre>
-            <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
+            <h2 class="text-xl font-bold text-red-800 mb-2">Portal Failed to Load</h2>
+            <p class="text-sm text-red-600 mb-4">This is usually caused by a security setting or a blocked script.</p>
+            <pre id="global-error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4 h-32"></pre>
+            <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
         </div>
     </div>
 
@@ -79,11 +97,23 @@
 
     <!-- MAIN APP -->
     <script type="text/babel">
-        // Error Handler
-        window.onerror = function(message, source, lineno, colno, error) {
-            document.getElementById('error-display').style.display = 'flex';
-            document.getElementById('error-message').textContent = `${message}\nLine: ${lineno}\n${error ? error.stack : ''}`;
-        };
+        // React Error Boundary for runtime crashes
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="p-8 text-center">
+                            <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
+                            <pre className="text-xs text-red-400 bg-slate-100 p-4 rounded text-left overflow-auto">{this.state.error.toString()}</pre>
+                            <button onClick={() => window.location.reload()} className="mt-4 bg-brand-600 text-white px-4 py-2 rounded">Reload</button>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
 
         // Firebase Init
         let auth, db, configMissing = false;
@@ -246,10 +276,8 @@
             const resetPassword = (email) => auth.sendPasswordResetEmail(email);
             const logout = () => auth.signOut();
             
-            // IMPROVEMENT: Conflict Check
             const checkConflict = (date) => {
                 if(!shifts || shifts.length === 0) return false;
-                // Check if any existing shift is on this date AND is not cancelled/declined
                 return shifts.some(s => 
                     s.date === date && 
                     s.status !== 'Cancelled' && 
@@ -368,8 +396,6 @@
                         current.setDate(current.getDate() + interval);
 
                         while(current <= projectionLimit) {
-                            // Check if this date is already manually cancelled or modified in the main list
-                            // (Simple check: exact date match)
                             const dateStr = current.toISOString().split('T')[0];
                             const exists = shifts.some(ex => ex.date === dateStr && ex.userId === s.userId);
                             
@@ -576,6 +602,7 @@
                         <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-2 animate-fade-in">
                             {visibleShifts.length === 0 && <div className="text-center text-sm text-slate-400 italic py-2">No matching shifts found.</div>}
                             {visibleShifts.map(s => {
+                                // Resolve worker name
                                 const assignedWorker = s.assignedWorkerEmail ? workersList?.find(w => w.email.toLowerCase() === s.assignedWorkerEmail.toLowerCase()) : null;
                                 const workerDisplayName = assignedWorker ? assignedWorker.name : s.assignedWorkerEmail;
 
@@ -623,57 +650,33 @@
             const [showWorkerModal, setShowWorkerModal] = useState(false);
             const [activeTab, setActiveTab] = useState('bookings');
             const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
-            const [viewMode, setViewMode] = useState('list'); 
+            const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
             const [selectedDayShifts, setSelectedDayShifts] = useState(null);
-            const [selectedWorker, setSelectedWorker] = useState(null); 
+            const [selectedWorker, setSelectedWorker] = useState(null); // For Worker Details Modal
 
-            // Group and Sort Clients
             const clients = useMemo(() => {
                 const groups = {};
                 shifts.forEach(s => {
-                    if (!groups[s.userId]) {
-                        groups[s.userId] = { 
-                            id: s.userId, 
-                            name: s.userName || 'Unknown', 
-                            email: s.userEmail || 'No Email', 
-                            shifts: [], 
-                            stats: { upcoming: 0, pending: 0 },
-                            nextShiftDate: null // For sorting clients
-                        };
-                    }
+                    if (!groups[s.userId]) groups[s.userId] = { id: s.userId, name: s.userName || 'Unknown', email: s.userEmail || 'No Email', shifts: [], stats: { upcoming: 0, pending: 0 } };
                     groups[s.userId].shifts.push(s);
-                    
-                    // Update stats and next shift date
-                    const shiftDate = new Date(s.date);
-                    const now = new Date();
-                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
                     if (s.status === 'Pending') groups[s.userId].stats.pending++;
-                    
-                    if ((s.status === 'Confirmed' || s.status === 'Pending') && shiftDate >= today) {
-                        groups[s.userId].stats.upcoming++;
-                        // Check if this is the soonest upcoming shift
-                        if (!groups[s.userId].nextShiftDate || shiftDate < groups[s.userId].nextShiftDate) {
-                            groups[s.userId].nextShiftDate = shiftDate;
-                        }
-                    }
+                    if ((s.status === 'Confirmed' || s.status === 'Pending') && new Date(s.date) >= new Date()) groups[s.userId].stats.upcoming++;
                 });
-                
-                // Convert to array and sort by Next Upcoming Shift (clients with urgent/soonest shifts first)
-                return Object.values(groups).sort((a, b) => {
-                    if (!a.nextShiftDate && !b.nextShiftDate) return 0;
-                    if (!a.nextShiftDate) return 1; // Push clients with no upcoming shifts to bottom
-                    if (!b.nextShiftDate) return -1;
-                    return a.nextShiftDate - b.nextShiftDate; // Ascending date
-                });
+                return Object.values(groups);
             }, [shifts]);
             
             const alerts = useMemo(() => shifts.filter(s => s.status === 'Pending'), [shifts]);
             const openActionModal = (shift, type) => setActionModal({ shift, type });
 
+            // Open worker modal handler
             const handleViewWorker = (email) => {
                 const worker = workersList?.find(w => w.email.toLowerCase() === email.toLowerCase());
-                setSelectedWorker(worker || { name: 'Unknown', email: email, notes: 'Profile not found.' });
+                if (worker) {
+                    setSelectedWorker(worker);
+                } else {
+                    // Fallback if worker removed but shift exists
+                    setSelectedWorker({ name: 'Unknown', email: email, notes: 'Worker profile not found.' });
+                }
             };
 
             return (
