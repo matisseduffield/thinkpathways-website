@@ -139,6 +139,10 @@
             return diffHours < 48 && diffHours > 0;
         };
 
+        // Calendar Logic Helpers
+        const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+        const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
         const AuthContext = createContext();
 
         // --- HOOK ---
@@ -206,17 +210,17 @@
                         };
                     });
 
+                    // Sorting Logic:
+                    // Default sort by date descending (newest first) for raw data
+                    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
                     if (isAdmin) {
-                        data.sort((a, b) => b.rawTimestamp - a.rawTimestamp);
                         setShifts(data);
                     } else if (isWorker) {
                         const assigned = data.filter(s => s.assignedWorkerEmail && s.assignedWorkerEmail.toLowerCase() === user.email.toLowerCase());
-                        assigned.sort((a, b) => new Date(a.date) - new Date(b.date));
                         setWorkerShifts(assigned);
                     } else {
                         const myShifts = data.filter(s => s.userId === user.uid);
-                        // Client: Sort by Date ascending for Upcoming, then by Date descending for History
-                        myShifts.sort((a, b) => new Date(a.date) - new Date(b.date));
                         setShifts(myShifts);
                     }
                     setIsLoading(false);
@@ -333,6 +337,83 @@
             return <div ref={containerRef} className="my-4 flex justify-center"></div>;
         };
 
+        // --- CALENDAR COMPONENT ---
+        const CalendarView = ({ shifts, onDateClick }) => {
+            const [currentDate, setCurrentDate] = useState(new Date());
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month); // 0 = Sun, 1 = Mon...
+
+            // Group shifts by date string 'YYYY-MM-DD'
+            const shiftsByDate = useMemo(() => {
+                const map = {};
+                shifts.forEach(s => {
+                    if (!s.date) return;
+                    // Ensure date comparison works regardless of timezone issues with simple strings
+                    // Assuming s.date is 'YYYY-MM-DD' from input type="date"
+                    if (!map[s.date]) map[s.date] = [];
+                    map[s.date].push(s);
+                });
+                return map;
+            }, [shifts]);
+
+            const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+            const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+
+            const renderDays = () => {
+                const days = [];
+                // Empty cells for offset
+                for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="h-24 bg-slate-50 border border-slate-100"></div>);
+                }
+                // Actual days
+                for (let d = 1; d <= daysInMonth; d++) {
+                    // Format to YYYY-MM-DD with local time consideration
+                    // A safe way to construct the key matches the input date format
+                    const monthStr = (month + 1).toString().padStart(2, '0');
+                    const dayStr = d.toString().padStart(2, '0');
+                    const dateKey = `${year}-${monthStr}-${dayStr}`;
+                    
+                    const dayShifts = shiftsByDate[dateKey] || [];
+                    const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+                    days.push(
+                        <div key={d} onClick={() => dayShifts.length > 0 && onDateClick(dayShifts)} className={`h-24 border border-slate-100 p-1 relative hover:bg-blue-50 transition-colors cursor-pointer ${isToday ? 'bg-blue-50 font-bold' : 'bg-white'}`}>
+                            <div className={`text-xs mb-1 ${isToday ? 'text-brand-600' : 'text-slate-500'}`}>{d}</div>
+                            <div className="flex flex-col gap-1 overflow-y-auto max-h-[70px]">
+                                {dayShifts.map(s => (
+                                    <div key={s.id} className={`text-[10px] px-1 rounded truncate ${s.status === 'Confirmed' ? 'bg-green-100 text-green-800' : s.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                                        {s.status === 'Confirmed' ? '●' : '○'} {s.userName || 'Shift'}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                return days;
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in">
+                    <div className="p-4 flex justify-between items-center border-b border-slate-100 bg-slate-50">
+                        <h3 className="font-bold text-slate-700">{currentDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}</h3>
+                        <div className="flex gap-2">
+                            <button onClick={prevMonth} className="p-2 hover:bg-slate-200 rounded-full text-slate-500"><i className="fa-solid fa-chevron-left"></i></button>
+                            <button onClick={nextMonth} className="p-2 hover:bg-slate-200 rounded-full text-slate-500"><i className="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-7 text-center bg-slate-100 text-xs font-bold text-slate-500 py-2">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div className="grid grid-cols-7">
+                        {renderDays()}
+                    </div>
+                </div>
+            );
+        };
+
         // --- MODALS ---
         const AddWorkerModal = ({ onClose, onAdd }) => {
             const [data, setData] = useState({ name: '', email: '', notes: '' });
@@ -381,6 +462,30 @@
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className={`text-xl font-bold mb-4 ${isDecline ? 'text-red-600' : 'text-red-600'} flex items-center`}><i className="fa-solid fa-triangle-exclamation mr-2"></i> {isDecline ? 'Decline Request' : 'Cancel Shift'}</h3><p className="text-slate-600 mb-4">Reason (visible to client):</p><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4" rows="3"></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button></div></div></div>
             );
         };
+
+        // Day Details Modal (For Calendar View)
+        const DayDetailsModal = ({ shifts, onClose }) => {
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                        <h3 className="text-xl font-bold text-slate-900 mb-4">Shifts on {shifts[0]?.dateDisplay}</h3>
+                        <div className="space-y-3">
+                            {shifts.map(s => (
+                                <div key={s.id} className="border border-slate-200 p-3 rounded-lg bg-slate-50">
+                                    <div className="flex justify-between">
+                                        <span className="font-bold text-slate-900">{s.userName}</span>
+                                        <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{s.status}</span>
+                                    </div>
+                                    <div className="text-sm text-slate-600 mt-1">{s.service} • {s.duration} hrs</div>
+                                    {s.assignedWorkerEmail && <div className="text-xs text-blue-600 mt-1"><i className="fa-solid fa-user-check"></i> {s.assignedWorkerEmail}</div>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
         const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly }) => {
             const pendingCount = client.stats.pending;
@@ -439,6 +544,8 @@
             const [showWorkerModal, setShowWorkerModal] = useState(false);
             const [activeTab, setActiveTab] = useState('bookings');
             const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
+            const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
+            const [selectedDayShifts, setSelectedDayShifts] = useState(null);
 
             const clients = useMemo(() => {
                 const groups = {};
@@ -459,6 +566,7 @@
                     {showWorkerModal && <AddWorkerModal onClose={() => setShowWorkerModal(false)} onAdd={addWorkerToDB} />}
                     {assignModalShift && <AssignWorkerModal shift={assignModalShift} workersList={workersList} onClose={() => setAssignModalShift(null)} onAssign={assignWorker} />}
                     {actionModal && <AdminActionModal shift={actionModal.shift} actionType={actionModal.type} onClose={() => setActionModal(null)} onConfirm={updateShiftStatus} />}
+                    {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
                     
                     <header className="bg-slate-900 shadow-md p-4 sticky top-0 z-20"><div className="max-w-7xl mx-auto flex justify-between items-center"><div className="flex items-center gap-3 text-white"><i className="fa-solid fa-user-shield text-xl"></i><h1 className="text-xl font-bold tracking-tight">Admin Portal</h1></div><div className="flex gap-4"><button onClick={() => setActiveTab('bookings')} className={`text-sm ${activeTab === 'bookings' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Bookings</button><button onClick={() => setActiveTab('team')} className={`text-sm ${activeTab === 'team' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Team</button><div className="w-px h-5 bg-slate-700 mx-2"></div><button onClick={logout} className="text-sm text-red-400 font-bold hover:text-red-300">Sign Out</button></div></div></header>
                     <main className="max-w-7xl mx-auto p-4 md:p-8">
@@ -476,6 +584,10 @@
                                         <div className="text-sm text-slate-500">Total Clients: {clients.length}</div>
                                     </div>
                                     <div className="flex items-center gap-2">
+                                        <div className="bg-white p-1 rounded-lg border border-slate-300 flex mr-4">
+                                            <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'list' ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50'}`}><i className="fa-solid fa-list mr-1"></i> List</button>
+                                            <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'calendar' ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50'}`}><i className="fa-solid fa-calendar mr-1"></i> Cal</button>
+                                        </div>
                                         <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Filter:</span>
                                         <button 
                                             onClick={() => setShowUnassignedOnly(!showUnassignedOnly)}
@@ -485,7 +597,12 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div>{clients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} showUnassignedOnly={showUnassignedOnly} />)}</div>
+                                
+                                {viewMode === 'list' ? (
+                                    <div>{clients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} showUnassignedOnly={showUnassignedOnly} />)}</div>
+                                ) : (
+                                    <CalendarView shifts={shifts} onDateClick={setSelectedDayShifts} />
+                                )}
                             </>
                         )}
                         {activeTab === 'team' && (
@@ -580,6 +697,15 @@
              const { user, logout, workerShifts, workerResponse } = useContext(AuthContext);
              const [loadingId, setLoadingId] = useState(null);
              const handleResponse = async (id, response) => { setLoadingId(id); await workerResponse(id, response); setLoadingId(null); };
+             
+             // Split worker shifts
+             const now = new Date();
+             // Helper to set time to 0 for date comparison
+             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+             
+             const upcomingShifts = workerShifts.filter(s => new Date(s.date) >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
+             const pastShifts = workerShifts.filter(s => new Date(s.date) < today).sort((a,b) => new Date(b.date) - new Date(a.date));
+
              return (
                  <div className="min-h-screen bg-slate-100 font-sans pb-12">
                      <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
@@ -589,15 +715,32 @@
                          </div>
                      </header>
                      <main className="max-w-4xl mx-auto p-4 md:p-8">
-                         <h2 className="text-2xl font-bold text-slate-900 mb-6">Assigned Shifts</h2>
-                         {workerShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">No shifts assigned.</div> : (
-                             <div className="space-y-4">{workerShifts.map(s => (
-                                 <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                                     <div>
-                                         <div className="flex items-center gap-2 mb-1"><span className="font-bold text-lg text-slate-900">{s.dateDisplay}</span><span className="text-xs px-2 py-0.5 rounded border bg-slate-100">{s.workerStatus || 'Pending Action'}</span></div>
+                         
+                         {/* Upcoming Shifts Section */}
+                         <h2 className="text-2xl font-bold text-slate-900 mb-4">Upcoming Shifts</h2>
+                         {upcomingShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 mb-8">No upcoming shifts assigned.</div> : (
+                             <div className="space-y-4 mb-8">{upcomingShifts.map(s => (
+                                 <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                                     <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.workerStatus === 'Accepted' ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
+                                     <div className="pl-3">
+                                         <div className="flex items-center gap-2 mb-1"><span className="font-bold text-lg text-slate-900">{s.dateDisplay}</span><span className={`text-xs px-2 py-0.5 rounded border ${s.workerStatus === 'Accepted' ? 'bg-green-50 text-green-800 border-green-100' : 'bg-yellow-50 text-yellow-800 border-yellow-100'}`}>{s.workerStatus || 'Pending Action'}</span></div>
                                          <div className="text-sm text-slate-600"><p><strong>Client:</strong> {s.userName}</p><p>{s.service} • {s.duration} Hours</p></div>
                                      </div>
-                                     {(s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold">Decline</button></div>}
+                                     {(s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors">Decline</button></div>}
+                                 </div>
+                             ))}</div>
+                         )}
+
+                         {/* Past Shifts Section */}
+                         <h2 className="text-2xl font-bold text-slate-900 mb-4">Past Shifts</h2>
+                         {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">No past shifts found.</div> : (
+                             <div className="space-y-4 opacity-75">{pastShifts.map(s => (
+                                 <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+                                     <div>
+                                         <div className="font-bold text-slate-700">{s.dateDisplay}</div>
+                                         <div className="text-sm text-slate-500">{s.userName} • {s.service}</div>
+                                     </div>
+                                     <div className="text-xs font-bold text-slate-400 uppercase">Completed</div>
                                  </div>
                              ))}</div>
                          )}
@@ -610,18 +753,33 @@
             const { user, logout, shifts, isLoadingShifts, updateShiftStatus } = useContext(AuthContext);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [cancelModalShift, setCancelModalShift] = useState(null);
+            const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
+            const [selectedDayShifts, setSelectedDayShifts] = useState(null);
 
-            // Calculate next shift
+            const now = new Date();
+            // Helper to set time to 0 for date comparison
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Split shifts
+            const upcomingShifts = useMemo(() => 
+                shifts.filter(s => new Date(s.date) >= today).sort((a,b) => new Date(a.date) - new Date(b.date)), 
+            [shifts]);
+            
+            const pastShifts = useMemo(() => 
+                shifts.filter(s => new Date(s.date) < today).sort((a,b) => new Date(b.date) - new Date(a.date)), 
+            [shifts]);
+
+            // Calculate next shift for Hero Card
             const nextShift = useMemo(() => {
-                const now = new Date();
-                const upcoming = shifts.filter(s => new Date(s.date) >= now && s.status !== 'Cancelled' && s.status !== 'Declined');
-                return upcoming.length > 0 ? upcoming[0] : null;
-            }, [shifts]);
+                const validUpcoming = upcomingShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
+                return validUpcoming.length > 0 ? validUpcoming[0] : null;
+            }, [upcomingShifts]);
 
             return (
                 <div className="min-h-screen bg-slate-50 font-sans pb-12">
                     {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
                     {cancelModalShift && <CancellationModal shift={cancelModalShift} onClose={() => setCancelModalShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
+                    {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
 
                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
@@ -633,9 +791,9 @@
                     <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1 order-2 lg:order-1 space-y-6">
                             
-                            {/* NEW: Next Session Hero Card */}
+                            {/* Hero Card */}
                             {nextShift ? (
-                                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                                <div className="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden animate-fade-in">
                                     <div className="absolute top-0 right-0 p-8 opacity-10"><i className="fa-regular fa-clock text-9xl"></i></div>
                                     <p className="text-brand-100 text-sm font-bold uppercase tracking-wider mb-2">Next Session</p>
                                     <h3 className="text-3xl font-bold mb-1">{nextShift.dateDisplay.split(',')[0]}</h3>
@@ -663,23 +821,67 @@
                             <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm"><h4 className="font-bold text-blue-900 text-sm mb-2"><i className="fa-solid fa-headset mr-2"></i>Need Help?</h4><p className="text-xs text-blue-700">Call <span className="font-bold">+61 420 673 303</span> for urgent issues.</p></div>
                         </div>
                         <div className="lg:col-span-2 order-1 lg:order-2">
-                            <div className="flex justify-between mb-6 border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-900">Your Schedule</h2><button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600"><i className="fa-solid fa-rotate-right"></i></button></div>
-                            {isLoadingShifts ? <div className="p-12 text-center text-slate-400">Loading...</div> : (
-                                <div className="space-y-3">
-                                    {shifts.map(s => (
-                                        <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 transition-all">
-                                            <div className="mb-3 md:mb-0">
-                                                <div className="font-bold text-slate-800 text-lg flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-3"></i> {s.dateDisplay}</div>
-                                                <div className="text-sm text-slate-500 ml-7 flex gap-3"><span>{s.service} • {s.duration} hrs</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase border ${s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : s.statusLabel === 'Unavailable' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`}>{s.statusLabel}</span>
-                                                {(s.statusLabel === 'Request Sent' || s.statusLabel === 'Scheduled') && <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 p-2" title="Cancel"><i className="fa-solid fa-ban"></i></button>}
-                                                {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined') && s.cancellationReason && <div className="group relative"><i className="fa-solid fa-circle-info text-red-500 cursor-help"></i><div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-white border border-red-200 rounded shadow-lg text-xs text-red-700 hidden group-hover:block z-10">{s.cancellationReason}</div></div>}
-                                            </div>
-                                        </div>
-                                    ))}
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+                                <h2 className="text-2xl font-bold text-slate-900">Your Schedule</h2>
+                                <div className="flex gap-2">
+                                    <div className="bg-white p-1 rounded-lg border border-slate-300 flex">
+                                        <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'list' ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50'}`}><i className="fa-solid fa-list mr-1"></i></button>
+                                        <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'calendar' ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50'}`}><i className="fa-solid fa-calendar mr-1"></i></button>
+                                    </div>
+                                    <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600 p-2"><i className="fa-solid fa-rotate-right"></i></button>
                                 </div>
+                            </div>
+                            
+                            {isLoadingShifts ? <div className="p-12 text-center text-slate-400">Loading...</div> : (
+                                <>
+                                    {viewMode === 'calendar' ? (
+                                        <CalendarView shifts={shifts} onDateClick={setSelectedDayShifts} />
+                                    ) : (
+                                        <>
+                                            {/* Upcoming List */}
+                                            {upcomingShifts.length > 0 && (
+                                                <div className="mb-8 animate-fade-in">
+                                                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Upcoming</h3>
+                                                    <div className="space-y-3">
+                                                        {upcomingShifts.map(s => (
+                                                            <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 transition-all">
+                                                                <div className="mb-3 md:mb-0">
+                                                                    <div className="font-bold text-slate-800 text-lg flex items-center"><i className="fa-regular fa-calendar text-brand-400 mr-3"></i> {s.dateDisplay}</div>
+                                                                    <div className="text-sm text-slate-500 ml-7 flex gap-3"><span>{s.service} • {s.duration} hrs</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase border ${s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : s.statusLabel === 'Unavailable' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`}>{s.statusLabel}</span>
+                                                                    {(s.statusLabel === 'Request Sent' || s.statusLabel === 'Scheduled') && <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 p-2" title="Cancel"><i className="fa-solid fa-ban"></i></button>}
+                                                                    {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined') && s.cancellationReason && <div className="group relative"><i className="fa-solid fa-circle-info text-red-500 cursor-help"></i><div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-white border border-red-200 rounded shadow-lg text-xs text-red-700 hidden group-hover:block z-10">{s.cancellationReason}</div></div>}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Past List */}
+                                            {pastShifts.length > 0 && (
+                                                <div className="animate-fade-in">
+                                                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">History</h3>
+                                                    <div className="space-y-3 opacity-75">
+                                                        {pastShifts.map(s => (
+                                                            <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+                                                                <div>
+                                                                    <div className="font-bold text-slate-700 text-sm">{s.dateDisplay}</div>
+                                                                    <div className="text-xs text-slate-500">{s.service}</div>
+                                                                </div>
+                                                                <div className="text-xs font-bold text-slate-400 uppercase">{s.statusLabel}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {shifts.length === 0 && <div className="text-center text-slate-400 py-8">No shifts found.</div>}
+                                        </>
+                                    )}
+                                </>
                             )}
                         </div>
                     </main>
