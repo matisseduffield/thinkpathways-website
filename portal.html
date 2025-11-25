@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- CRITICAL: Content Security Policy -->
+    <!-- CRITICAL: Content Security Policy to allow single-file React/Babel execution -->
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
     
     <title>My Pathway Portal - Think Pathways</title>
@@ -33,7 +33,7 @@
     <!-- Config -->
     <script>
         tailwind.config = {
-            darkMode: 'class', // Enable dark mode
+            darkMode: 'class', // Enable class-based dark mode
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -71,17 +71,18 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Dark mode scrollbar */
+        /* Dark mode scrollbar overrides */
         .dark ::-webkit-scrollbar-track { background: #1e293b; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-300">
+<body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
     
     <!-- Global Error UI -->
     <div id="global-error-display" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Failed to Load</h2>
+            <p class="text-sm text-red-600 mb-4">This is usually caused by a security setting or a blocked script.</p>
             <pre id="global-error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4 h-32"></pre>
             <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
         </div>
@@ -100,13 +101,19 @@
 
     <!-- MAIN APP -->
     <script type="text/babel">
-        // Error Boundary
+        // React Error Boundary for runtime crashes
         class ErrorBoundary extends React.Component {
             constructor(props) { super(props); this.state = { hasError: false, error: null }; }
             static getDerivedStateFromError(error) { return { hasError: true, error }; }
             render() {
                 if (this.state.hasError) {
-                    return <div className="p-8 text-center text-red-500">Error: {this.state.error.toString()}</div>;
+                    return (
+                        <div className="p-8 text-center">
+                            <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
+                            <pre className="text-xs text-red-400 bg-slate-100 p-4 rounded text-left overflow-auto">{this.state.error.toString()}</pre>
+                            <button onClick={() => window.location.reload()} className="mt-4 bg-brand-600 text-white px-4 py-2 rounded">Reload</button>
+                        </div>
+                    );
                 }
                 return this.props.children;
             }
@@ -116,11 +123,18 @@
         let auth, db, configMissing = false;
         try {
             if (window.__firebase_config && window.__firebase_config.apiKey) {
-                if (!firebase.apps.length) { firebase.initializeApp(window.__firebase_config); }
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(window.__firebase_config);
+                }
                 auth = firebase.auth();
                 db = firebase.firestore();
-            } else { configMissing = true; }
-        } catch(e) { configMissing = true; }
+            } else {
+                configMissing = true;
+            }
+        } catch(e) { 
+            console.error("Firebase Init Error", e);
+            configMissing = true;
+        }
 
         const { useState, useEffect, useMemo, useRef, useContext, createContext } = React;
         const { createRoot } = ReactDOM;
@@ -295,7 +309,7 @@
                 return shifts.some(s => s.date === date && s.status !== 'Cancelled' && s.status !== 'Declined');
             };
 
-            // NEW: Updated Book Shift with Series Generation
+            // NEW: Updated Book Shift with Series Generation (RECURRING LOGIC)
             const bookShift = async (data) => {
                 try {
                     const batch = db.batch();
@@ -452,8 +466,7 @@
         };
 
         // --- SHARED LOGIC: RECURRING PROJECTION (SIMPLIFIED) ---
-        // Now that we generate real records, we don't need complex projection logic.
-        // We just show what's in the database, which is now accurate and complete.
+        // Since we now generate real records, we just show what's in the database.
         
         const CalendarView = ({ shifts, onDateClick }) => {
             const [currentDate, setCurrentDate] = useState(new Date());
@@ -936,10 +949,11 @@
         };
 
         const WorkerDashboard = () => {
-             const { user, logout, workerShifts, workerResponse } = useContext(AuthContext);
+             const { user, logout, workerShifts, workerResponse, updateProfile } = useContext(AuthContext);
              const [loadingId, setLoadingId] = useState(null);
              const [viewMode, setViewMode] = useState('list');
              const [selectedDayShifts, setSelectedDayShifts] = useState(null);
+             const [isProfileOpen, setIsProfileOpen] = useState(false);
 
              const handleResponse = async (id, response) => { setLoadingId(id); await workerResponse(id, response); setLoadingId(null); };
              
@@ -951,12 +965,10 @@
              // Filter out cancelled/declined for "Upcoming" and "Calendar"
              // We only want active shifts
              const activeWorkerShifts = workerShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
+
+             // For Calendar View: Just show active shifts as-is (no projection needed as we generate them)
+             // For List View: Show shifts >= today
              
-             // Since we are generating individual shifts, no complex projection is needed for list/calendar anymore, 
-             // BUT we still want to see them all on calendar. 
-             // For the LIST view, it's standard list now.
-             
-             // Upcoming: Future dates, strictly active
              const upcomingShifts = activeWorkerShifts
                 .filter(s => s.date >= todayStr)
                 .sort((a,b) => getSortValue(a) - getSortValue(b));
@@ -964,19 +976,42 @@
              // Past: Date < today
              const pastShifts = workerShifts.filter(s => s.date < todayStr).sort((a,b) => getSortValue(b) - getSortValue(a));
 
+             // Simple stats for dashboard (added as per new requirement)
+             const shiftsThisWeek = upcomingShifts.filter(s => {
+                const d = new Date(s.date);
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                return d <= nextWeek;
+             }).length;
+
              return (
                  <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans pb-12 transition-colors">
                      {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
+                     {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
+                     
                      <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600 dark:bg-slate-800">
                          <div className="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 dark:text-white">Worker Portal</h1></div>
                              <div className="flex gap-4 items-center">
                                  <ThemeToggle />
+                                 <button onClick={() => setIsProfileOpen(true)} className="text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400"><i className="fa-solid fa-user-circle text-xl"></i></button>
                                  <button onClick={logout} className="text-sm text-red-600 font-bold">Sign Out</button>
                              </div>
                          </div>
                      </header>
                      <main className="max-w-4xl mx-auto p-4 md:p-8">
+                         
+                         {/* Quick Stats (New Feature) */}
+                         <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">Upcoming Shifts</p>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white">{upcomingShifts.length}</p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <p className="text-xs text-slate-500 uppercase font-bold mb-1">This Week</p>
+                                <p className="text-2xl font-bold text-brand-600">{shiftsThisWeek}</p>
+                            </div>
+                         </div>
                          
                          <div className="flex justify-between items-center mb-6">
                              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Your Shifts</h2>
@@ -999,7 +1034,7 @@
                                  <h3 className="text-lg font-bold text-slate-900 mb-4 dark:text-white">Upcoming</h3>
                                  {upcomingShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 mb-8 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No upcoming shifts assigned.</div> : (
                                      <div className="space-y-4 mb-8">{upcomingShifts.map(s => (
-                                         <div key={s.id} className={`bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden ${s.isProjection ? 'opacity-80 border-dashed' : ''} dark:bg-slate-800 dark:border-slate-700`}>
+                                         <div key={s.id} className={`bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden dark:bg-slate-800 dark:border-slate-700`}>
                                              <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.workerStatus === 'Accepted' ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
                                              <div className="pl-3">
                                                  <div className="flex items-center gap-2 mb-1">
@@ -1009,11 +1044,11 @@
                                                              <i className="fa-solid fa-rotate mr-1"></i> {s.recurrence}
                                                          </span>
                                                      )}
-                                                     {!s.isProjection && <span className={`text-xs px-2 py-0.5 rounded border ${s.workerStatus === 'Accepted' ? 'bg-green-50 text-green-800 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' : 'bg-yellow-50 text-yellow-800 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'}`}>{s.workerStatus || 'Pending Action'}</span>}
+                                                     <span className={`text-xs px-2 py-0.5 rounded border ${s.workerStatus === 'Accepted' ? 'bg-green-50 text-green-800 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' : 'bg-yellow-50 text-yellow-800 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'}`}>{s.workerStatus || 'Pending Action'}</span>
                                                  </div>
                                                  <div className="text-sm text-slate-600 dark:text-slate-400"><p><strong>Client:</strong> {s.userName}</p><p>{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</p></div>
                                              </div>
-                                             {!s.isProjection && (s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors dark:bg-slate-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">Decline</button></div>}
+                                             {(s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors dark:bg-slate-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">Decline</button></div>}
                                          </div>
                                      ))}</div>
                                  )}
@@ -1038,12 +1073,13 @@
          };
 
         const ClientDashboard = () => {
-            const { user, logout, shifts, isLoadingShifts, updateShiftStatus } = useContext(AuthContext);
+            const { user, logout, shifts, isLoadingShifts, updateShiftStatus, updateProfile } = useContext(AuthContext);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [cancelModalShift, setCancelModalShift] = useState(null);
             const [viewMode, setViewMode] = useState('list'); 
             const [selectedDayShifts, setSelectedDayShifts] = useState(null);
             const [activeTab, setActiveTab] = useState('upcoming');
+            const [isProfileOpen, setIsProfileOpen] = useState(false);
 
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1071,11 +1107,17 @@
                     {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
                     {cancelModalShift && <CancellationModal shift={cancelModalShift} onClose={() => setCancelModalShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
                     {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
+                    {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
 
                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600 dark:bg-slate-800">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                             <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 hidden md:inline dark:text-white">My Pathway Portal</h1></div>
-                            <div className="flex items-center gap-6"><span className="text-sm text-slate-500 hidden md:inline dark:text-slate-400">Welcome, <span className="text-slate-900 font-bold dark:text-white">{user.displayName || 'Client'}</span></span><button onClick={logout} className="text-sm text-red-600 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30">Sign Out</button><ThemeToggle /></div>
+                            <div className="flex items-center gap-6">
+                                <span className="text-sm text-slate-500 hidden md:inline dark:text-slate-400">Welcome, <span className="text-slate-900 font-bold dark:text-white">{user.displayName || 'Client'}</span></span>
+                                <button onClick={() => setIsProfileOpen(true)} className="text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400"><i className="fa-solid fa-user-circle text-xl"></i></button>
+                                <button onClick={logout} className="text-sm text-red-600 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30">Sign Out</button>
+                                <ThemeToggle />
+                            </div>
                         </div>
                     </header>
 
