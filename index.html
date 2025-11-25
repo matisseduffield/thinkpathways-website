@@ -50,6 +50,22 @@
                         accent: {
                             500: '#10b981', // Emerald green
                         }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
                     }
                 }
             }
@@ -63,9 +79,36 @@
             outline-offset: 2px;
         }
         
-        /* Smooth fade in for elements */
-        .fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
+        /* Scroll Reveal Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Glowing Button Effect */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
         }
 
         /* High Contrast Mode Overrides */
@@ -81,16 +124,8 @@
         .high-contrast img, .high-contrast svg {
             filter: grayscale(100%) contrast(150%);
         }
-        /* Keep buttons visible in HC mode */
-        .high-contrast button, .high-contrast a.bg-brand-600 {
-            border: 2px solid #ffff00 !important;
-            text-decoration: underline;
-        }
+        .high-contrast .blob { display: none; } /* Hide distracting blobs in HC mode */
         
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translate3d(0, 40px, 0); }
-            to { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
     </style>
 </head>
 <body class="font-sans text-slate-800 bg-slate-50 antialiased relative">
@@ -122,6 +157,12 @@
                     <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
                     <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
                     <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
+                    
+                    <!-- Portal Button -->
+                    <a href="portal.jsx" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-800 transition-all flex items-center gap-2 border border-transparent hover:border-brand-400">
+                        <i class="fa-solid fa-lock text-brand-400 text-xs"></i> Portal Login
+                    </a>
+
                     <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">
                         Contact Us
                     </a>
@@ -143,6 +184,7 @@
                 <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
                 <a href="activities.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Activities</a>
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
+                <a href="portal.jsx" class="block px-3 py-3 text-base font-medium text-slate-900 bg-slate-100 rounded-md font-bold"><i class="fa-solid fa-lock mr-2"></i>Client Portal</a>
                 <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
                 <a href="#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
                 <a href="#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
@@ -150,14 +192,20 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section (With Animation) -->
     <section id="home" class="relative bg-white overflow-hidden">
         <div class="max-w-7xl mx-auto">
-            <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-20 px-4 sm:px-6 lg:px-8">
-                <main id="main-content" class="mt-10 mx-auto max-w-7xl sm:mt-12 md:mt-16 lg:mt-20 xl:mt-28">
+            <div class="relative z-10 pb-8 bg-white/90 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-20 px-4 sm:px-6 lg:px-8 backdrop-blur-sm">
+                
+                <!-- Animated Blobs (Background Decoration) -->
+                <div class="absolute top-0 -left-4 w-72 h-72 bg-brand-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob blob -z-10"></div>
+                <div class="absolute top-0 -right-4 w-72 h-72 bg-accent-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 blob -z-10"></div>
+                <div class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 blob -z-10"></div>
+
+                <main id="main-content" class="mt-10 mx-auto max-w-7xl sm:mt-12 md:mt-16 lg:mt-20 xl:mt-28 reveal">
                     <div class="sm:text-center lg:text-left">
-                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-200 bg-brand-50 text-brand-800 text-xs font-semibold uppercase tracking-wide mb-4">
-                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-200 bg-brand-50 text-brand-800 text-xs font-semibold uppercase tracking-wide mb-4 shadow-sm">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                             Accepting New Referrals
                         </div>
                         <h1 class="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
@@ -168,13 +216,13 @@
                             At <strong>Think Pathways</strong>, we provide person-centered disability support services designed to help you live independently and achieve your goals. NDIS compatible support with a focus on dignity and respect.
                         </p>
                         <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-3">
-                            <div class="rounded-md shadow">
-                                <a href="#contact" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-brand-600 hover:bg-brand-700 md:py-4 md:text-lg transition-all">
+                            <div class="rounded-full shadow-lg">
+                                <a href="#contact" class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 md:text-lg transition-all btn-glow transform hover:-translate-y-1">
                                     Get Started
                                 </a>
                             </div>
                             <div class="mt-3 sm:mt-0 sm:ml-3">
-                                <a href="#services" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-brand-700 bg-brand-100 hover:bg-brand-200 md:py-4 md:text-lg transition-all">
+                                <a href="#services" class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-brand-700 bg-brand-50 hover:bg-brand-100 md:text-lg transition-all">
                                     View Services
                                 </a>
                             </div>
@@ -185,14 +233,14 @@
         </div>
         <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-slate-50 flex items-center justify-center">
             <!-- Custom Cartoon Illustration -->
-            <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full object-center" src="https://i.imgur.com/o73sFO7.png" alt="Cartoon illustration of a female support worker pushing an elderly man in a wheelchair">
+            <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full object-center animate-float" src="https://i.imgur.com/o73sFO7.png" alt="Cartoon illustration of a female support worker pushing an elderly man in a wheelchair">
         </div>
     </section>
 
     <!-- Services Section -->
     <section id="services" class="py-20 bg-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
+            <div class="text-center reveal">
                 <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">Our Services</h2>
                 <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
                     Supporting your independence
@@ -205,7 +253,7 @@
             <div class="mt-16">
                 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     <!-- Service 1 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-house-user text-brand-600 text-xl"></i>
@@ -218,7 +266,7 @@
                     </div>
 
                     <!-- Service 2 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-people-group text-accent-500 text-xl"></i>
@@ -231,7 +279,7 @@
                     </div>
 
                     <!-- Service 3 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-graduation-cap text-purple-600 text-xl"></i>
@@ -244,7 +292,7 @@
                     </div>
 
                     <!-- Service 4 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-car text-orange-600 text-xl"></i>
@@ -257,7 +305,7 @@
                     </div>
 
                     <!-- Service 5 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-heart-pulse text-red-600 text-xl"></i>
@@ -270,7 +318,7 @@
                     </div>
 
                      <!-- Service 6 -->
-                     <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                     <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
                         <div class="p-6">
                             <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-clipboard-list text-teal-600 text-xl"></i>
@@ -284,7 +332,7 @@
                 </div>
 
                 <!-- PRICING BUTTON -->
-                <div class="mt-16 text-center">
+                <div class="mt-16 text-center reveal">
                     <a href="pricing.html" class="inline-flex items-center px-6 py-3 border border-brand-600 text-base font-medium rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-sm hover:shadow-md">
                         <i class="fa-solid fa-tag mr-2"></i> View Full Pricing Guide
                     </a>
@@ -296,32 +344,67 @@
 
     <!-- Activities CTA Section -->
     <section class="py-16 bg-brand-50 border-t border-b border-brand-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
             <h2 class="text-3xl font-extrabold text-slate-900 mb-4">See Support in Action</h2>
             <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
                 We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate to help you achieve your goals.
             </p>
-            <a href="activities.html" class="inline-flex items-center px-8 py-4 border border-transparent text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg transition-all transform hover:-translate-y-1">
+            <a href="activities.html" class="inline-flex items-center px-8 py-4 border border-transparent text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg transition-all transform hover:-translate-y-1 btn-glow">
                 View Our Activities <i class="fa-solid fa-arrow-right ml-3"></i>
             </a>
         </div>
     </section>
 
-    <!-- Onboarding Journey (How It Works) -->
+    <!-- NEW: Our Core Values Section -->
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
+            <div class="text-center mb-12 reveal">
+                <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">Our Philosophy</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                    Values that drive our care
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center reveal">
+                <div class="p-6">
+                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-hand-holding-heart text-2xl text-brand-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Empowerment</h3>
+                    <p class="text-slate-600">We focus on building your skills and confidence so you can live life on your own terms.</p>
+                </div>
+                <div class="p-6">
+                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-shield-halved text-2xl text-brand-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Integrity</h3>
+                    <p class="text-slate-600">Honest, transparent, and reliable support. We do what we say we will do, every time.</p>
+                </div>
+                <div class="p-6">
+                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-users text-2xl text-brand-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Connection</h3>
+                    <p class="text-slate-600">Fostering genuine relationships and helping you connect meaningfully with your community.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Onboarding Journey (How It Works) -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
                 <h2 class="text-3xl font-extrabold text-slate-900">Your Journey with Us</h2>
                 <p class="mt-4 text-lg text-slate-500">We make getting started simple and stress-free.</p>
             </div>
 
-            <div class="relative">
+            <div class="relative reveal">
                 <!-- Connector Line (Desktop) -->
                 <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-100 -translate-y-1/2 z-0"></div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
                     <!-- Step 1 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             1
                         </div>
@@ -330,7 +413,7 @@
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             2
                         </div>
@@ -339,7 +422,7 @@
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative group hover:border-brand-200 transition-colors">
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative group hover:border-brand-200 transition-colors hover:shadow-md">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             3
                         </div>
@@ -353,7 +436,7 @@
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative">
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             <i class="fa-solid fa-check"></i>
                         </div>
@@ -365,83 +448,88 @@
         </div>
     </section>
 
-    <!-- Why Choose Us / About Section -->
-    <section id="about" class="py-16 bg-slate-50">
+    <!-- MEET THE FOUNDER SECTION -->
+    <section id="about" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">
-                        Founded on empathy, built on trust.
-                    </h2>
-                    <p class="mt-4 text-lg text-slate-500">
-                        At <strong>Think Pathways</strong>, we believe that everyone deserves the opportunity to live a fulfilling life. Our team is dedicated to providing high-quality, reliable support that respects your choices and promotes your autonomy.
-                    </p>
+            <div class="bg-slate-50 rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100 reveal">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
                     
-                    <div class="mt-8 space-y-4">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fa-solid fa-check-circle text-brand-600 text-xl mt-1"></i>
-                            </div>
-                            <p class="ml-3 text-lg text-slate-600">Experienced and qualified support workers</p>
+                    <!-- Profile Image Column -->
+                    <div class="md:col-span-1 text-center">
+                        <div class="relative inline-block">
+                            <div class="absolute inset-0 bg-brand-200 rounded-full blur-xl opacity-50"></div>
+                            <img src="https://i.imgur.com/o73sFO7.png" alt="Matisse Duffield" class="relative w-48 h-48 md:w-56 md:h-56 rounded-full object-cover border-4 border-white shadow-lg">
                         </div>
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fa-solid fa-check-circle text-brand-600 text-xl mt-1"></i>
-                            </div>
-                            <p class="ml-3 text-lg text-slate-600">Tailored support plans to meet your specific goals</p>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fa-solid fa-check-circle text-brand-600 text-xl mt-1"></i>
-                            </div>
-                            <p class="ml-3 text-lg text-slate-600">Commitment to safety and ethical practice</p>
+                        <div class="mt-6">
+                            <h3 class="text-2xl font-bold text-slate-900">Matisse Duffield</h3>
+                            <p class="text-brand-600 font-medium">Founder & Director</p>
                         </div>
                     </div>
 
-                    <div class="mt-8 border-t border-slate-200 pt-6">
-                        <p class="font-medium text-slate-900">Matisse Duffield</p>
-                        <p class="text-slate-500">Founder & Director</p>
+                    <!-- Text Column -->
+                    <div class="md:col-span-2">
+                        <div class="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <i class="fa-solid fa-quote-left text-brand-400"></i> My Philosophy
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
+                            "Support is about walking <span class="text-brand-600">with</span> you, not just for you."
+                        </h2>
+                        <div class="prose text-slate-600 text-lg leading-relaxed space-y-4">
+                            <p>
+                                I started Think Pathways with a simple belief: everyone deserves support that actually <em>listens</em>. I've seen too many participants treated as just a number in a system.
+                            </p>
+                            <p>
+                                My goal is to build a service where you feel genuinely heard, valued, and empowered to take control of your own journey. Whether it's learning a new skill or just having a chat over coffee, we are here to make your day better.
+                            </p>
+                        </div>
+                        
+                        <!-- Signature / Trust Signals -->
+                        <div class="mt-8 pt-8 border-t border-slate-200 flex flex-wrap gap-6">
+                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                                <i class="fa-solid fa-certificate text-brand-500"></i> Fully Insured
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                                <i class="fa-solid fa-check-circle text-brand-500"></i> NDIS Worker Screened
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+                                <i class="fa-solid fa-heart-pulse text-brand-500"></i> First Aid Certified
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-10 lg:mt-0 relative">
-                    <!-- Decorative blobs -->
-                    <div class="absolute -top-4 -right-4 w-72 h-72 bg-brand-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                    <div class="absolute -bottom-8 -left-4 w-72 h-72 bg-accent-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                    
-                    <!-- Real Stock Image for About -->
-                    <div class="relative rounded-2xl shadow-xl aspect-[4/3] flex items-center justify-center overflow-hidden">
-                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Caring team discussion">
-                    </div>
+
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Testimonial Section -->
-    <section class="py-20 bg-brand-700 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-            <svg class="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
-            </svg>
+    <section class="py-24 bg-gradient-to-br from-brand-700 to-brand-900 relative overflow-hidden">
+        <!-- Decorative Background Elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 right-0 w-64 h-64 bg-accent-500 rounded-full blur-3xl"></div>
         </div>
         
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
-            <h2 class="text-3xl font-extrabold text-white text-center mb-12">What our community says</h2>
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Stories from our community</h2>
+                <p class="text-brand-100 text-lg max-w-2xl mx-auto">Real experiences from the people we support.</p>
+            </div>
             
             <!-- Carousel Wrapper -->
-            <div class="relative w-full max-w-5xl mx-auto">
+            <div class="relative w-full max-w-4xl mx-auto">
                 
-                <!-- Navigation Arrows (Absolute Positioned) -->
-                <button onclick="prevTestimonial()" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/30 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 -ml-2 md:-ml-8" aria-label="Previous testimonial">
-                    <i class="fa-solid fa-chevron-left text-xl"></i>
+                <!-- Navigation Arrows (Outside the card on desktop) -->
+                <button onclick="prevTestimonial()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-16 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 group" aria-label="Previous testimonial">
+                    <i class="fa-solid fa-arrow-left text-xl group-hover:-translate-x-1 transition-transform"></i>
                 </button>
                 
-                <button onclick="nextTestimonial()" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/30 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 -mr-2 md:-mr-8" aria-label="Next testimonial">
-                    <i class="fa-solid fa-chevron-right text-xl"></i>
+                <button onclick="nextTestimonial()" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-16 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 group" aria-label="Next testimonial">
+                    <i class="fa-solid fa-arrow-right text-xl group-hover:translate-x-1 transition-transform"></i>
                 </button>
 
-                <!-- Slides Container (Grid stack for cross-fade) -->
-                <div id="testimonial-container" class="grid grid-rows-1 grid-cols-1 items-center justify-items-center min-h-[200px]">
+                <!-- Slides Container -->
+                <div id="testimonial-container" class="grid grid-rows-1 grid-cols-1 items-center justify-items-center min-h-[300px]">
                     <!-- Slides injected via JS -->
                 </div>
             </div>
@@ -451,14 +539,14 @@
     <!-- FAQ Section -->
     <section id="faq" class="py-16 bg-white">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
+            <div class="text-center mb-12 reveal">
                 <h2 class="text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
                 <p class="mt-4 text-lg text-slate-500">Common questions about our services and NDIS support.</p>
             </div>
             
             <div class="space-y-6">
                 <!-- FAQ Item 1 -->
-                <div class="bg-slate-50 rounded-lg p-6">
+                <div class="bg-slate-50 rounded-lg p-6 reveal">
                     <h3 class="text-lg font-medium text-slate-900 flex items-center">
                         <i class="fa-solid fa-circle-question text-brand-500 mr-3"></i>
                         Are you NDIS registered?
@@ -469,7 +557,7 @@
                 </div>
 
                 <!-- FAQ Item 2 -->
-                <div class="bg-slate-50 rounded-lg p-6">
+                <div class="bg-slate-50 rounded-lg p-6 reveal">
                     <h3 class="text-lg font-medium text-slate-900 flex items-center">
                         <i class="fa-solid fa-map-location-dot text-brand-500 mr-3"></i>
                         What areas do you service?
@@ -480,7 +568,7 @@
                 </div>
 
                 <!-- FAQ Item 3 -->
-                <div class="bg-slate-50 rounded-lg p-6">
+                <div class="bg-slate-50 rounded-lg p-6 reveal">
                     <h3 class="text-lg font-medium text-slate-900 flex items-center">
                         <i class="fa-solid fa-calendar-check text-brand-500 mr-3"></i>
                         Is there a waiting list?
@@ -496,7 +584,7 @@
     <!-- Contact Section -->
     <section id="contact" class="py-16 bg-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden reveal">
                 <div class="grid grid-cols-1 lg:grid-cols-2">
                     <!-- Contact Info (Centered Content) -->
                     <div class="bg-brand-600 p-10 text-white flex flex-col justify-center h-full">
@@ -644,21 +732,21 @@
         </div>
     </div>
 
-    <!-- JavaScript for Interactions & Accessibility -->
+    <!-- JavaScript for Interactions -->
     <script>
         // Testimonial Carousel Data
         const testimonials = [
             {
-                quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism",
-                author: "Nicholas McLeod"
+                quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism.",
+                author: "Nicholas M."
             },
             {
-                quote: "I couldn't be more blessed with the support I receive from Matisse, I truly am grateful for how he has supported me",
-                author: "Jimi Tam"
+                quote: "I couldn't be more blessed with the support I receive from Matisse, I truly am grateful for how he has supported me.",
+                author: "Jimi T."
             },
             {
                 quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals while having a great time doing it.",
-                author: "Jordan Trudgen"
+                author: "Jordan T."
             }
         ];
 
@@ -668,18 +756,37 @@
 
         // Initialize Carousel
         function initCarousel() {
-            // Render all slides at once, stacked on top of each other
+            // Check if container exists before running
+            if (!container) return;
+
             container.innerHTML = testimonials.map((t, index) => `
-                <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out px-12 md:px-20 ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}">
-                    <div class="relative">
-                        <div class="text-brand-300 text-6xl opacity-30 absolute -top-8 -left-8 font-serif">"</div>
-                        <blockquote class="text-xl md:text-2xl font-medium text-white italic text-center relative z-10">
-                            ${t.quote}
+                <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${index === 0 ? 'opacity-100 translate-x-0 scale-100 z-10' : 'opacity-0 translate-x-8 scale-95 z-0'}">
+                    
+                    <!-- The Card -->
+                    <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center relative w-full mx-4 transform transition-transform hover:-translate-y-1 duration-300">
+                        
+                        <!-- Floating Quote Icon -->
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-brand-500 rounded-full flex items-center justify-center text-white text-2xl shadow-lg border-4 border-brand-700">
+                            <i class="fa-solid fa-quote-right"></i>
+                        </div>
+
+                        <!-- Quote Text -->
+                        <blockquote class="text-xl md:text-2xl font-medium text-slate-700 mt-8 mb-10 leading-relaxed font-serif">
+                            "${t.quote}"
                         </blockquote>
+
+                        <!-- Author Info with Avatar -->
+                        <div class="flex items-center justify-center gap-4 border-t border-slate-100 pt-6">
+                            <div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xl shadow-inner border border-brand-100">
+                                ${t.author.charAt(0)}
+                            </div>
+                            <div class="text-left">
+                                <div class="font-bold text-slate-900 text-lg">${t.author}</div>
+                                <div class="text-sm text-slate-500 font-medium">Participant</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-6">
-                        <p class="text-brand-200 font-semibold">— ${t.author}</p>
-                    </div>
+
                 </div>
             `).join('');
             
@@ -690,11 +797,11 @@
             const slides = document.querySelectorAll('.testimonial-slide');
             slides.forEach((slide, index) => {
                 if (index === currentTestimonialIndex) {
-                    slide.classList.remove('opacity-0', 'z-0');
-                    slide.classList.add('opacity-100', 'z-10');
+                    slide.classList.remove('opacity-0', 'translate-x-8', 'scale-95', 'z-0');
+                    slide.classList.add('opacity-100', 'translate-x-0', 'scale-100', 'z-10');
                 } else {
-                    slide.classList.remove('opacity-100', 'z-10');
-                    slide.classList.add('opacity-0', 'z-0');
+                    slide.classList.remove('opacity-100', 'translate-x-0', 'scale-100', 'z-10');
+                    slide.classList.add('opacity-0', 'translate-x-8', 'scale-95', 'z-0');
                 }
             });
         }
@@ -717,11 +824,32 @@
             testimonialInterval = setInterval(() => {
                 currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonials.length;
                 updateSlides();
-            }, 6000); // Slightly slower cycle for better reading time
+            }, 6000); 
         }
+
+        // Intersection Observer for Scroll Reveal
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Only animate once
+                }
+            });
+        }, observerOptions);
 
         document.addEventListener('DOMContentLoaded', () => {
             initCarousel();
+            
+            // Observe elements with 'reveal' class
+            document.querySelectorAll('.reveal').forEach((element) => {
+                observer.observe(element);
+            });
         });
 
         // Mobile Menu Toggle
