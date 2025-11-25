@@ -429,7 +429,6 @@
         const useNextRecurringList = (rawShifts) => {
             return useMemo(() => {
                 // Use local date string comparison to avoid timezone issues
-                // Create date object in local time, then format to YYYY-MM-DD
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -454,7 +453,6 @@
                 recurring.forEach(s => {
                     const interval = s.recurrence === 'weekly' ? 7 : 14;
                     let nextDate = new Date(s.date);
-                    // We need to find the first occurrence >= today
                     
                     // Helper to format date object to YYYY-MM-DD string
                     const toIsoString = (d) => {
@@ -468,7 +466,6 @@
 
                     // If start date is already in future/today, use it directly
                     if (currentDateStr >= todayStr) {
-                         // Check if this specific date exists as real shift override
                          if (!resultList.find(r => r.id === s.id)) {
                              resultList.push(s);
                          }
@@ -987,6 +984,14 @@
              // I'll assume history shows everything for record keeping, but sorted by date descending)
              const pastShifts = workerShifts.filter(s => s.date < todayStr).sort((a,b) => getSortValue(b) - getSortValue(a));
 
+             // Simple stats for dashboard (added as per new requirement)
+             const shiftsThisWeek = upcomingShifts.filter(s => {
+                const d = new Date(s.date);
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                return d <= nextWeek;
+             }).length;
+
              return (
                  <div className="min-h-screen bg-slate-100 font-sans pb-12">
                      {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
@@ -997,6 +1002,18 @@
                          </div>
                      </header>
                      <main className="max-w-4xl mx-auto p-4 md:p-8">
+                         
+                         {/* Quick Stats (New Feature) */}
+                         <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <p className="text-xs text-slate-500 uppercase font-bold mb-1">Upcoming Shifts</p>
+                                <p className="text-2xl font-bold text-slate-900">{upcomingShifts.length}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <p className="text-xs text-slate-500 uppercase font-bold mb-1">This Week</p>
+                                <p className="text-2xl font-bold text-brand-600">{shiftsThisWeek}</p>
+                            </div>
+                         </div>
                          
                          <div className="flex justify-between items-center mb-6">
                              <h2 className="text-2xl font-bold text-slate-900">Your Shifts</h2>
