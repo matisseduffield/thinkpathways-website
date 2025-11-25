@@ -17,7 +17,7 @@
     <!-- Cloudflare Turnstile -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-    <!-- React & Babel -->
+    <!-- React & Babel (Globals) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -64,15 +64,14 @@
              appId: "1:31616186160:web:646c33b844b999e81efaf5"
         };
 
-        // Turnstile Site Key
         window.__turnstile_site_key = "0x4AAAAAACCy0zfo2e5QOQoB"; 
-
-        // Admin Email
         window.__admin_email = "care@thinkpathways.com";
     </script>
     
     <style>
         #error-display { display: none; }
+        #root:empty + #loading-fallback { display: flex; }
+        #loading-fallback { display: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -85,22 +84,21 @@
     <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
-            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500"></pre>
-            <button onclick="window.location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Reload Page</button>
+            <pre id="error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4"></pre>
+            <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Reload Page</button>
         </div>
+    </div>
+
+    <!-- Fallback Loading UI (Visible if React fails to start) -->
+    <div id="loading-fallback" class="fixed inset-0 bg-slate-100 z-40 flex flex-col items-center justify-center text-slate-400">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600 mb-4"></i>
+        <p>Initializing System...</p>
     </div>
 
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        window.onerror = function(message, source, lineno, colno, error) {
-            document.getElementById('error-display').style.display = 'flex';
-            document.getElementById('error-message').textContent = `${message}\n\nLine: ${lineno}`;
-        };
-
-        const { useState, useEffect, useMemo, useRef } = React;
-        const { createRoot } = ReactDOM;
-
+        // IMPORTS MUST BE AT THE TOP
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
@@ -109,6 +107,15 @@
         import { 
             getFirestore, collection, query, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, where, getDocs 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Error Handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('error-display').style.display = 'flex';
+            document.getElementById('error-message').textContent = `${message}\n\nLine: ${lineno}\n${error ? error.stack : ''}`;
+        };
+
+        const { useState, useEffect, useMemo, useRef } = React;
+        const { createRoot } = ReactDOM;
 
         let app, auth, db;
         let configMissing = false;
@@ -174,8 +181,8 @@
             useEffect(() => {
                 if (configMissing || !auth) { setIsAuthReady(true); return; }
                 const unsubscribe = onAuthStateChanged(auth, async (u) => {
-                    setUser(u);
                     if (u) {
+                        setUser(u);
                         if (u.email && u.email.toLowerCase() === window.__admin_email.toLowerCase()) {
                             setIsAdmin(true);
                             setIsWorker(false);
@@ -190,6 +197,7 @@
                             }
                         }
                     } else {
+                        setUser(null);
                         setIsAdmin(false);
                         setIsWorker(false);
                     }
@@ -247,7 +255,7 @@
             const signup = async (email, password, name) => {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(cred.user, { displayName: name });
-                setUser({...cred.user, displayName: name});
+                setUser({...cred.user, displayName: name}); // Force UI update
             };
             const resetPassword = (email) => sendPasswordResetEmail(auth, email);
             const logout = () => signOut(auth);
@@ -317,6 +325,7 @@
             };
         };
 
+        // --- Turnstile Widget ---
         const TurnstileWidget = ({ onVerify }) => {
             const containerRef = useRef(null);
             useEffect(() => {
@@ -332,7 +341,205 @@
             return <div ref={containerRef} className="my-4 flex justify-center"></div>;
         };
 
-        // --- Components ---
+        // --- Login Component ---
+        const Login = () => {
+            const { login, signup, resetPassword } = React.useContext(AuthContext);
+            const [mode, setMode] = useState('login'); 
+            const [error, setError] = useState('');
+            const [successMsg, setSuccessMsg] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [captchaToken, setCaptchaToken] = useState(null);
+            const [showPassword, setShowPassword] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setSuccessMsg('');
+                
+                if (mode !== 'forgot' && !captchaToken) {
+                    setError('Please complete the security check.');
+                    return;
+                }
+
+                setLoading(true);
+                const data = new FormData(e.target);
+                
+                try {
+                    if (mode === 'signup') {
+                        const p1 = data.get('password');
+                        const p2 = data.get('confirmPassword');
+                        if (p1 !== p2) {
+                            throw new Error("Firebase: Passwords do not match.");
+                        }
+                        await signup(data.get('email'), p1, data.get('name'));
+                    } else if (mode === 'login') {
+                        await login(data.get('email'), data.get('password'));
+                    } else if (mode === 'forgot') {
+                        await resetPassword(data.get('email'));
+                        setSuccessMsg('Password reset email sent! Check your inbox.');
+                        setLoading(false);
+                        return; 
+                    }
+                } catch (err) {
+                    let msg = err.message.replace('Firebase: ', '');
+                    if(msg.includes('auth/invalid-credential')) msg = 'Incorrect email or password.';
+                    setError(msg);
+                    setLoading(false);
+                    if(window.turnstile) window.turnstile.reset();
+                    setCaptchaToken(null);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 animate-slide-up transition-all duration-300">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg transform hover:rotate-6 transition-transform duration-300">
+                                <i className="fa-solid fa-hands-holding-circle"></i>
+                            </div>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Pathway Portal</h1>
+                            <p className="text-slate-500 text-sm mt-2 font-medium">
+                                {mode === 'signup' && 'Join the community'}
+                                {mode === 'login' && 'Welcome back'}
+                                {mode === 'forgot' && 'Reset Password'}
+                            </p>
+                        </div>
+
+                        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center animate-fade-in"><i className="fa-solid fa-circle-exclamation mr-2"></i> {error}</div>}
+                        {successMsg && <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-lg border border-green-100 flex items-center animate-fade-in"><i className="fa-solid fa-check-circle mr-2"></i> {successMsg}</div>}
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            {mode === 'signup' && (
+                                <div className="animate-fade-in">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Full Name</label>
+                                    <div className="relative">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-user"></i></span>
+                                        <input name="name" type="text" required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="Matisse Duffield" />
+                                    </div>
+                                </div>
+                            )}
+                            <div className="animate-fade-in">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address</label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-envelope"></i></span>
+                                    <input name="email" type="email" required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="you@example.com" />
+                                </div>
+                            </div>
+                            {mode !== 'forgot' && (
+                                <div className="animate-fade-in space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Password</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
+                                            <input name="password" type={showPassword ? "text" : "password"} required className="w-full pl-10 pr-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="••••••••" />
+                                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-brand-600">
+                                                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {mode === 'signup' && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Confirm Password</label>
+                                            <div className="relative">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
+                                                <input name="confirmPassword" type={showPassword ? "text" : "password"} required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="Repeat password" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {mode !== 'forgot' && <TurnstileWidget onVerify={setCaptchaToken} />}
+                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-md disabled:opacity-50 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : null}
+                                {loading ? 'Processing...' : (mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In')}
+                            </button>
+                        </form>
+                        <div className="mt-6 text-center pt-6 border-t border-slate-100 space-y-3">
+                            {mode === 'login' && (
+                                <>
+                                    <button onClick={() => setMode('signup')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">New Client? Create Account</button>
+                                    <button onClick={() => setMode('forgot')} className="block w-full text-xs text-slate-500 hover:text-slate-700 transition-colors">Forgot Password?</button>
+                                </>
+                            )}
+                            {(mode === 'signup' || mode === 'forgot') && (
+                                <button onClick={() => setMode('login')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">Back to Login</button>
+                            )}
+                        </div>
+                        <div className="mt-4 text-center">
+                             <a href="index.html" className="text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all">← Back to Website</a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Admin Action Modal ---
+        const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
+            const [reason, setReason] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleConfirm = async () => {
+                if (!reason) return; 
+                setLoading(true);
+                await onConfirm(shift.id, actionType, reason);
+                setLoading(false);
+                onClose();
+            };
+
+            const isDecline = actionType === 'Declined';
+            const title = isDecline ? 'Decline Request' : 'Cancel Scheduled Shift';
+            const colorClass = 'text-red-600';
+            const btnClass = 'bg-red-600 hover:bg-red-700';
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
+                        <h3 className={`text-xl font-bold mb-4 ${colorClass} flex items-center`}>
+                            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {title}
+                        </h3>
+                        <p className="text-slate-600 mb-4">
+                            Please provide a reason for {isDecline ? 'declining' : 'cancelling'} <strong>{shift.userName}'s</strong> session on <strong>{shift.dateDisplay}</strong>.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reason (Visible to Client) <span className="text-red-500">*</span></label>
+                            <textarea 
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm"
+                                rows="3"
+                                placeholder="e.g. Staff unavailable, scheduling conflict..."
+                            ></textarea>
+                        </div>
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Go Back</button>
+                            <button 
+                                onClick={handleConfirm} 
+                                disabled={!reason || loading}
+                                className={`px-4 py-2 text-white rounded-lg font-bold transition-colors disabled:opacity-50 ${btnClass}`}
+                            >
+                                {loading ? 'Processing...' : 'Confirm Action'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AddWorkerModal = ({ onClose, onAdd }) => {
+            const [email, setEmail] = useState('');
+            const [loading, setLoading] = useState(false);
+            const handleSubmit = async (e) => { e.preventDefault(); if(!email) return; setLoading(true); await onAdd(email); setLoading(false); onClose(); };
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in">
+                        <h3 className="text-xl font-bold text-slate-900 mb-4">Manage Team</h3>
+                        <form onSubmit={handleSubmit}><input type="email" required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none mb-4" placeholder="worker@thinkpathways.com" value={email} onChange={(e) => setEmail(e.target.value)} /><button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded-lg font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Adding...' : 'Authorize Worker'}</button></form>
+                        <button onClick={onClose} className="absolute top-4 right-4"><i className="fa-solid fa-xmark text-xl text-slate-400"></i></button>
+                    </div>
+                </div>
+            );
+        };
+
         const AssignWorkerModal = ({ shift, onClose, onAssign }) => {
             const [email, setEmail] = useState('');
             const [loading, setLoading] = useState(false);
@@ -348,6 +555,7 @@
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in">
                         <h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3>
+                        <p className="text-sm text-slate-500 mb-4">Enter the email address of the worker for this shift.</p>
                         <form onSubmit={handleSubmit}>
                             <input type="email" required placeholder="worker@thinkpathways.com" className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none" value={email} onChange={(e) => setEmail(e.target.value)} />
                             <div className="flex gap-3 justify-end">
@@ -399,37 +607,6 @@
         );
     };
 
-    const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
-        const [reason, setReason] = useState('');
-        const [loading, setLoading] = useState(false);
-        const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason); setLoading(false); onClose(); };
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
-                    <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center"><i className="fa-solid fa-triangle-exclamation mr-2"></i> {actionType === 'Declined' ? 'Decline Request' : 'Cancel Shift'}</h3>
-                    <p className="text-slate-600 mb-4">Please provide a reason (visible to client).</p>
-                    <textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4" rows="3" placeholder="e.g. Staff unavailable..."></textarea>
-                    <div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Go Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">{loading ? 'Processing...' : 'Confirm Action'}</button></div>
-                </div>
-            </div>
-        );
-    };
-
-    const AddWorkerModal = ({ onClose, onAdd }) => {
-        const [email, setEmail] = useState('');
-        const [loading, setLoading] = useState(false);
-        const handleSubmit = async (e) => { e.preventDefault(); if(!email) return; setLoading(true); await onAdd(email); setLoading(false); onClose(); };
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in">
-                    <h3 className="text-xl font-bold text-slate-900 mb-4">Manage Team</h3>
-                    <form onSubmit={handleSubmit}><input type="email" required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none mb-4" placeholder="worker@thinkpathways.com" value={email} onChange={(e) => setEmail(e.target.value)} /><button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded-lg font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Adding...' : 'Authorize Worker'}</button></form>
-                    <button onClick={onClose} className="absolute top-4 right-4"><i className="fa-solid fa-xmark text-xl text-slate-400"></i></button>
-                </div>
-            </div>
-        );
-    };
-
     const AdminDashboard = () => {
         const { shifts, isLoadingShifts, user, logout, updateShiftStatus, assignWorker, registerWorker } = React.useContext(AuthContext);
         const [expandedClientId, setExpandedClientId] = useState(null);
@@ -449,6 +626,10 @@
         }, [shifts]);
         
         const alerts = useMemo(() => shifts.filter(s => s.status === 'Pending'), [shifts]);
+
+        const openActionModal = (shift, type) => {
+            setActionModal({ shift, type });
+        };
 
         return (
             <div className="min-h-screen bg-slate-100 font-sans pb-12">
@@ -474,7 +655,7 @@
                     )}
                     <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-slate-900">Client Management</h2><div className="text-sm text-slate-500">Total Clients: {clients.length}</div></div>
                     {isLoadingShifts ? <div className="text-center p-12 text-slate-500">Loading...</div> : (
-                        <div>{clients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={(s, type) => setActionModal({shift: s, type})} onAssign={setAssignModalShift} />)}</div>
+                        <div>{clients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} />)}</div>
                     )}
                 </main>
             </div>
