@@ -126,15 +126,22 @@
         const AuthContext = React.createContext();
         const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
 
-        // --- NEW: Custom Date Formatter ---
+        // --- NEW: Custom Date Formatter (28th November, Friday) ---
         const formatBookingDate = (dateString) => {
             if (!dateString) return 'Pending Date';
             const date = new Date(dateString);
-            // Format: "25 November Tuesday"
+            
             const day = date.getDate();
             const month = date.toLocaleDateString('en-AU', { month: 'long' });
             const weekday = date.toLocaleDateString('en-AU', { weekday: 'long' });
-            return `${day} ${month} ${weekday}`;
+            
+            // Ordinal Suffix Logic
+            let suffix = 'th';
+            if (day % 10 === 1 && day !== 11) suffix = 'st';
+            else if (day % 10 === 2 && day !== 12) suffix = 'nd';
+            else if (day % 10 === 3 && day !== 13) suffix = 'rd';
+
+            return `${day}${suffix} ${month}, ${weekday}`;
         };
 
         const getTomorrowDate = () => {
@@ -350,107 +357,107 @@
                             )}
                             <div className="animate-fade-in">
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address</label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-envelope"></i></span>
-                                    <input name="email" type="email" required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="you@example.com" />
-                                </div>
-                            </div>
-                            {mode !== 'forgot' && (
-                                <div className="animate-fade-in space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Password</label>
-                                        <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
-                                            <input name="password" type={showPassword ? "text" : "password"} required className="w-full pl-10 pr-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="••••••••" />
-                                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-brand-600">
-                                                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {mode === 'signup' && (
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Confirm Password</label>
-                                            <div className="relative">
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i className="fa-solid fa-lock"></i></span>
-                                                <input name="confirmPassword" type={showPassword ? "text" : "password"} required className="w-full pl-10 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-slate-50 focus:bg-white" placeholder="Repeat password" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            {mode !== 'forgot' && <TurnstileWidget onVerify={setCaptchaToken} />}
-                            <button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-lg font-bold hover:bg-brand-700 transition-all shadow-md disabled:opacity-50 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                                {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : null}
-                                {loading ? 'Processing...' : (mode === 'signup' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In')}
-                            </button>
-                        </form>
-                        <div className="mt-6 text-center pt-6 border-t border-slate-100 space-y-3">
-                            {mode === 'login' && (
-                                <>
-                                    <button onClick={() => setMode('signup')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">New Client? Create Account</button>
-                                    <button onClick={() => setMode('forgot')} className="block w-full text-xs text-slate-500 hover:text-slate-700 transition-colors">Forgot Password?</button>
-                                </>
-                            )}
-                            {(mode === 'signup' || mode === 'forgot') && (
-                                <button onClick={() => setMode('login')} className="block w-full text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors">Back to Login</button>
-                            )}
-                        </div>
-                        <div className="mt-4 text-center">
-                             <a href="index.html" className="text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all">← Back to Website</a>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- Admin Action Modal (New) ---
-        const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
-            const [reason, setReason] = useState('');
-            const [loading, setLoading] = useState(false);
-
-            const handleConfirm = async () => {
-                if (!reason) return; // Require reason
-                setLoading(true);
-                await onConfirm(shift.id, actionType, reason);
-                setLoading(false);
-                onClose();
-            };
-
-            const isDecline = actionType === 'Declined';
-            const title = isDecline ? 'Decline Request' : 'Cancel Scheduled Shift';
-            const colorClass = 'text-red-600';
-            const btnClass = 'bg-red-600 hover:bg-red-700';
+        // --- Admin Components ---
+        const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus }) => {
+            const pendingCount = client.stats.pending;
+            const upcomingCount = client.stats.upcoming;
 
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
-                        <h3 className={`text-xl font-bold mb-4 ${colorClass} flex items-center`}>
-                            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {title}
-                        </h3>
-                        <p className="text-slate-600 mb-4">
-                            Please provide a reason for {isDecline ? 'declining' : 'cancelling'} <strong>{shift.userName}'s</strong> session on <strong>{shift.dateDisplay}</strong>.
-                        </p>
-                        <div className="mb-4">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reason (Visible to Client) <span className="text-red-500">*</span></label>
-                            <textarea 
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm"
-                                rows="3"
-                                placeholder="e.g. Staff unavailable, scheduling conflict..."
-                            ></textarea>
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md mb-4">
+                    <div 
+                        className="p-5 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50"
+                        onClick={onExpand}
+                    >
+                        <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${pendingCount > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>
+                                {client.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-900 text-lg">{client.name}</h3>
+                                <p className="text-xs text-slate-500">{client.email}</p>
+                            </div>
                         </div>
-                        <div className="flex gap-3 justify-end mt-6">
-                            <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Go Back</button>
-                            <button 
-                                onClick={handleConfirm} 
-                                disabled={!reason || loading}
-                                className={`px-4 py-2 text-white rounded-lg font-bold transition-colors disabled:opacity-50 ${btnClass}`}
-                            >
-                                {loading ? 'Processing...' : 'Confirm Action'}
-                            </button>
+
+                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                            <div className="flex gap-3">
+                                <div className="text-center px-3 py-1 bg-slate-100 rounded-lg">
+                                    <span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span>
+                                    <span className="font-bold text-brand-600">{upcomingCount}</span>
+                                </div>
+                                <div className={`text-center px-3 py-1 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}>
+                                    <span className="block text-xs text-slate-400 font-bold uppercase">Pending</span>
+                                    <span className={`font-bold ${pendingCount > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{pendingCount}</span>
+                                </div>
+                            </div>
+                            <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i>
                         </div>
                     </div>
+
+                    {isExpanded && (
+                        <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-2 animate-fade-in">
+                            {client.shifts.map(s => (
+                                <div key={s.id} className="group bg-white rounded-lg border border-slate-200 flex flex-col md:flex-row items-start md:items-center overflow-hidden transition-all hover:border-brand-300 relative">
+                                    
+                                    {/* Status Indicator Line */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                        s.status === 'Pending' ? 'bg-yellow-400' : 
+                                        s.status === 'Confirmed' ? 'bg-green-500' : 'bg-red-400'
+                                    }`}></div>
+
+                                    <div className="p-3 pl-5 flex-grow grid grid-cols-1 md:grid-cols-12 gap-4 w-full items-center">
+                                        
+                                        {/* Date & Time */}
+                                        <div className="md:col-span-4">
+                                            <div className="font-bold text-slate-800 text-sm flex items-center">
+                                                <i className="fa-regular fa-calendar text-brand-400 mr-2 w-4"></i> 
+                                                {s.dateDisplay}
+                                            </div>
+                                            <div className="text-xs text-slate-500 ml-6 mt-0.5">
+                                                <i className="fa-regular fa-clock mr-1"></i> {s.duration} Hours
+                                            </div>
+                                        </div>
+
+                                        {/* Service & Notes */}
+                                        <div className="md:col-span-5">
+                                            <div className="font-medium text-slate-700 text-sm">
+                                                {s.service}
+                                                {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wide">{s.recurrence}</span>}
+                                            </div>
+                                            {s.notes && <div className="text-xs text-slate-400 truncate mt-0.5" title={s.notes}><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
+                                            {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' || s.statusLabel === 'Cancelled') && s.cancellationReason && <div className="text-xs text-red-500 font-medium mt-0.5">Reason: {s.cancellationReason}</div>}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="md:col-span-3 flex justify-end items-center gap-2">
+                                            {s.status === 'Pending' ? (
+                                                <>
+                                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="p-1.5 rounded text-green-600 hover:bg-green-50 transition-colors" title="Accept">
+                                                        <i className="fa-solid fa-check-circle text-xl"></i>
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="p-1.5 rounded text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Decline">
+                                                        <i className="fa-solid fa-circle-xmark text-xl"></i>
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                                                        s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                                                    }`}>
+                                                        {s.statusLabel}
+                                                    </span>
+                                                    {s.status === 'Confirmed' && (
+                                                        <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-slate-300 hover:text-red-500 transition-colors" title="Cancel Shift">
+                                                            <i className="fa-solid fa-ban"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         };
