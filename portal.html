@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- CRITICAL: Content Security Policy to allow single-file React/Babel execution -->
+    <!-- CRITICAL: Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
     
     <title>My Pathway Portal - Think Pathways</title>
@@ -33,7 +33,7 @@
     <!-- Config -->
     <script>
         tailwind.config = {
-            darkMode: 'class', // Enable class-based dark mode
+            darkMode: 'class', // Enable dark mode
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -71,18 +71,17 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Dark mode scrollbar overrides */
+        /* Dark mode scrollbar */
         .dark ::-webkit-scrollbar-track { background: #1e293b; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+<body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-300">
     
     <!-- Global Error UI -->
     <div id="global-error-display" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Failed to Load</h2>
-            <p class="text-sm text-red-600 mb-4">This is usually caused by a security setting or a blocked script.</p>
             <pre id="global-error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4 h-32"></pre>
             <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
         </div>
@@ -101,19 +100,13 @@
 
     <!-- MAIN APP -->
     <script type="text/babel">
-        // React Error Boundary for runtime crashes
+        // Error Boundary
         class ErrorBoundary extends React.Component {
             constructor(props) { super(props); this.state = { hasError: false, error: null }; }
             static getDerivedStateFromError(error) { return { hasError: true, error }; }
             render() {
                 if (this.state.hasError) {
-                    return (
-                        <div className="p-8 text-center">
-                            <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
-                            <pre className="text-xs text-red-400 bg-slate-100 p-4 rounded text-left overflow-auto">{this.state.error.toString()}</pre>
-                            <button onClick={() => window.location.reload()} className="mt-4 bg-brand-600 text-white px-4 py-2 rounded">Reload</button>
-                        </div>
-                    );
+                    return <div className="p-8 text-center text-red-500">Error: {this.state.error.toString()}</div>;
                 }
                 return this.props.children;
             }
@@ -123,18 +116,11 @@
         let auth, db, configMissing = false;
         try {
             if (window.__firebase_config && window.__firebase_config.apiKey) {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(window.__firebase_config);
-                }
+                if (!firebase.apps.length) { firebase.initializeApp(window.__firebase_config); }
                 auth = firebase.auth();
                 db = firebase.firestore();
-            } else {
-                configMissing = true;
-            }
-        } catch(e) { 
-            console.error("Firebase Init Error", e);
-            configMissing = true;
-        }
+            } else { configMissing = true; }
+        } catch(e) { configMissing = true; }
 
         const { useState, useEffect, useMemo, useRef, useContext, createContext } = React;
         const { createRoot } = ReactDOM;
@@ -180,19 +166,10 @@
             return new Date(`${datePart}T${timePart}`).getTime();
         };
 
-        // NEW: Helper to check if shift can be completed
-        const canCompleteShift = (shift) => {
-            if (!shift.date || !shift.endTime) return false;
-            const shiftEnd = new Date(`${shift.date}T${shift.endTime}`);
-            const now = new Date();
-            return now >= shiftEnd;
-        };
-
         const AuthContext = createContext();
-        
-        // NEW: Theme Context
         const ThemeContext = createContext();
 
+        // --- THEME PROVIDER ---
         const ThemeProvider = ({ children }) => {
             const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
             
@@ -213,7 +190,7 @@
             );
         };
 
-        // --- HOOK ---
+        // --- AUTH & DATA HOOK ---
         const useAuthAndData = () => {
             const [user, setUser] = useState(null);
             const [isAdmin, setIsAdmin] = useState(false);
@@ -318,17 +295,55 @@
                 return shifts.some(s => s.date === date && s.status !== 'Cancelled' && s.status !== 'Declined');
             };
 
+            // NEW: Updated Book Shift with Series Generation
             const bookShift = async (data) => {
-                if(checkConflict(data.date)) return { success: false, msg: "You already have a session on this date." };
                 try {
-                    await db.collection(COLLECTION_PATH).add({
-                        ...data,
-                        userId: user.uid,
-                        userName: user.displayName || 'Client',
-                        userEmail: user.email,
-                        status: 'Pending',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    const batch = db.batch();
+                    const createdTimestamp = firebase.firestore.FieldValue.serverTimestamp();
+                    const seriesId = Math.random().toString(36).substr(2, 9); // Link them logically
+
+                    let datesToBook = [];
+                    let currentDate = new Date(data.date);
+                    // If recurrence is selected, use End Date, otherwise just book 1 day.
+                    let endDate = (data.recurrence !== 'none' && data.endDate) ? new Date(data.endDate) : new Date(data.date);
+                    
+                    // Ensure loop runs at least once for single bookings
+                    if (data.recurrence === 'none') endDate = currentDate; 
+
+                    while (currentDate <= endDate) {
+                        const dateStr = currentDate.toISOString().split('T')[0];
+                        
+                        // Check conflict per date
+                        // Note: In a real app we might need to fetch latest shifts first to be 100% sure, but client-side check is okay for now
+                        if (checkConflict(dateStr)) {
+                            return { success: false, msg: `Conflict detected on ${dateStr}. Please adjust your dates.` };
+                        }
+                        
+                        datesToBook.push(dateStr);
+
+                        // Increment date
+                        if (data.recurrence === 'weekly') currentDate.setDate(currentDate.getDate() + 7);
+                        else if (data.recurrence === 'fortnightly') currentDate.setDate(currentDate.getDate() + 14);
+                        else break; // Loop once for one-off
+                    }
+
+                    // Create individual documents for every shift in the series
+                    datesToBook.forEach(dateStr => {
+                        const ref = db.collection(COLLECTION_PATH).doc();
+                        batch.set(ref, {
+                            ...data,
+                            date: dateStr,
+                            // We don't need to store the overall endDate on individual shifts
+                            seriesId: seriesId,
+                            userId: user.uid,
+                            userName: user.displayName || 'Client',
+                            userEmail: user.email,
+                            status: 'Pending',
+                            timestamp: createdTimestamp
+                        });
                     });
+
+                    await batch.commit();
                     return { success: true };
                 } catch (e) { return { success: false, msg: e.message }; }
             };
@@ -400,19 +415,10 @@
                 } catch (e) { return { success: false, msg: e.message }; }
             };
 
-            const updateProfile = async (name) => {
-                if (!user) return;
-                try {
-                    await user.updateProfile({ displayName: name });
-                    setUser({...user, displayName: name});
-                    return { success: true };
-                } catch (e) { return { success: false, msg: e.message }; }
-            };
-
             return { 
                 user, isAdmin, isWorker, isAuthReady, shifts, workerShifts, workersList, isLoading, 
                 login, signup, resetPassword, logout, bookShift, updateShiftStatus, 
-                assignWorker, removeWorker, workerResponse, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile
+                assignWorker, removeWorker, workerResponse, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB 
             };
         };
 
@@ -431,7 +437,7 @@
             return <div ref={containerRef} className="my-4 flex justify-center"></div>;
         };
         
-        // NEW: Theme Toggle Button
+        // Theme Toggle Button
         const ThemeToggle = () => {
             const { darkMode, setDarkMode } = useContext(ThemeContext);
             return (
@@ -445,119 +451,10 @@
             );
         };
 
-        // --- SHARED LOGIC: RECURRING PROJECTION ---
-        const useRecurringProjection = (rawShifts, lookAheadMonths = 3) => {
-            return useMemo(() => {
-                // Only project active shifts, ignore cancelled
-                let allShifts = rawShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
-                
-                const recurring = allShifts.filter(s => 
-                    (s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && 
-                    s.status === 'Confirmed'
-                );
-
-                const limit = new Date();
-                limit.setMonth(limit.getMonth() + lookAheadMonths);
-
-                recurring.forEach(s => {
-                    const start = new Date(s.date);
-                    let current = new Date(start);
-                    const interval = s.recurrence === 'weekly' ? 7 : 14;
-                    current.setDate(current.getDate() + interval);
-
-                    while(current <= limit) {
-                        const dateStr = current.toISOString().split('T')[0];
-                        // Check if this specific date exists as a real shift in the raw list
-                        const exists = rawShifts.some(ex => ex.date === dateStr && ex.userId === s.userId);
-                        if (!exists) {
-                            allShifts.push({
-                                ...s,
-                                id: `recur-${s.id}-${dateStr}`,
-                                date: dateStr,
-                                dateDisplay: formatBookingDate(dateStr),
-                                isProjection: true
-                            });
-                        }
-                        current.setDate(current.getDate() + interval);
-                    }
-                });
-                return allShifts.sort((a, b) => getSortValue(a) - getSortValue(b));
-            }, [rawShifts, lookAheadMonths]);
-        };
-
-        // --- LOGIC FOR LIST VIEW: ONLY NEXT RECURRING ---
-        const useNextRecurringList = (rawShifts) => {
-            return useMemo(() => {
-                // Use local date string comparison to avoid timezone issues
-                // Create date object in local time, then format to YYYY-MM-DD
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const todayStr = `${year}-${month}-${day}`;
-                
-                let resultList = [];
-
-                // 1. Add all active non-recurring shifts >= today
-                rawShifts.forEach(s => {
-                    if (s.status === 'Cancelled' || s.status === 'Declined') return;
-                    
-                    // Standard string comparison for ISO dates works reliably
-                    if (s.date >= todayStr && (!s.recurrence || s.recurrence === 'none')) {
-                        resultList.push(s);
-                    }
-                });
-
-                // 2. Process recurring shifts to find JUST the next one
-                const recurring = rawShifts.filter(s => (s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && s.status === 'Confirmed');
-                
-                recurring.forEach(s => {
-                    const interval = s.recurrence === 'weekly' ? 7 : 14;
-                    let nextDate = new Date(s.date);
-                    
-                    // Helper to format date object to YYYY-MM-DD string
-                    const toIsoString = (d) => {
-                        const y = d.getFullYear();
-                        const m = String(d.getMonth() + 1).padStart(2, '0');
-                        const da = String(d.getDate()).padStart(2, '0');
-                        return `${y}-${m}-${da}`;
-                    };
-
-                    let currentDateStr = s.date;
-
-                    // If start date is already in future/today, use it directly
-                    if (currentDateStr >= todayStr) {
-                         if (!resultList.find(r => r.id === s.id)) {
-                             resultList.push(s);
-                         }
-                         return;
-                    }
-
-                    // Otherwise loop forward until we hit >= today
-                    while (currentDateStr < todayStr) {
-                        nextDate.setDate(nextDate.getDate() + interval);
-                        currentDateStr = toIsoString(nextDate);
-                    }
-                    
-                    // Check if this calculated date exists as a real shift
-                    const exists = rawShifts.some(r => r.date === currentDateStr && r.userId === s.userId);
-                    
-                    // If it doesn't exist as a real shift, add this projection.
-                    if (!exists) {
-                        resultList.push({
-                            ...s,
-                            id: `next-recur-${s.id}`,
-                            date: currentDateStr,
-                            dateDisplay: formatBookingDate(currentDateStr),
-                            isProjection: true
-                        });
-                    }
-                });
-                
-                return resultList.sort((a, b) => getSortValue(a) - getSortValue(b));
-            }, [rawShifts]);
-        };
-
+        // --- SHARED LOGIC: RECURRING PROJECTION (SIMPLIFIED) ---
+        // Now that we generate real records, we don't need complex projection logic.
+        // We just show what's in the database, which is now accurate and complete.
+        
         const CalendarView = ({ shifts, onDateClick }) => {
             const [currentDate, setCurrentDate] = useState(new Date());
             const year = currentDate.getFullYear();
@@ -570,7 +467,7 @@
                 const map = {};
                 shifts.forEach(s => {
                     if (!s.date) return;
-                    // Explicitly hide cancelled/declined from calendar
+                    // Hide cancelled from calendar view
                     if (s.status === 'Cancelled' || s.status === 'Declined') return;
                     
                     if (!map[s.date]) map[s.date] = [];
@@ -597,8 +494,7 @@
                             <div className={`text-xs mb-1 ${isToday ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400'}`}>{d}</div>
                             <div className="flex flex-col gap-1 overflow-y-auto max-h-[70px]">
                                 {dayShifts.map(s => (
-                                    <div key={s.id} className={`text-[10px] px-1 rounded truncate flex items-center ${s.isProjection ? 'opacity-60 italic bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200' : s.status === 'Confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' : s.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'}`}>
-                                        {s.isProjection && <i className="fa-solid fa-rotate mr-1 text-[8px]"></i>}
+                                    <div key={s.id} className={`text-[10px] px-1 rounded truncate flex items-center ${s.status === 'Confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' : s.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'}`}>
                                         {s.status === 'Confirmed' ? '●' : '○'} {s.userName || 'Shift'}
                                     </div>
                                 ))}
@@ -658,26 +554,6 @@
                                 <button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700">Save Changes</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // PROFILE MODAL
-        const ProfileModal = ({ user, onClose, onUpdate }) => {
-            const [name, setName] = useState(user.displayName || '');
-            const [loading, setLoading] = useState(false);
-            const handleUpdate = async (e) => { e.preventDefault(); setLoading(true); await onUpdate(name); setLoading(false); onClose(); };
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Edit Profile</h3>
-                        <form onSubmit={handleUpdate} className="space-y-4">
-                            <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Full Name</label><input required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded focus:border-brand-500 outline-none dark:bg-slate-700 dark:text-white" value={name} onChange={e=>setName(e.target.value)} /></div>
-                            <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email</label><input disabled className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300" value={user.email} /></div>
-                            <button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Saving...' : 'Save Changes'}</button>
-                        </form>
                     </div>
                 </div>
             );
@@ -978,6 +854,7 @@
             const { bookShift } = useContext(AuthContext);
             const [loading, setLoading] = useState(false);
             const [msg, setMsg] = useState(null);
+            const [recurrence, setRecurrence] = useState('none'); // Track recurrence for conditional input
             
             const handleSubmit = async (e) => {
                 e.preventDefault(); 
@@ -1009,6 +886,7 @@
                     duration: diff.toFixed(1), 
                     service: d.get('service'), 
                     recurrence: d.get('recurrence'), 
+                    endDate: d.get('endDate'), // Pass End Date
                     notes: d.get('notes') 
                 });
 
@@ -1022,7 +900,29 @@
             };
             
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5"><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 border dark:border-slate-600 rounded-lg outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" /><div className="grid grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Start</label><input type="time" name="startTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Finish</label><input type="time" name="endTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div></div><div className="grid grid-cols-2 gap-4"><select name="recurrence" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white"><option value="none">One-off</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option></select><select name="service" required defaultValue="" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white"><option value="" disabled>Service Type...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select></div><textarea name="notes" rows="2" className="w-full p-3 border dark:border-slate-600 rounded-lg resize-none outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" placeholder="Notes..."></textarea><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70 transition-colors">Submit Request</button></form></div></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5"><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 border dark:border-slate-600 rounded-lg outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" />
+                
+                {/* End Date Input for Recurring Shifts */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                        <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block">Recurrence</label>
+                        <select name="recurrence" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                            <option value="none">One-off</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="fortnightly">Fortnightly</option>
+                        </select>
+                    </div>
+                    {recurrence !== 'none' && (
+                        <div className="col-span-2 animate-fade-in">
+                            <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block">End Date (Series)</label>
+                            <input type="date" name="endDate" required className="w-full p-3 border dark:border-slate-600 rounded-lg outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" />
+                        </div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Start</label><input type="time" name="startTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Finish</label><input type="time" name="endTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div></div>
+                
+                <select name="service" required defaultValue="" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white"><option value="" disabled>Service Type...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select><textarea name="notes" rows="2" className="w-full p-3 border dark:border-slate-600 rounded-lg resize-none outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" placeholder="Notes..."></textarea><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70 transition-colors">Submit Request</button></form></div></div>
             );
         };
 
@@ -1031,16 +931,15 @@
             const [loading, setLoading] = useState(false);
             const handleConfirm = async () => { setLoading(true); await onConfirm(shift.id, reason); setLoading(false); onClose(); };
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border dark:border-slate-600 rounded-lg mb-4 text-sm outline-none focus:border-red-500 dark:bg-slate-700 dark:text-white" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border rounded-lg mb-4 text-sm outline-none focus:border-red-500 dark:bg-slate-700 dark:text-white" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
             );
         };
 
         const WorkerDashboard = () => {
-             const { user, logout, workerShifts, workerResponse, updateProfile } = useContext(AuthContext);
+             const { user, logout, workerShifts, workerResponse } = useContext(AuthContext);
              const [loadingId, setLoadingId] = useState(null);
              const [viewMode, setViewMode] = useState('list');
              const [selectedDayShifts, setSelectedDayShifts] = useState(null);
-             const [isProfileOpen, setIsProfileOpen] = useState(false);
 
              const handleResponse = async (id, response) => { setLoadingId(id); await workerResponse(id, response); setLoadingId(null); };
              
@@ -1052,60 +951,36 @@
              // Filter out cancelled/declined for "Upcoming" and "Calendar"
              // We only want active shifts
              const activeWorkerShifts = workerShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
-
-             const projectedShifts = useRecurringProjection(activeWorkerShifts);
-             const nextRecurringList = useNextRecurringList(activeWorkerShifts);
-
+             
+             // Since we are generating individual shifts, no complex projection is needed for list/calendar anymore, 
+             // BUT we still want to see them all on calendar. 
+             // For the LIST view, it's standard list now.
+             
              // Upcoming: Future dates, strictly active
-             const upcomingShifts = (viewMode === 'list' ? nextRecurringList : projectedShifts)
+             const upcomingShifts = activeWorkerShifts
                 .filter(s => s.date >= todayStr)
                 .sort((a,b) => getSortValue(a) - getSortValue(b));
 
-             // Past: Date < today (including cancelled, if we want to see history of cancellations? 
-             // The user said "don't show deleted/cancelled on CALENDAR", but usually history includes them.
-             // I'll assume history shows everything for record keeping, but sorted by date descending)
+             // Past: Date < today
              const pastShifts = workerShifts.filter(s => s.date < todayStr).sort((a,b) => getSortValue(b) - getSortValue(a));
-
-             // Simple stats for dashboard (added as per new requirement)
-             const shiftsThisWeek = upcomingShifts.filter(s => {
-                const d = new Date(s.date);
-                const nextWeek = new Date();
-                nextWeek.setDate(nextWeek.getDate() + 7);
-                return d <= nextWeek;
-             }).length;
 
              return (
                  <div className="min-h-screen bg-slate-100 dark:bg-slate-900 font-sans pb-12 transition-colors">
                      {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
-                     {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
-                     
-                     <header className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
+                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600 dark:bg-slate-800">
                          <div className="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 dark:text-white">Worker Portal</h1></div>
                              <div className="flex gap-4 items-center">
                                  <ThemeToggle />
-                                 <button onClick={() => setIsProfileOpen(true)} className="text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400"><i className="fa-solid fa-user-circle text-xl"></i></button>
                                  <button onClick={logout} className="text-sm text-red-600 font-bold">Sign Out</button>
                              </div>
                          </div>
                      </header>
                      <main className="max-w-4xl mx-auto p-4 md:p-8">
                          
-                         {/* Quick Stats (New Feature) */}
-                         <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">Upcoming Shifts</p>
-                                <p className="text-2xl font-bold text-slate-900 dark:text-white">{upcomingShifts.length}</p>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">This Week</p>
-                                <p className="text-2xl font-bold text-brand-600">{shiftsThisWeek}</p>
-                            </div>
-                         </div>
-                         
                          <div className="flex justify-between items-center mb-6">
                              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Your Shifts</h2>
-                             <div className="bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-300 dark:border-slate-700 flex">
+                             <div className="bg-white p-1 rounded-lg border border-slate-300 flex dark:bg-slate-800 dark:border-slate-700">
                                  <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'list' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'}`}><i className="fa-solid fa-list mr-1"></i></button>
                                  <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'calendar' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'}`}><i className="fa-solid fa-calendar mr-1"></i></button>
                              </div>
@@ -1113,45 +988,45 @@
 
                          {viewMode === 'calendar' ? (
                              <div className="mb-8">
-                                 <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg mb-4 text-xs text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 flex items-start">
+                                 <div className="bg-blue-50 p-3 rounded-lg mb-4 text-xs text-blue-700 border border-blue-100 flex items-start dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
                                      <i className="fa-solid fa-circle-info mt-0.5 mr-2"></i>
                                      <span>Recurring shifts are projected on the calendar for the next 3 months.</span>
                                  </div>
-                                 <CalendarView shifts={activeWorkerShifts} onDateClick={setSelectedDayShifts} enableRecurringProjection={true} />
+                                 <CalendarView shifts={activeWorkerShifts} onDateClick={setSelectedDayShifts} />
                              </div>
                          ) : (
                              <>
-                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Upcoming</h3>
-                                 {upcomingShifts.length === 0 ? <div className="p-8 text-center bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 mb-8">No upcoming shifts assigned.</div> : (
+                                 <h3 className="text-lg font-bold text-slate-900 mb-4 dark:text-white">Upcoming</h3>
+                                 {upcomingShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 mb-8 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No upcoming shifts assigned.</div> : (
                                      <div className="space-y-4 mb-8">{upcomingShifts.map(s => (
-                                         <div key={s.id} className={`bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden ${s.isProjection ? 'opacity-80 border-dashed' : ''}`}>
+                                         <div key={s.id} className={`bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden ${s.isProjection ? 'opacity-80 border-dashed' : ''} dark:bg-slate-800 dark:border-slate-700`}>
                                              <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.workerStatus === 'Accepted' ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
                                              <div className="pl-3">
                                                  <div className="flex items-center gap-2 mb-1">
                                                      <span className="font-bold text-lg text-slate-900 dark:text-white">{s.dateDisplay}</span>
                                                      {(s.recurrence && s.recurrence !== 'none') && (
-                                                         <span className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold uppercase">
+                                                         <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase dark:bg-blue-900/30 dark:text-blue-300">
                                                              <i className="fa-solid fa-rotate mr-1"></i> {s.recurrence}
                                                          </span>
                                                      )}
-                                                     {!s.isProjection && <span className={`text-xs px-2 py-0.5 rounded border ${s.workerStatus === 'Accepted' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-100 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-100 dark:border-yellow-800'}`}>{s.workerStatus || 'Pending Action'}</span>}
+                                                     {!s.isProjection && <span className={`text-xs px-2 py-0.5 rounded border ${s.workerStatus === 'Accepted' ? 'bg-green-50 text-green-800 border-green-100 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' : 'bg-yellow-50 text-yellow-800 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'}`}>{s.workerStatus || 'Pending Action'}</span>}
                                                  </div>
                                                  <div className="text-sm text-slate-600 dark:text-slate-400"><p><strong>Client:</strong> {s.userName}</p><p>{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</p></div>
                                              </div>
-                                             {!s.isProjection && (s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white dark:bg-slate-700 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-2 rounded-lg font-bold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">Decline</button></div>}
+                                             {!s.isProjection && (s.workerStatus === 'Pending Acceptance' || !s.workerStatus) && <div className="flex gap-3"><button onClick={()=>handleResponse(s.id, 'Accepted')} disabled={loadingId===s.id} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors">Accept</button><button onClick={()=>handleResponse(s.id, 'Declined')} disabled={loadingId===s.id} className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors dark:bg-slate-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">Decline</button></div>}
                                          </div>
                                      ))}</div>
                                  )}
 
-                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">History</h3>
-                                 {pastShifts.length === 0 ? <div className="p-8 text-center bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400">No past shifts found.</div> : (
+                                 <h3 className="text-lg font-bold text-slate-900 mb-4 dark:text-white">History</h3>
+                                 {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No past shifts found.</div> : (
                                      <div className="space-y-4 opacity-75">{pastShifts.map(s => (
-                                         <div key={s.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                         <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center dark:bg-slate-800/50 dark:border-slate-700">
                                              <div>
                                                  <div className="font-bold text-slate-700 dark:text-slate-300">{s.dateDisplay}</div>
                                                  <div className="text-sm text-slate-500 dark:text-slate-400">{s.userName} • {s.service}</div>
                                              </div>
-                                             <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">{s.status === 'Confirmed' ? 'Completed' : s.status}</div>
+                                             <div className="text-xs font-bold text-slate-400 uppercase dark:text-slate-500">{s.status === 'Confirmed' ? 'Completed' : s.status}</div>
                                          </div>
                                      ))}</div>
                                  )}
@@ -1163,13 +1038,12 @@
          };
 
         const ClientDashboard = () => {
-            const { user, logout, shifts, isLoadingShifts, updateShiftStatus, updateProfile } = useContext(AuthContext);
+            const { user, logout, shifts, isLoadingShifts, updateShiftStatus } = useContext(AuthContext);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [cancelModalShift, setCancelModalShift] = useState(null);
             const [viewMode, setViewMode] = useState('list'); 
             const [selectedDayShifts, setSelectedDayShifts] = useState(null);
             const [activeTab, setActiveTab] = useState('upcoming');
-            const [isProfileOpen, setIsProfileOpen] = useState(false);
 
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1193,21 +1067,15 @@
             const nextShift = upcomingShifts.length > 0 ? upcomingShifts[0] : null;
 
             return (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-12 transition-colors">
+                <div className="min-h-screen bg-slate-50 font-sans pb-12 transition-colors dark:bg-slate-900">
                     {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
                     {cancelModalShift && <CancellationModal shift={cancelModalShift} onClose={() => setCancelModalShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
                     {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
-                    {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
 
-                    <header className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
+                    <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600 dark:bg-slate-800">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 dark:text-white hidden md:inline">My Pathway Portal</h1></div>
-                            <div className="flex items-center gap-6">
-                                <span className="text-sm text-slate-500 dark:text-slate-400 hidden md:inline">Welcome, <span className="text-slate-900 dark:text-white font-bold">{user.displayName || 'Client'}</span></span>
-                                <button onClick={() => setIsProfileOpen(true)} className="text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400"><i className="fa-solid fa-user-circle text-xl"></i></button>
-                                <button onClick={logout} className="text-sm text-red-600 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30">Sign Out</button>
-                                <ThemeToggle />
-                            </div>
+                            <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white"><i className="fa-solid fa-hands-holding-circle"></i></div><h1 className="text-xl font-bold text-slate-900 hidden md:inline dark:text-white">My Pathway Portal</h1></div>
+                            <div className="flex items-center gap-6"><span className="text-sm text-slate-500 hidden md:inline dark:text-slate-400">Welcome, <span className="text-slate-900 font-bold dark:text-white">{user.displayName || 'Client'}</span></span><button onClick={logout} className="text-sm text-red-600 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30">Sign Out</button><ThemeToggle /></div>
                         </div>
                     </header>
 
@@ -1226,32 +1094,32 @@
                                     </div>
                                 </div>
                             ) : (
-                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md border border-slate-200 dark:border-slate-700 text-center">
+                                <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 text-center dark:bg-slate-800 dark:border-slate-700">
                                     <div className="w-14 h-14 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-regular fa-calendar-plus text-2xl text-brand-600"></i></div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Upcoming Sessions</h3>
-                                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">You are all caught up! Book a new session below.</p>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2 dark:text-white">No Upcoming Sessions</h3>
+                                    <p className="text-slate-500 text-sm mb-4 dark:text-slate-400">You are all caught up! Book a new session below.</p>
                                     <button onClick={() => setIsModalOpen(true)} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 shadow-lg transform hover:-translate-y-0.5 transition-all">Request New Session</button>
                                 </div>
                             )}
 
                             {nextShift && (
-                                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md border border-slate-200 dark:border-slate-700 text-center">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Book Another Session</h3>
-                                    <button onClick={() => setIsModalOpen(true)} className="w-full bg-brand-50 dark:bg-slate-700 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-slate-600 py-3 rounded-xl font-bold hover:bg-brand-100 dark:hover:bg-slate-600 transition-all">Request New Session</button>
+                                <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 text-center dark:bg-slate-800 dark:border-slate-700">
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2 dark:text-white">Book Another Session</h3>
+                                    <button onClick={() => setIsModalOpen(true)} className="w-full bg-brand-50 text-brand-700 border border-brand-200 py-3 rounded-xl font-bold hover:bg-brand-100 transition-all dark:bg-slate-700 dark:text-brand-300 dark:border-slate-600 dark:hover:bg-slate-600">Request New Session</button>
                                 </div>
                             )}
 
-                            <div className="bg-blue-50 dark:bg-blue-900/30 p-5 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm"><h4 className="font-bold text-blue-900 dark:text-blue-200 text-sm mb-2"><i className="fa-solid fa-headset mr-2"></i>Need Help?</h4><p className="text-xs text-blue-700 dark:text-blue-300">Call <span className="font-bold">+61 420 673 303</span> for urgent issues.</p></div>
+                            <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm dark:bg-blue-900/30 dark:border-blue-800"><h4 className="font-bold text-blue-900 text-sm mb-2 dark:text-blue-200"><i className="fa-solid fa-headset mr-2"></i>Need Help?</h4><p className="text-xs text-blue-700 dark:text-blue-300">Call <span className="font-bold">+61 420 673 303</span> for urgent issues.</p></div>
                         </div>
                         <div className="lg:col-span-2 order-1 lg:order-2">
-                            <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-200 pb-4 dark:border-slate-700">
                                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Your Schedule</h2>
                                 <div className="flex gap-2">
-                                    <div className="bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-300 dark:border-slate-700 flex">
+                                    <div className="bg-white p-1 rounded-lg border border-slate-300 flex dark:bg-slate-800 dark:border-slate-700">
                                         <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'list' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'}`}><i className="fa-solid fa-list mr-1"></i></button>
                                         <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-xs font-bold ${viewMode === 'calendar' ? 'bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300' : 'text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700'}`}><i className="fa-solid fa-calendar mr-1"></i></button>
                                     </div>
-                                    <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 p-2"><i className="fa-solid fa-rotate-right"></i></button>
+                                    <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-brand-600 p-2 dark:hover:text-brand-400"><i className="fa-solid fa-rotate-right"></i></button>
                                 </div>
                             </div>
                             
@@ -1262,26 +1130,26 @@
                                     ) : (
                                         <>
                                             {/* Tabs Navigation */}
-                                            <div className="flex space-x-2 mb-6 bg-slate-200 dark:bg-slate-700 p-1 rounded-lg w-fit">
-                                                <button onClick={() => setActiveTab('upcoming')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'upcoming' ? 'bg-white dark:bg-slate-800 text-brand-700 dark:text-brand-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Upcoming</button>
-                                                <button onClick={() => setActiveTab('pending')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all flex items-center ${activeTab === 'pending' ? 'bg-white dark:bg-slate-800 text-yellow-700 dark:text-yellow-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Pending {pendingShifts.length > 0 && <span className="ml-2 bg-yellow-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pendingShifts.length}</span>}</button>
-                                                <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>History</button>
+                                            <div className="flex space-x-2 mb-6 bg-slate-200 p-1 rounded-lg w-fit dark:bg-slate-700">
+                                                <button onClick={() => setActiveTab('upcoming')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'upcoming' ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-800 dark:text-brand-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>Upcoming</button>
+                                                <button onClick={() => setActiveTab('pending')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all flex items-center ${activeTab === 'pending' ? 'bg-white text-yellow-700 shadow-sm dark:bg-slate-800 dark:text-yellow-400' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>Pending {pendingShifts.length > 0 && <span className="ml-2 bg-yellow-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pendingShifts.length}</span>}</button>
+                                                <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-white text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>History</button>
                                             </div>
 
                                             {/* Upcoming List */}
                                             {activeTab === 'upcoming' && (
                                                 <div className="animate-fade-in">
-                                                    {upcomingShifts.length === 0 ? <div className="text-center text-slate-400 dark:text-slate-500 py-8 italic">No confirmed upcoming sessions.</div> : 
+                                                    {upcomingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No confirmed upcoming sessions.</div> : 
                                                     <div className="space-y-3">
                                                         {upcomingShifts.map(s => (
-                                                            <div key={s.id} className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 dark:hover:border-brand-700 transition-all">
+                                                            <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-brand-700">
                                                                 <div className="mb-3 md:mb-0">
-                                                                    <div className="font-bold text-slate-800 dark:text-white text-lg flex items-center"><i className="fa-regular fa-calendar text-green-600 dark:text-green-400 mr-3"></i> {s.dateDisplay}</div>
-                                                                    <div className="text-sm text-slate-500 dark:text-slate-400 ml-7 flex gap-3"><span>{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
+                                                                    <div className="font-bold text-slate-800 text-lg flex items-center dark:text-white"><i className="fa-regular fa-calendar text-green-600 mr-3 dark:text-green-400"></i> {s.dateDisplay}</div>
+                                                                    <div className="text-sm text-slate-500 ml-7 flex gap-3 dark:text-slate-400"><span>{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded dark:bg-blue-900/30 dark:text-blue-300"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
                                                                 </div>
                                                                 <div className="flex items-center gap-3">
-                                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">Scheduled</span>
-                                                                    <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2" title="Cancel"><i className="fa-solid fa-ban"></i></button>
+                                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">Scheduled</span>
+                                                                    <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 p-2 dark:hover:text-red-400" title="Cancel"><i className="fa-solid fa-ban"></i></button>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1292,17 +1160,17 @@
                                             {/* Pending List */}
                                             {activeTab === 'pending' && (
                                                 <div className="animate-fade-in">
-                                                    {pendingShifts.length === 0 ? <div className="text-center text-slate-400 dark:text-slate-500 py-8 italic">No pending requests.</div> : 
+                                                    {pendingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No pending requests.</div> : 
                                                     <div className="space-y-3">
                                                         {pendingShifts.map(s => (
-                                                            <div key={s.id} className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-yellow-100 dark:border-yellow-900/50 shadow-sm flex flex-col md:flex-row justify-between items-center">
+                                                            <div key={s.id} className="bg-white p-5 rounded-xl border border-yellow-100 shadow-sm flex flex-col md:flex-row justify-between items-center dark:bg-slate-800 dark:border-yellow-900/50">
                                                                 <div className="mb-3 md:mb-0 opacity-75">
-                                                                    <div className="font-bold text-slate-800 dark:text-white text-lg flex items-center"><i className="fa-regular fa-clock text-yellow-600 dark:text-yellow-400 mr-3"></i> {s.dateDisplay}</div>
-                                                                    <div className="text-sm text-slate-500 dark:text-slate-400 ml-7">{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</div>
+                                                                    <div className="font-bold text-slate-800 text-lg flex items-center dark:text-white"><i className="fa-regular fa-clock text-yellow-600 mr-3 dark:text-yellow-400"></i> {s.dateDisplay}</div>
+                                                                    <div className="text-sm text-slate-500 ml-7 dark:text-slate-400">{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</div>
                                                                 </div>
                                                                 <div className="flex items-center gap-3">
-                                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">Request Sent</span>
-                                                                    <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2" title="Withdraw"><i className="fa-solid fa-ban"></i></button>
+                                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">Request Sent</span>
+                                                                    <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 p-2 dark:hover:text-red-400" title="Withdraw"><i className="fa-solid fa-ban"></i></button>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1313,13 +1181,13 @@
                                             {/* History List */}
                                             {activeTab === 'history' && (
                                                 <div className="animate-fade-in">
-                                                    {historyShifts.length === 0 ? <div className="text-center text-slate-400 dark:text-slate-500 py-8 italic">No history found.</div> : 
+                                                    {historyShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No history found.</div> : 
                                                     <div className="space-y-3 opacity-75">
                                                         {historyShifts.map(s => (
-                                                            <div key={s.id} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                                            <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                                                                 <div className="flex justify-between items-center">
                                                                     <div>
-                                                                        <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{s.dateDisplay}</div>
+                                                                        <div className="font-bold text-slate-700 text-sm dark:text-slate-300">{s.dateDisplay}</div>
                                                                         <div className="text-xs text-slate-500 dark:text-slate-400">{s.service}</div>
                                                                     </div>
                                                                     <div className={`text-xs font-bold uppercase ${s.status === 'Confirmed' ? 'text-slate-500 dark:text-slate-400' : 'text-red-500 dark:text-red-400'}`}>
@@ -1328,7 +1196,7 @@
                                                                 </div>
                                                                 {/* Moved note to its own line */}
                                                                 {s.cancellationReason && (
-                                                                    <div className="mt-3 text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-100 dark:border-red-800 flex items-start">
+                                                                    <div className="mt-3 text-xs text-red-700 bg-red-50 p-3 rounded border border-red-100 flex items-start dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
                                                                         <i className="fa-solid fa-circle-info mr-2 mt-0.5 text-red-500 dark:text-red-400"></i>
                                                                         <span><strong>Note:</strong> {s.cancellationReason}</span>
                                                                     </div>
