@@ -74,11 +74,6 @@
     
     <style>
         #error-display { display: none; }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
@@ -131,10 +126,15 @@
         const AuthContext = React.createContext();
         const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
 
-        const formatTimestamp = (timestamp) => {
-            if (!timestamp) return 'N/A';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+        // --- NEW: Custom Date Formatter ---
+        const formatBookingDate = (dateString) => {
+            if (!dateString) return 'Pending Date';
+            const date = new Date(dateString);
+            // Format: "25 November Tuesday"
+            const day = date.getDate();
+            const month = date.toLocaleDateString('en-AU', { month: 'long' });
+            const weekday = date.toLocaleDateString('en-AU', { weekday: 'long' });
+            return `${day} ${month} ${weekday}`;
         };
 
         const getTomorrowDate = () => {
@@ -143,7 +143,6 @@
             return d.toISOString().split('T')[0];
         };
 
-        // --- Helpers ---
         const isShortNotice = (shiftDateString) => {
             if (!shiftDateString) return false;
             const shiftDate = new Date(shiftDateString);
@@ -186,13 +185,18 @@
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     const data = snapshot.docs.map(doc => {
                         const d = doc.data();
+                        let statusText = d.status;
+                        if (d.status === 'Pending') statusText = 'Request Sent';
+                        if (d.status === 'Confirmed') statusText = 'Scheduled';
+                        if (d.status === 'Cancelled') statusText = 'Unavailable';
+                        if (d.status === 'Declined') statusText = 'Declined';
+
                         return {
                             id: doc.id,
                             ...d,
-                            statusLabel: d.status === 'Pending' ? 'Request Sent' : 
-                                         d.status === 'Confirmed' ? 'Scheduled' : 
-                                         d.status === 'Declined' ? 'Declined' : 'Unavailable',
-                            dateDisplay: d.date || 'Pending', 
+                            statusLabel: statusText,
+                            // Use new formatter here
+                            dateDisplay: d.date ? formatBookingDate(d.date) : 'Pending', 
                             rawTimestamp: d.timestamp?.toMillis() || 0
                         };
                     });
@@ -399,76 +403,54 @@
             );
         };
 
-        // --- Admin Components ---
-        const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus }) => {
-            const pendingCount = client.stats.pending;
-            const upcomingCount = client.stats.upcoming;
+        // --- Admin Action Modal (New) ---
+        const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
+            const [reason, setReason] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleConfirm = async () => {
+                if (!reason) return; // Require reason
+                setLoading(true);
+                await onConfirm(shift.id, actionType, reason);
+                setLoading(false);
+                onClose();
+            };
+
+            const isDecline = actionType === 'Declined';
+            const title = isDecline ? 'Decline Request' : 'Cancel Scheduled Shift';
+            const colorClass = 'text-red-600';
+            const btnClass = 'bg-red-600 hover:bg-red-700';
 
             return (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md mb-4">
-                    <div 
-                        className="p-5 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50"
-                        onClick={onExpand}
-                    >
-                        <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${pendingCount > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>
-                                {client.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900 text-lg">{client.name}</h3>
-                                <p className="text-xs text-slate-500">{client.email}</p>
-                            </div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
+                        <h3 className={`text-xl font-bold mb-4 ${colorClass} flex items-center`}>
+                            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {title}
+                        </h3>
+                        <p className="text-slate-600 mb-4">
+                            Please provide a reason for {isDecline ? 'declining' : 'cancelling'} <strong>{shift.userName}'s</strong> session on <strong>{shift.dateDisplay}</strong>.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reason (Visible to Client) <span className="text-red-500">*</span></label>
+                            <textarea 
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm"
+                                rows="3"
+                                placeholder="e.g. Staff unavailable, scheduling conflict..."
+                            ></textarea>
                         </div>
-
-                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                            <div className="flex gap-3">
-                                <div className="text-center px-3 py-1 bg-slate-100 rounded-lg">
-                                    <span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span>
-                                    <span className="font-bold text-brand-600">{upcomingCount}</span>
-                                </div>
-                                <div className={`text-center px-3 py-1 rounded-lg ${pendingCount > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}>
-                                    <span className="block text-xs text-slate-400 font-bold uppercase">Pending</span>
-                                    <span className={`font-bold ${pendingCount > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{pendingCount}</span>
-                                </div>
-                            </div>
-                            <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i>
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Go Back</button>
+                            <button 
+                                onClick={handleConfirm} 
+                                disabled={!reason || loading}
+                                className={`px-4 py-2 text-white rounded-lg font-bold transition-colors disabled:opacity-50 ${btnClass}`}
+                            >
+                                {loading ? 'Processing...' : 'Confirm Action'}
+                            </button>
                         </div>
                     </div>
-
-                    {isExpanded && (
-                        <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-3 animate-fade-in">
-                            {client.shifts.map(s => (
-                                <div key={s.id} className="bg-white p-4 rounded-lg border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 font-bold text-slate-800">
-                                            <i className="fa-regular fa-calendar text-brand-400"></i> {s.dateDisplay}
-                                        </div>
-                                        <div className="text-sm text-slate-500 mt-1">
-                                            {s.service} • {s.duration} hrs 
-                                            {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}
-                                        </div>
-                                        {s.notes && <div className="text-xs text-slate-500 mt-2 italic bg-yellow-50 p-2 rounded inline-block">"{s.notes}"</div>}
-                                        {s.status === 'Cancelled' && s.cancellationReason && <div className="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded"><strong>Cancelled:</strong> {s.cancellationReason}</div>}
-                                    </div>
-
-                                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                                        {s.status === 'Pending' ? (
-                                            <>
-                                                <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-bold shadow-sm">Accept</button>
-                                                <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Declined'); }} className="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded text-sm font-bold shadow-sm">Decline</button>
-                                            </>
-                                        ) : (
-                                            <span className={`px-3 py-1 rounded text-xs font-bold uppercase border ${
-                                                s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                                            }`}>
-                                                {s.statusLabel}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
             );
         };
@@ -477,6 +459,7 @@
         const AdminDashboard = () => {
             const { shifts, isLoadingShifts, user, logout, updateShiftStatus } = React.useContext(AuthContext);
             const [expandedClientId, setExpandedClientId] = useState(null);
+            const [actionModal, setActionModal] = useState(null); // { shift, type }
 
             // Group shifts by Client ID
             const clients = useMemo(() => {
@@ -495,7 +478,6 @@
                     
                     const shiftDate = new Date(s.date);
                     const now = new Date();
-                    // Count stats
                     if (s.status === 'Pending') groups[s.userId].stats.pending++;
                     if ((s.status === 'Confirmed' || s.status === 'Pending') && shiftDate >= now) {
                         groups[s.userId].stats.upcoming++;
@@ -504,18 +486,13 @@
                 return Object.values(groups);
             }, [shifts]);
 
-            // Filter Alerts (Pending requests or Cancellations in the last 7 days)
             const alerts = useMemo(() => {
-                return shifts.filter(s => {
-                    if (s.status === 'Pending') return true;
-                    if (s.status === 'Cancelled') {
-                         // Check if cancellation was recent (e.g. within last 48 hours of creation/update - utilizing simple logic here)
-                         // For simplicity, showing pending only in top alerts for now as per "requested new shifts" focus
-                         return false; 
-                    }
-                    return false;
-                });
+                return shifts.filter(s => s.status === 'Pending');
             }, [shifts]);
+
+            const openActionModal = (shift, type) => {
+                setActionModal({ shift, type });
+            };
 
             return (
                 <div className="min-h-screen bg-slate-100 font-sans pb-12">
@@ -531,7 +508,16 @@
 
                     <main className="max-w-7xl mx-auto p-4 md:p-8">
                         
-                        {/* Alerts Section */}
+                        {/* Modal */}
+                        {actionModal && (
+                            <AdminActionModal 
+                                shift={actionModal.shift} 
+                                actionType={actionModal.type} 
+                                onClose={() => setActionModal(null)} 
+                                onConfirm={updateShiftStatus} 
+                            />
+                        )}
+
                         {alerts.length > 0 && (
                             <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6 shadow-sm animate-fade-in">
                                 <h3 className="text-yellow-800 font-bold text-lg mb-4 flex items-center">
@@ -544,12 +530,7 @@
                                                 <p className="font-bold text-slate-900">{s.userName}</p>
                                                 <p className="text-xs text-slate-500">{s.service} • {s.dateDisplay}</p>
                                             </div>
-                                            <button 
-                                                onClick={() => setExpandedClientId(s.userId)}
-                                                className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold hover:bg-yellow-200"
-                                            >
-                                                Review
-                                            </button>
+                                            <button onClick={() => setExpandedClientId(s.userId)} className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold hover:bg-yellow-200">Review</button>
                                         </div>
                                     ))}
                                 </div>
@@ -565,13 +546,55 @@
                             <div>
                                 {clients.length === 0 && <div className="p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">No clients found.</div>}
                                 {clients.map(client => (
-                                    <ClientCard 
-                                        key={client.id} 
-                                        client={client} 
-                                        isExpanded={expandedClientId === client.id}
-                                        onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)}
-                                        onUpdateStatus={updateShiftStatus}
-                                    />
+                                    <div key={client.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md mb-4">
+                                        <div className="p-5 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50" onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)}>
+                                            <div className="flex items-center gap-4 mb-3 md:mb-0 w-full md:w-auto">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg ${client.stats.pending > 0 ? 'bg-yellow-500' : 'bg-brand-500'}`}>
+                                                    {client.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900 text-lg">{client.name}</h3>
+                                                    <p className="text-xs text-slate-500">{client.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                                                <div className="flex gap-3">
+                                                    <div className="text-center px-3 py-1 bg-slate-100 rounded-lg"><span className="block text-xs text-slate-400 font-bold uppercase">Upcoming</span><span className="font-bold text-brand-600">{client.stats.upcoming}</span></div>
+                                                    <div className={`text-center px-3 py-1 rounded-lg ${client.stats.pending > 0 ? 'bg-yellow-100' : 'bg-slate-100'}`}><span className="block text-xs text-slate-400 font-bold uppercase">Pending</span><span className={`font-bold ${client.stats.pending > 0 ? 'text-yellow-700' : 'text-slate-400'}`}>{client.stats.pending}</span></div>
+                                                </div>
+                                                <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${expandedClientId === client.id ? 'rotate-180' : ''}`}></i>
+                                            </div>
+                                        </div>
+                                        {expandedClientId === client.id && (
+                                            <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-3 animate-fade-in">
+                                                {client.shifts.map(s => (
+                                                    <div key={s.id} className="bg-white p-4 rounded-lg border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 font-bold text-slate-800"><i className="fa-regular fa-calendar text-brand-400"></i> {s.dateDisplay}</div>
+                                                            <div className="text-sm text-slate-500 mt-1">{s.service} • {s.duration} hrs {s.recurrence && s.recurrence !== 'none' && <span className="ml-2 bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
+                                                            {s.notes && <div className="text-xs text-slate-500 mt-2 italic bg-yellow-50 p-2 rounded inline-block">"{s.notes}"</div>}
+                                                            {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' || s.statusLabel === 'Cancelled') && s.cancellationReason && <div className="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded"><strong>Reason:</strong> {s.cancellationReason}</div>}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                                            {s.status === 'Pending' ? (
+                                                                <>
+                                                                    <button onClick={(e) => { e.stopPropagation(); updateShiftStatus(s.id, 'Confirmed'); }} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-bold shadow-sm">Accept</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 rounded text-sm font-bold shadow-sm">Decline</button>
+                                                                </>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`px-3 py-1 rounded text-xs font-bold uppercase border ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{s.statusLabel}</span>
+                                                                    {s.status === 'Confirmed' && (
+                                                                        <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-slate-400 hover:text-red-600 transition-colors" title="Cancel Shift"><i className="fa-solid fa-ban"></i></button>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -580,7 +603,7 @@
             );
         };
 
-        // --- Cancellation Modal ---
+        // --- Cancellation Modal (Client Side) ---
         const CancellationModal = ({ shift, onClose, onConfirm }) => {
             const [reason, setReason] = useState('');
             const shortNotice = isShortNotice(shift.date);
@@ -832,6 +855,15 @@
                                                         <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 transition-colors p-2" title="Cancel Session">
                                                             <i className="fa-solid fa-ban"></i>
                                                         </button>
+                                                    )}
+
+                                                    {(s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined') && s.cancellationReason && (
+                                                        <div className="group relative">
+                                                            <i className="fa-solid fa-circle-info text-red-500 cursor-help"></i>
+                                                            <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-white border border-red-200 rounded shadow-lg text-xs text-red-700 hidden group-hover:block z-10">
+                                                                {s.cancellationReason}
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
