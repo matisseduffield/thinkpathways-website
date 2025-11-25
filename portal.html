@@ -316,7 +316,6 @@
                 } catch (e) { return false; }
             };
 
-            // NEW: Remove Worker function
             const removeWorker = async (shiftId) => {
                 try {
                     await db.collection(COLLECTION_PATH).doc(shiftId).update({
@@ -407,6 +406,55 @@
                 // Sort chronologically by date + start time
                 return allShifts.sort((a, b) => getSortValue(a) - getSortValue(b));
             }, [rawShifts, lookAheadMonths]);
+        };
+
+        // --- LOGIC FOR LIST VIEW: ONLY NEXT RECURRING ---
+        // Filters recurring shifts to show only the *next* instance relative to today
+        const useNextRecurringList = (rawShifts) => {
+            return useMemo(() => {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                let resultList = [];
+
+                rawShifts.forEach(s => {
+                    if (s.status === 'Cancelled' || s.status === 'Declined') return;
+
+                    const shiftDate = new Date(s.date);
+                    
+                    // If standard one-off is upcoming
+                    if (shiftDate >= today && (!s.recurrence || s.recurrence === 'none')) {
+                        resultList.push(s);
+                    }
+                    // If recurring (start date can be past or future)
+                    else if ((s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && s.status === 'Confirmed') {
+                        const interval = s.recurrence === 'weekly' ? 7 : 14;
+                        let nextDate = new Date(shiftDate);
+                        
+                        // Fast forward to next occurrence
+                        while (nextDate < today) {
+                            nextDate.setDate(nextDate.getDate() + interval);
+                        }
+                        
+                        // Add THIS specific next instance
+                        const dateStr = nextDate.toISOString().split('T')[0];
+                        const exists = rawShifts.some(r => r.date === dateStr && r.userId === s.userId);
+                        
+                        if (!exists) {
+                            resultList.push({
+                                ...s,
+                                id: `next-recur-${s.id}`,
+                                date: dateStr,
+                                dateDisplay: formatBookingDate(dateStr),
+                                isProjection: true
+                            });
+                        } else {
+                            // If the specific date exists as a real record, it will be picked up by standard logic if it's >= today
+                        }
+                    }
+                });
+                
+                return resultList.sort((a, b) => getSortValue(a) - getSortValue(b));
+            }, [rawShifts]);
         };
 
         const CalendarView = ({ shifts, onDateClick }) => {
@@ -779,7 +827,9 @@
                 
                 // Basic Validation
                 if (new Date(d.get('date')) < new Date(new Date().setDate(new Date().getDate() + 1))) { 
-                    setMsg({type:'error', text:'Please select a date from tomorrow onwards.'}); setLoading(false); return; 
+                    setMsg({type:'error', text:'Please select a date from tomorrow onwards.'}); 
+                    setLoading(false); 
+                    return; 
                 }
                 if(!start || !end) { setMsg({type:'error', text:'Please select start and end times.'}); setLoading(false); return; }
 
@@ -830,12 +880,17 @@
 
              const handleResponse = async (id, response) => { setLoadingId(id); await workerResponse(id, response); setLoadingId(null); };
              
-             const projectedShifts = useRecurringProjection(workerShifts);
+             // Split worker shifts
              const now = new Date();
              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
              
-             const upcomingShifts = projectedShifts.filter(s => new Date(s.date) >= today).sort((a,b) => getSortValue(a) - getSortValue(b));
-             // For past shifts, we typically only show actual database records, not projections
+             const projectedShifts = useRecurringProjection(workerShifts);
+             const nextRecurringList = useNextRecurringList(workerShifts);
+
+             const upcomingShifts = (viewMode === 'list' ? nextRecurringList : projectedShifts)
+                .filter(s => new Date(s.date) >= today)
+                .sort((a,b) => getSortValue(a) - getSortValue(b));
+
              const pastShifts = workerShifts.filter(s => new Date(s.date) < today).sort((a,b) => getSortValue(b) - getSortValue(a));
 
              return (
