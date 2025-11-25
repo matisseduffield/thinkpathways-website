@@ -388,7 +388,7 @@
         // --- SHARED LOGIC: RECURRING PROJECTION ---
         const useRecurringProjection = (rawShifts, lookAheadMonths = 3) => {
             return useMemo(() => {
-                // Only project active shifts
+                // Only project active shifts, ignore cancelled
                 let allShifts = rawShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
                 
                 const recurring = allShifts.filter(s => 
@@ -407,6 +407,7 @@
 
                     while(current <= limit) {
                         const dateStr = current.toISOString().split('T')[0];
+                        // Check if this specific date exists as a real shift in the raw list
                         const exists = rawShifts.some(ex => ex.date === dateStr && ex.userId === s.userId);
                         if (!exists) {
                             allShifts.push({
@@ -428,14 +429,20 @@
         const useNextRecurringList = (rawShifts) => {
             return useMemo(() => {
                 // Use local date string comparison to avoid timezone issues
-                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+                // Create date object in local time, then format to YYYY-MM-DD
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${year}-${month}-${day}`;
+                
                 let resultList = [];
 
-                // 1. Add all standard confirmed/pending shifts that are >= today
+                // 1. Add all active non-recurring shifts >= today
                 rawShifts.forEach(s => {
                     if (s.status === 'Cancelled' || s.status === 'Declined') return;
                     
-                    // Simple string comparison works for ISO dates
+                    // Standard string comparison for ISO dates works reliably
                     if (s.date >= todayStr && (!s.recurrence || s.recurrence === 'none')) {
                         resultList.push(s);
                     }
@@ -446,17 +453,22 @@
                 
                 recurring.forEach(s => {
                     const interval = s.recurrence === 'weekly' ? 7 : 14;
-                    
-                    // Start from original date
                     let nextDate = new Date(s.date);
                     // We need to find the first occurrence >= today
-                    // Convert dates to timestamps for math, but compare using strings
-                    const todayDate = new Date(todayStr);
                     
-                    // If start date is already in future, that IS the next one
-                    if (s.date >= todayStr) {
-                         // Check if this specific date exists as real shift, if so it's handled in loop 1
-                         // If not (e.g. it is the base recurrence record), add it
+                    // Helper to format date object to YYYY-MM-DD string
+                    const toIsoString = (d) => {
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const da = String(d.getDate()).padStart(2, '0');
+                        return `${y}-${m}-${da}`;
+                    };
+
+                    let currentDateStr = s.date;
+
+                    // If start date is already in future/today, use it directly
+                    if (currentDateStr >= todayStr) {
+                         // Check if this specific date exists as real shift override
                          if (!resultList.find(r => r.id === s.id)) {
                              resultList.push(s);
                          }
@@ -464,19 +476,21 @@
                     }
 
                     // Otherwise loop forward until we hit >= today
-                    while (nextDate < todayDate) {
+                    while (currentDateStr < todayStr) {
                         nextDate.setDate(nextDate.getDate() + interval);
+                        currentDateStr = toIsoString(nextDate);
                     }
                     
-                    const dateStr = nextDate.toISOString().split('T')[0];
-                    const exists = rawShifts.some(r => r.date === dateStr && r.userId === s.userId);
+                    // Check if this calculated date exists as a real shift
+                    const exists = rawShifts.some(r => r.date === currentDateStr && r.userId === s.userId);
                     
+                    // If it doesn't exist as a real shift, add this projection.
                     if (!exists) {
                         resultList.push({
                             ...s,
                             id: `next-recur-${s.id}`,
-                            date: dateStr,
-                            dateDisplay: formatBookingDate(dateStr),
+                            date: currentDateStr,
+                            dateDisplay: formatBookingDate(currentDateStr),
                             isProjection: true
                         });
                     }
