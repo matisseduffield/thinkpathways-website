@@ -57,6 +57,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
     
+    <!-- Error Catching UI -->
     <div id="error-display" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-8">
         <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
             <h2 class="text-xl font-bold text-red-800 mb-2">Portal Error</h2>
@@ -305,10 +306,10 @@
         const TurnstileWidget = ({ onVerify }) => {
             const containerRef = useRef(null);
             useEffect(() => {
-                if (window.turnstile && TURNSTILE_SITE_KEY) {
+                if (window.turnstile && window.__turnstile_site_key) {
                     if (containerRef.current) containerRef.current.innerHTML = '';
                     window.turnstile.render(containerRef.current, {
-                        sitekey: TURNSTILE_SITE_KEY,
+                        sitekey: window.__turnstile_site_key,
                         callback: (token) => onVerify(token),
                     });
                 }
@@ -347,7 +348,7 @@
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900">Assign Worker</h3><p className="text-sm text-slate-500 mb-4">Select a worker for this shift:</p><form onSubmit={handleSubmit}>
                     <select required className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white" value={email} onChange={(e) => setEmail(e.target.value)}>
-                        <option value="" disabled>Select a Worker</option>
+                        <option value="" disabled selected>Select a Worker</option>
                         {workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}
                     </select>
                     <div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button></div></form></div></div>
