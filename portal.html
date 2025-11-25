@@ -388,8 +388,10 @@
         // --- SHARED LOGIC: RECURRING PROJECTION ---
         const useRecurringProjection = (rawShifts, lookAheadMonths = 3) => {
             return useMemo(() => {
-                let allShifts = [...rawShifts];
-                const recurring = rawShifts.filter(s => 
+                // Only project active shifts
+                let allShifts = rawShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
+                
+                const recurring = allShifts.filter(s => 
                     (s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && 
                     s.status === 'Confirmed'
                 );
@@ -425,15 +427,16 @@
         // --- LOGIC FOR LIST VIEW: ONLY NEXT RECURRING ---
         const useNextRecurringList = (rawShifts) => {
             return useMemo(() => {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                // Use local date string comparison to avoid timezone issues
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
                 let resultList = [];
 
                 // 1. Add all standard confirmed/pending shifts that are >= today
                 rawShifts.forEach(s => {
                     if (s.status === 'Cancelled' || s.status === 'Declined') return;
-                    const shiftDate = new Date(s.date);
-                    if (shiftDate >= today && (!s.recurrence || s.recurrence === 'none')) {
+                    
+                    // Simple string comparison works for ISO dates
+                    if (s.date >= todayStr && (!s.recurrence || s.recurrence === 'none')) {
                         resultList.push(s);
                     }
                 });
@@ -442,21 +445,32 @@
                 const recurring = rawShifts.filter(s => (s.recurrence === 'weekly' || s.recurrence === 'fortnightly') && s.status === 'Confirmed');
                 
                 recurring.forEach(s => {
-                    const shiftDate = new Date(s.date);
                     const interval = s.recurrence === 'weekly' ? 7 : 14;
-                    let nextDate = new Date(shiftDate);
                     
-                    // Find next occurrence >= today
-                    while (nextDate < today) {
+                    // Start from original date
+                    let nextDate = new Date(s.date);
+                    // We need to find the first occurrence >= today
+                    // Convert dates to timestamps for math, but compare using strings
+                    const todayDate = new Date(todayStr);
+                    
+                    // If start date is already in future, that IS the next one
+                    if (s.date >= todayStr) {
+                         // Check if this specific date exists as real shift, if so it's handled in loop 1
+                         // If not (e.g. it is the base recurrence record), add it
+                         if (!resultList.find(r => r.id === s.id)) {
+                             resultList.push(s);
+                         }
+                         return;
+                    }
+
+                    // Otherwise loop forward until we hit >= today
+                    while (nextDate < todayDate) {
                         nextDate.setDate(nextDate.getDate() + interval);
                     }
                     
-                    // Check if this specific date already exists as a real overridden shift
                     const dateStr = nextDate.toISOString().split('T')[0];
                     const exists = rawShifts.some(r => r.date === dateStr && r.userId === s.userId);
                     
-                    // If it doesn't exist as a real shift, add this projection. 
-                    // If it DOES exist, it was already added in step 1 (if >= today).
                     if (!exists) {
                         resultList.push({
                             ...s,
@@ -484,6 +498,9 @@
                 const map = {};
                 shifts.forEach(s => {
                     if (!s.date) return;
+                    // Explicitly hide cancelled/declined from calendar
+                    if (s.status === 'Cancelled' || s.status === 'Declined') return;
+                    
                     if (!map[s.date]) map[s.date] = [];
                     map[s.date].push(s);
                 });
@@ -937,15 +954,24 @@
              // Split worker shifts
              const now = new Date();
              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-             
-             const projectedShifts = useRecurringProjection(workerShifts);
-             const nextRecurringList = useNextRecurringList(workerShifts);
+             const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
 
+             // Filter out cancelled/declined for "Upcoming" and "Calendar"
+             // We only want active shifts
+             const activeWorkerShifts = workerShifts.filter(s => s.status !== 'Cancelled' && s.status !== 'Declined');
+
+             const projectedShifts = useRecurringProjection(activeWorkerShifts);
+             const nextRecurringList = useNextRecurringList(activeWorkerShifts);
+
+             // Upcoming: Future dates, strictly active
              const upcomingShifts = (viewMode === 'list' ? nextRecurringList : projectedShifts)
-                .filter(s => new Date(s.date) >= today)
+                .filter(s => s.date >= todayStr)
                 .sort((a,b) => getSortValue(a) - getSortValue(b));
 
-             const pastShifts = workerShifts.filter(s => new Date(s.date) < today).sort((a,b) => getSortValue(b) - getSortValue(a));
+             // Past: Date < today (including cancelled, if we want to see history of cancellations? 
+             // The user said "don't show deleted/cancelled on CALENDAR", but usually history includes them.
+             // I'll assume history shows everything for record keeping, but sorted by date descending)
+             const pastShifts = workerShifts.filter(s => s.date < todayStr).sort((a,b) => getSortValue(b) - getSortValue(a));
 
              return (
                  <div className="min-h-screen bg-slate-100 font-sans pb-12">
@@ -972,7 +998,7 @@
                                      <i className="fa-solid fa-circle-info mt-0.5 mr-2"></i>
                                      <span>Recurring shifts are projected on the calendar for the next 3 months.</span>
                                  </div>
-                                 <CalendarView shifts={workerShifts} onDateClick={setSelectedDayShifts} enableRecurringProjection={true} />
+                                 <CalendarView shifts={activeWorkerShifts} onDateClick={setSelectedDayShifts} enableRecurringProjection={true} />
                              </div>
                          ) : (
                              <>
@@ -1002,7 +1028,7 @@
                                                  <div className="font-bold text-slate-700">{s.dateDisplay}</div>
                                                  <div className="text-sm text-slate-500">{s.userName} • {s.service}</div>
                                              </div>
-                                             <div className="text-xs font-bold text-slate-400 uppercase">Completed</div>
+                                             <div className="text-xs font-bold text-slate-400 uppercase">{s.status === 'Confirmed' ? 'Completed' : s.status}</div>
                                          </div>
                                      ))}</div>
                                  )}
