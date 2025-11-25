@@ -129,7 +129,6 @@
         }
 
         const AuthContext = React.createContext();
-        // Using a shared collection so Admin can see all shifts
         const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
 
         const formatTimestamp = (timestamp) => {
@@ -142,6 +141,17 @@
             const d = new Date();
             d.setDate(d.getDate() + 1);
             return d.toISOString().split('T')[0];
+        };
+
+        // --- Helpers ---
+        const isShortNotice = (shiftDateString) => {
+            if (!shiftDateString) return false;
+            const shiftDate = new Date(shiftDateString);
+            const now = new Date();
+            // Calculate difference in hours
+            const diffHours = (shiftDate - now) / 1000 / 60 / 60;
+            // Simple 48 hour check. Ideally this checks business days, but 48 hours is the core rule.
+            return diffHours < 48 && diffHours > 0;
         };
 
         // --- Custom Hook ---
@@ -178,24 +188,26 @@
                 const unsubscribe = onSnapshot(q, (snapshot) => {
                     const data = snapshot.docs.map(doc => {
                         const d = doc.data();
+                        let statusText = d.status;
+                        if (d.status === 'Pending') statusText = 'Request Sent';
+                        if (d.status === 'Confirmed') statusText = 'Scheduled';
+                        if (d.status === 'Cancelled') statusText = 'Unavailable';
+                        if (d.status === 'Declined') statusText = 'Declined';
+
                         return {
                             id: doc.id,
                             ...d,
-                            statusLabel: d.status === 'Pending' ? 'Request Sent' : 
-                                         d.status === 'Confirmed' ? 'Scheduled' : 
-                                         d.status === 'Declined' ? 'Declined' : 'Unavailable',
+                            statusLabel: statusText,
                             dateDisplay: d.date || 'Pending', 
                             rawTimestamp: d.timestamp?.toMillis() || 0
                         };
                     });
                     
-                    // Admin sees all, User sees only theirs
                     const visibleShifts = isAdmin 
                         ? data 
                         : data.filter(s => s.userId === user.uid);
 
                     visibleShifts.sort((a, b) => b.rawTimestamp - a.rawTimestamp); 
-                    
                     setShifts(visibleShifts);
                     setIsLoadingShifts(false);
                 });
@@ -229,13 +241,16 @@
                 }
             };
 
-            const updateShiftStatus = async (shiftId, newStatus) => {
-                if (!isAdmin) return;
+            const updateShiftStatus = async (shiftId, newStatus, reason = null) => {
                 try {
                     const shiftRef = doc(db, COLLECTION_PATH, shiftId);
-                    await updateDoc(shiftRef, { status: newStatus });
+                    const updateData = { status: newStatus };
+                    if (reason) updateData.cancellationReason = reason;
+                    await updateDoc(shiftRef, updateData);
+                    return true;
                 } catch (e) {
                     console.error("Error updating shift", e);
+                    return false;
                 }
             };
 
@@ -254,7 +269,6 @@
                     });
                 }
             }, []);
-            
             if (!window.__turnstile_site_key) return <div className="text-xs text-red-500">Turnstile Config Missing</div>;
             return <div ref={containerRef} className="my-4 flex justify-center"></div>;
         };
@@ -391,88 +405,59 @@
             );
         };
 
-        // --- Admin Dashboard ---
-        const AdminDashboard = () => {
-            const { shifts, isLoadingShifts, user, logout, updateShiftStatus } = React.useContext(AuthContext);
-            
+        // --- Cancellation Modal ---
+        const CancellationModal = ({ shift, onClose, onConfirm }) => {
+            const [reason, setReason] = useState('');
+            const shortNotice = isShortNotice(shift.date);
+            const isScheduled = shift.status === 'Confirmed';
+            const [loading, setLoading] = useState(false);
+
+            const handleConfirm = async () => {
+                if(isScheduled && !reason) return;
+                setLoading(true);
+                await onConfirm(shift.id, reason);
+                setLoading(false);
+                onClose();
+            }
+
             return (
-                <div className="min-h-screen bg-slate-100 font-sans pb-12">
-                    <header className="bg-slate-900 shadow-md p-4 sticky top-0 z-20">
-                        <div className="max-w-7xl mx-auto flex justify-between items-center">
-                            <div className="flex items-center gap-3 text-white">
-                                <i className="fa-solid fa-user-shield text-xl"></i>
-                                <h1 className="text-xl font-bold tracking-tight">Admin Portal</h1>
-                            </div>
-                            <button onClick={logout} className="text-sm text-slate-300 hover:text-white font-bold bg-slate-800 px-4 py-2 rounded hover:bg-slate-700 transition-colors">Sign Out</button>
-                        </div>
-                    </header>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
+                        <h3 className="text-xl font-bold text-slate-900 mb-4 text-red-600 flex items-center"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>
+                        <p className="text-slate-600 mb-4">
+                            Are you sure you want to cancel your session on <strong>{shift.dateDisplay}</strong>?
+                        </p>
 
-                    <main className="max-w-7xl mx-auto p-4 md:p-8">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                            <h2 className="text-2xl font-bold text-slate-900">Booking Requests</h2>
-                            <div className="bg-white px-4 py-2 rounded-lg shadow-sm text-sm text-slate-600 border border-slate-200">
-                                <i className="fa-solid fa-user-circle mr-2"></i>{user.email}
-                            </div>
-                        </div>
-
-                        {isLoadingShifts ? <div className="text-center p-12 text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading...</div> : (
-                            <div className="space-y-4">
-                                {shifts.length === 0 && (
-                                    <div className="p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
-                                        <i className="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
-                                        <p>No booking requests found.</p>
-                                    </div>
-                                )}
-                                {shifts.map(s => (
-                                    <div key={s.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 hover:shadow-md transition-shadow">
-                                        <div className="flex-grow">
-                                            <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                                <span className="font-bold text-lg text-slate-900">{s.userName}</span>
-                                                <a href={`mailto:${s.userEmail}`} className="text-xs text-brand-600 bg-brand-50 px-2 py-1 rounded hover:bg-brand-100 transition-colors flex items-center">
-                                                    <i className="fa-regular fa-envelope mr-1"></i> {s.userEmail}
-                                                </a>
-                                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">ID: {s.userId.substring(0,6)}...</span>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-sm text-slate-700">
-                                                <p><i className="fa-regular fa-calendar mr-2 text-brand-500 w-4"></i> <strong>{s.dateDisplay}</strong></p>
-                                                <p><i className="fa-solid fa-hands-holding mr-2 text-brand-500 w-4"></i> {s.service}</p>
-                                                <p><i className="fa-regular fa-clock mr-2 text-brand-500 w-4"></i> {s.duration} Hours</p>
-                                                <p>
-                                                    <i className="fa-solid fa-rotate mr-2 text-brand-500 w-4"></i>
-                                                    {s.recurrence && s.recurrence !== 'none' ? <span className="font-bold text-brand-700 capitalize">{s.recurrence}</span> : 'One-off'}
-                                                </p>
-                                            </div>
-                                            {s.notes && (
-                                                <div className="mt-3 text-sm text-slate-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100 italic">
-                                                    <i className="fa-solid fa-quote-left mr-2 text-yellow-400"></i> {s.notes}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
-                                            {s.status === 'Pending' ? (
-                                                <>
-                                                    <button onClick={() => updateShiftStatus(s.id, 'Confirmed')} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center">
-                                                        <i className="fa-solid fa-check mr-2"></i> Accept
-                                                    </button>
-                                                    <button onClick={() => updateShiftStatus(s.id, 'Declined')} className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm">
-                                                        Decline
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <div className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide border flex items-center ${
-                                                    s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                                                }`}>
-                                                    <i className={`fa-solid ${s.status === 'Confirmed' ? 'fa-check-circle' : 'fa-ban'} mr-2`}></i>
-                                                    {s.status === 'Confirmed' ? 'Scheduled' : 'Declined'}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                        {shortNotice && (
+                            <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800">
+                                <strong>Notice:</strong> This cancellation is within 2 business days. Per NDIS policy, a short notice cancellation fee may apply.
                             </div>
                         )}
-                    </main>
+
+                        {isScheduled && (
+                            <div className="mb-4">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Reason for Cancellation <span className="text-red-500">*</span></label>
+                                <textarea 
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm"
+                                    rows="2"
+                                    placeholder="e.g. Sick, appointment conflict..."
+                                ></textarea>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Keep Session</button>
+                            <button 
+                                onClick={handleConfirm} 
+                                disabled={isScheduled && !reason || loading}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Cancelling...' : 'Confirm Cancellation'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -514,11 +499,12 @@
                 
                 if (success) {
                     setMsg({ type: 'success', text: 'Request sent successfully!' });
-                    setTimeout(() => { onClose(); }, 1500);
+                    setTimeout(() => { onClose(); }, 1000); // Shorter timeout
                 } else {
                     setMsg({ type: 'error', text: 'Failed to send request.' });
+                    setLoading(false); // Only reset loading on error
                 }
-                setLoading(false);
+                // Don't reset loading on success to prevent double click
             };
 
             return (
@@ -577,15 +563,113 @@
             );
         };
 
+        // --- Admin Dashboard ---
+        const AdminDashboard = () => {
+            const { shifts, isLoadingShifts, user, logout, updateShiftStatus } = React.useContext(AuthContext);
+            
+            return (
+                <div className="min-h-screen bg-slate-100 font-sans pb-12">
+                    <header className="bg-slate-900 shadow-md p-4 sticky top-0 z-20">
+                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3 text-white">
+                                <i className="fa-solid fa-user-shield text-xl"></i>
+                                <h1 className="text-xl font-bold tracking-tight">Admin Portal</h1>
+                            </div>
+                            <button onClick={logout} className="text-sm text-slate-300 hover:text-white font-bold bg-slate-800 px-4 py-2 rounded hover:bg-slate-700 transition-colors">Sign Out</button>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto p-4 md:p-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                            <h2 className="text-2xl font-bold text-slate-900">Booking Requests</h2>
+                            <div className="bg-white px-4 py-2 rounded-lg shadow-sm text-sm text-slate-600 border border-slate-200">
+                                <i className="fa-solid fa-user-circle mr-2"></i>{user.email}
+                            </div>
+                        </div>
+
+                        {isLoadingShifts ? <div className="text-center p-12 text-slate-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading...</div> : (
+                            <div className="space-y-4">
+                                {shifts.length === 0 && (
+                                    <div className="p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
+                                        <i className="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
+                                        <p>No booking requests found.</p>
+                                    </div>
+                                )}
+                                {shifts.map(s => (
+                                    <div key={s.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 hover:shadow-md transition-shadow">
+                                        <div className="flex-grow">
+                                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                                <span className="font-bold text-lg text-slate-900">{s.userName}</span>
+                                                <a href={`mailto:${s.userEmail}`} className="text-xs text-brand-600 bg-brand-50 px-2 py-1 rounded hover:bg-brand-100 transition-colors flex items-center">
+                                                    <i className="fa-regular fa-envelope mr-1"></i> {s.userEmail}
+                                                </a>
+                                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">ID: {s.userId.substring(0,6)}...</span>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-sm text-slate-700">
+                                                <p><i className="fa-regular fa-calendar mr-2 text-brand-500 w-4"></i> <strong>{s.dateDisplay}</strong></p>
+                                                <p><i className="fa-solid fa-hands-holding mr-2 text-brand-500 w-4"></i> {s.service}</p>
+                                                <p><i className="fa-regular fa-clock mr-2 text-brand-500 w-4"></i> {s.duration} Hours</p>
+                                                <p>
+                                                    <i className="fa-solid fa-rotate mr-2 text-brand-500 w-4"></i>
+                                                    {s.recurrence && s.recurrence !== 'none' ? <span className="font-bold text-brand-700 capitalize">{s.recurrence}</span> : 'One-off'}
+                                                </p>
+                                            </div>
+                                            {s.notes && (
+                                                <div className="mt-3 text-sm text-slate-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100 italic">
+                                                    <i className="fa-solid fa-quote-left mr-2 text-yellow-400"></i> {s.notes}
+                                                </div>
+                                            )}
+                                            {s.status === 'Cancelled' && s.cancellationReason && (
+                                                 <div className="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                                                    <strong>Cancelled:</strong> {s.cancellationReason}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
+                                            {s.status === 'Pending' ? (
+                                                <>
+                                                    <button onClick={() => updateShiftStatus(s.id, 'Confirmed')} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center">
+                                                        <i className="fa-solid fa-check mr-2"></i> Accept
+                                                    </button>
+                                                    <button onClick={() => updateShiftStatus(s.id, 'Declined')} className="bg-white hover:bg-red-50 text-red-600 border border-red-200 px-5 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm">
+                                                        Decline
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide border flex items-center ${
+                                                    s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                                                }`}>
+                                                    <i className={`fa-solid ${s.status === 'Confirmed' ? 'fa-check-circle' : 'fa-ban'} mr-2`}></i>
+                                                    {s.status === 'Confirmed' ? 'Scheduled' : s.status}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
         // --- Client Dashboard ---
         const ClientDashboard = () => {
-            const { user, logout, shifts, isLoadingShifts } = React.useContext(AuthContext);
+            const { user, logout, shifts, isLoadingShifts, updateShiftStatus } = React.useContext(AuthContext);
             const [isModalOpen, setIsModalOpen] = useState(false);
+            const [cancelModalShift, setCancelModalShift] = useState(null);
 
             return (
                 <div className="min-h-screen bg-slate-50 font-sans pb-12">
-                    {/* Modal */}
                     {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
+                    {cancelModalShift && (
+                        <CancellationModal 
+                            shift={cancelModalShift} 
+                            onClose={() => setCancelModalShift(null)} 
+                            onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)}
+                        />
+                    )}
 
                     <header className="bg-white shadow-sm sticky top-0 z-20 border-b-4 border-brand-600">
                         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
@@ -651,13 +735,21 @@
                                                         )}
                                                     </div>
                                                 </div>
-                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                                                    s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : 
-                                                    s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' ? 'bg-red-50 text-red-700 border-red-200' : 
-                                                    'bg-yellow-50 text-yellow-800 border-yellow-200'
-                                                }`}>
-                                                    {s.statusLabel}
-                                                </span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                                                        s.statusLabel === 'Scheduled' ? 'bg-green-50 text-green-700 border-green-200' : 
+                                                        s.statusLabel === 'Unavailable' || s.statusLabel === 'Declined' ? 'bg-red-50 text-red-700 border-red-200' : 
+                                                        'bg-yellow-50 text-yellow-800 border-yellow-200'
+                                                    }`}>
+                                                        {s.statusLabel}
+                                                    </span>
+                                                    
+                                                    {(s.statusLabel === 'Request Sent' || s.statusLabel === 'Scheduled') && (
+                                                        <button onClick={() => setCancelModalShift(s)} className="text-slate-400 hover:text-red-500 transition-colors p-2" title="Cancel Session">
+                                                            <i className="fa-solid fa-ban"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
