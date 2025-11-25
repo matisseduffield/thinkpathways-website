@@ -1089,7 +1089,7 @@
         };
 
         const App = () => {
-            if (configMissing) return <div className="min-h-screen flex items-center justify-center p-4"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400"><h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2><p className=\"text-slate-600\">Configure Firebase keys in portal.html</p></div></div>;
+            if (configMissing) return <div className="min-h-screen flex items-center justify-center p-4"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-l-4 border-yellow-400"><h2 className="text-2xl font-bold text-slate-900 mb-2">Setup Required</h2><p className="text-slate-600">Configure Firebase keys in portal.html</p></div></div>;
             const authData = useAuthAndData();
             if (!authData.isAuthReady) return <div className="flex h-screen items-center justify-center bg-slate-100"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-brand-600"></i></div>;
 
