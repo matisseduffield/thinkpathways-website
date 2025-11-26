@@ -353,23 +353,59 @@
                 } catch (e) { return { success: false, msg: e.message }; }
             };
 
-            const updateShiftStatus = async (shiftId, newStatus, reason = null) => {
+            const updateShiftStatus = async (shiftId, newStatus, reason = null, applyToFuture = false, currentShift = null) => {
                 try {
+                    const batch = db.batch();
                     const updateData = { status: newStatus };
                     if (reason) updateData.cancellationReason = reason;
-                    await db.collection(COLLECTION_PATH).doc(shiftId).update(updateData);
+
+                    // 1. Update Current
+                    const currentRef = db.collection(COLLECTION_PATH).doc(shiftId);
+                    batch.update(currentRef, updateData);
+
+                    // 2. Update Future if requested
+                    if (applyToFuture && currentShift && currentShift.seriesId) {
+                        const futureShifts = await db.collection(COLLECTION_PATH)
+                            .where('seriesId', '==', currentShift.seriesId)
+                            .where('date', '>', currentShift.date)
+                            .get();
+                        
+                        futureShifts.forEach(doc => {
+                            // Don't update if already cancelled/declined/completed to avoid messing up history?
+                            // Actually, if admin cancels a series, they probably want to cancel everything regardless.
+                            batch.update(doc.ref, updateData);
+                        });
+                    }
+
+                    await batch.commit();
                     return true;
-                } catch (e) { return false; }
+                } catch (e) { console.error(e); return false; }
             };
 
-            const assignWorker = async (shiftId, workerEmail) => {
+            const assignWorker = async (shiftId, workerEmail, applyToFuture = false, currentShift = null) => {
                 try {
-                    await db.collection(COLLECTION_PATH).doc(shiftId).update({ 
+                    const batch = db.batch();
+                    const updateData = { 
                         assignedWorkerEmail: workerEmail,
                         workerStatus: 'Pending Acceptance'
-                    });
+                    };
+
+                    batch.update(db.collection(COLLECTION_PATH).doc(shiftId), updateData);
+
+                    if (applyToFuture && currentShift && currentShift.seriesId) {
+                        const futureShifts = await db.collection(COLLECTION_PATH)
+                            .where('seriesId', '==', currentShift.seriesId)
+                            .where('date', '>', currentShift.date)
+                            .get();
+                        
+                        futureShifts.forEach(doc => {
+                            batch.update(doc.ref, updateData);
+                        });
+                    }
+
+                    await batch.commit();
                     return true;
-                } catch (e) { return false; }
+                } catch (e) { console.error(e); return false; }
             };
 
             const removeWorker = async (shiftId) => {
@@ -817,19 +853,94 @@
 
         const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => {
             const [email, setEmail] = useState('');
+            const [applyToFuture, setApplyToFuture] = useState(false);
             const [loading, setLoading] = useState(false);
-            const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email); setLoading(false); onClose(); };
+            const isRecurring = shift.seriesId && shift.recurrence !== 'none';
+
+            const handleSubmit = async (e) => { 
+                e.preventDefault(); 
+                if (!email) return; 
+                setLoading(true); 
+                await onAssign(shift.id, email, applyToFuture, shift); 
+                setLoading(false); 
+                onClose(); 
+            };
+
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Assign Worker</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Select a worker for this shift:</p><p className="text-xs text-red-500 mb-4 italic">Note: This is a demo environment. No actual email will be sent. The worker must log in to accept.</p><form onSubmit={handleSubmit}><select required className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white dark:bg-slate-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select><div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">Assign</button></div></form></div></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                        <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Assign Worker</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Select a worker for <strong>{shift.dateDisplay}</strong>:</p>
+                        
+                        <form onSubmit={handleSubmit}>
+                            <select required className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white dark:bg-slate-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}>
+                                <option value="" disabled selected>Select a Worker</option>
+                                {workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}
+                            </select>
+
+                            {isRecurring && (
+                                <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex items-start gap-3">
+                                    <input type="checkbox" id="futureAssign" className="mt-1 rounded text-brand-600 focus:ring-brand-500" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} />
+                                    <label htmlFor="futureAssign" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                        <strong>Recurring Shift Detected</strong><br/>
+                                        Assign this worker to all future shifts in this series?
+                                    </label>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 justify-end">
+                                <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
+                                <button disabled={loading} className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 disabled:opacity-50">
+                                    {loading ? 'Assigning...' : 'Assign'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             );
         };
 
         const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
             const [reason, setReason] = useState('');
+            const [applyToFuture, setApplyToFuture] = useState(false);
             const [loading, setLoading] = useState(false);
-            const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason); setLoading(false); onClose(); };
+            const isRecurring = shift.seriesId && shift.recurrence !== 'none';
+
+            const handleConfirm = async () => { 
+                if (!reason) return; 
+                setLoading(true); 
+                await onConfirm(shift.id, actionType, reason, applyToFuture, shift); 
+                setLoading(false); 
+                onClose(); 
+            };
+
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className={`text-xl font-bold mb-4 ${actionType === 'Declined' ? 'text-red-600' : 'text-red-600'} flex items-center`}><i className="fa-solid fa-triangle-exclamation mr-2"></i> {actionType === 'Declined' ? 'Decline Request' : 'Cancel Shift'}</h3><p className="text-slate-600 dark:text-slate-400 mb-4">Reason (visible to client):</p><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4 dark:bg-slate-700 dark:text-white" rows="3"></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button></div></div></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
+                        <h3 className={`text-xl font-bold mb-4 ${actionType === 'Declined' ? 'text-red-600' : 'text-red-600'} flex items-center`}>
+                            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {actionType === 'Declined' ? 'Decline Request' : 'Cancel Shift'}
+                        </h3>
+                        
+                        <p className="text-slate-600 dark:text-slate-400 mb-4">Reason (visible to client):</p>
+                        <textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4 dark:bg-slate-700 dark:text-white" rows="3"></textarea>
+                        
+                        {isRecurring && (
+                            <div className="mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800 flex items-start gap-3">
+                                <input type="checkbox" id="futureCancel" className="mt-1 rounded text-red-600 focus:ring-red-500" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} />
+                                <label htmlFor="futureCancel" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                    <strong>Recurring Shift</strong><br/>
+                                    Apply this action to all future shifts in this series?
+                                </label>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 justify-end">
+                            <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Back</button>
+                            <button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button>
+                        </div>
+                    </div>
+                </div>
             );
         };
 
