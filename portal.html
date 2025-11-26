@@ -619,7 +619,9 @@
 
             // Add a travel leg
             const addTravelLeg = () => {
-                setTravelLogs([...travelLogs, { id: Date.now(), from: '', to: '', reason: '', km: '' }]);
+                const lastLog = travelLogs[travelLogs.length - 1];
+                const defaultFrom = lastLog ? lastLog.to : ''; // Auto-fill from previous destination
+                setTravelLogs([...travelLogs, { id: Date.now(), from: defaultFrom, to: '', reason: '', km: '' }]);
             };
 
             // Remove a travel leg
