@@ -389,13 +389,28 @@
                 } catch (e) { return false; }
             };
 
-            // NEW: Complete Shift Function
-            const completeShift = async (shiftId, notesData) => {
+            // NEW: Complete Shift Function (Updated for Travel & Timesheet)
+            const completeShift = async (shiftId, finalData) => {
                 try {
                     await db.collection(COLLECTION_PATH).doc(shiftId).update({
                         workerStatus: 'Completed',
-                        status: 'Confirmed', // Ensure it stays confirmed
-                        caseNotes: notesData,
+                        status: 'Confirmed', 
+                        caseNotes: {
+                            summary: finalData.summary,
+                            goals: finalData.goals,
+                            incidents: finalData.incidents,
+                            incidentDetails: finalData.incidentDetails
+                        },
+                        timesheet: {
+                            start: finalData.actualStartTime,
+                            end: finalData.actualEndTime,
+                            scheduledStart: finalData.scheduledStartTime,
+                            scheduledEnd: finalData.scheduledEndTime
+                        },
+                        travel: {
+                            logs: finalData.travelLog,
+                            totalKm: finalData.totalTravelKm
+                        },
                         completedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     return { success: true };
@@ -469,8 +484,6 @@
             );
         };
 
-        // --- SHARED LOGIC: RECURRING PROJECTION (SIMPLIFIED) ---
-        
         const CalendarView = ({ shifts, onDateClick }) => {
             const [currentDate, setCurrentDate] = useState(new Date());
             const year = currentDate.getFullYear();
@@ -534,7 +547,6 @@
             );
         };
 
-        // --- NEW COMPONENT: PROFILE MODAL ---
         const ProfileModal = ({ user, onClose, onUpdate }) => {
             const [name, setName] = useState(user.displayName || '');
             const [loading, setLoading] = useState(false);
@@ -586,58 +598,195 @@
             );
         };
 
-        // --- NEW COMPONENT: COMPLETE SHIFT MODAL ---
+        // --- NEW COMPONENT: ADVANCED COMPLETE SHIFT MODAL ---
         const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
+            // 1. Time Tracking
+            const [actualStartTime, setActualStartTime] = useState(shift.startTime);
+            const [actualEndTime, setActualEndTime] = useState(shift.endTime);
+
+            // 2. Travel Log
+            // Structure: { id: 1, from: '', to: '', reason: '', km: 0 }
+            const [travelLogs, setTravelLogs] = useState([]);
+            
+            // 3. Case Notes
             const [summary, setSummary] = useState('');
             const [goals, setGoals] = useState('');
             const [incidents, setIncidents] = useState('None');
             const [incidentDetails, setIncidentDetails] = useState('');
+            
             const [loading, setLoading] = useState(false);
+            const [step, setStep] = useState(1); // 1: Time/Travel, 2: Notes
+
+            // Add a travel leg
+            const addTravelLeg = () => {
+                setTravelLogs([...travelLogs, { id: Date.now(), from: '', to: '', reason: '', km: '' }]);
+            };
+
+            // Remove a travel leg
+            const removeTravelLeg = (id) => {
+                setTravelLogs(travelLogs.filter(log => log.id !== id));
+            };
+
+            // Update a specific travel field
+            const updateTravel = (id, field, value) => {
+                setTravelLogs(travelLogs.map(log => 
+                    log.id === id ? { ...log, [field]: value } : log
+                ));
+            };
+
+            // Calculate Total KM
+            const totalKm = travelLogs.reduce((acc, curr) => acc + (parseFloat(curr.km) || 0), 0);
+
+            // Open Google Maps to verify distance (Free workaround for no API Key)
+            const openMapCheck = (log) => {
+                if(!log.from || !log.to) return;
+                const url = `https://www.google.com/maps/dir/${encodeURIComponent(log.from + ' SA')}/${encodeURIComponent(log.to + ' SA')}`;
+                window.open(url, '_blank');
+            };
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setLoading(true);
-                const notesData = { summary, goals, incidents, incidentDetails: incidents === 'Yes' ? incidentDetails : 'N/A' };
-                await onConfirm(shift.id, notesData);
+                
+                const finalData = {
+                    // Time Adjustments
+                    actualStartTime,
+                    actualEndTime,
+                    scheduledStartTime: shift.startTime,
+                    scheduledEndTime: shift.endTime,
+                    
+                    // Travel Data
+                    travelLog: travelLogs,
+                    totalTravelKm: totalKm,
+                    
+                    // Notes
+                    summary, 
+                    goals, 
+                    incidents, 
+                    incidentDetails: incidents === 'Yes' ? incidentDetails : 'N/A' 
+                };
+
+                await onConfirm(shift.id, finalData);
                 setLoading(false);
                 onClose();
             };
 
             return (
                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Complete Shift</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Please submit your case notes to finalize this shift.</p>
+                    <div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]">
                         
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">What happened? (Summary) <span className="text-red-500">*</span></label>
-                                <textarea required rows="3" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)} placeholder="Brief summary of activities..."></textarea>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3>
+                                <p className="text-xs text-slate-500">{shift.dateDisplay} • {shift.userName}</p>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Goals Achieved <span className="text-red-500">*</span></label>
-                                <textarea required rows="2" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)} placeholder="Progress towards NDIS goals..."></textarea>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Any Incidents? <span className="text-red-500">*</span></label>
-                                <select className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}>
-                                    <option value="None">No Incidents</option>
-                                    <option value="Yes">Yes (Provide details)</option>
-                                </select>
-                            </div>
-                            {incidents === 'Yes' && (
-                                <div className="animate-fade-in">
-                                    <label className="block text-xs font-bold text-red-600 uppercase mb-1">Incident Details</label>
-                                    <textarea required rows="2" className="w-full p-3 border border-red-200 dark:border-red-900 rounded-lg outline-none focus:ring-2 focus:ring-red-500 bg-red-50 dark:bg-red-900/20 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)} placeholder="Describe the incident..."></textarea>
+                            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="p-6 overflow-y-auto">
+                            <form id="completeForm" onSubmit={handleSubmit} className="space-y-8">
+                                
+                                {/* SECTION 1: Time Adjustment */}
+                                <div>
+                                    <h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">1. Time & Attendance</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 mb-1">Start Time</label>
+                                            <input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 mb-1">Finish Time</label>
+                                            <input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} />
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
-                            <div className="pt-2">
-                                <button disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-md transition-transform transform hover:-translate-y-0.5 disabled:opacity-50">
-                                    {loading ? 'Submitting...' : 'Submit & Complete Shift'}
-                                </button>
-                            </div>
-                        </form>
+
+                                {/* SECTION 2: Travel Log */}
+                                <div>
+                                    <div className="flex justify-between items-end mb-3 border-b border-slate-100 pb-2">
+                                        <h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4>
+                                        <button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-2 py-1 rounded hover:bg-brand-100 font-bold border border-brand-200">
+                                            <i className="fa-solid fa-plus mr-1"></i> Add Trip
+                                        </button>
+                                    </div>
+                                    
+                                    {travelLogs.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">No travel recorded. Click "Add Trip" if you travelled.</p>}
+
+                                    <div className="space-y-3">
+                                        {travelLogs.map((log, index) => (
+                                            <div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group">
+                                                <button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500"><i className="fa-solid fa-trash-can"></i></button>
+                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                                    <div className="md:col-span-3">
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">From (Suburb)</label>
+                                                        <input type="text" placeholder="e.g Marden" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} />
+                                                    </div>
+                                                    <div className="md:col-span-3">
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">To (Suburb)</label>
+                                                        <input type="text" placeholder="e.g Walkerville" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} />
+                                                    </div>
+                                                    <div className="md:col-span-3">
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Reason</label>
+                                                        <input type="text" placeholder="e.g Client Home" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} />
+                                                    </div>
+                                                    <div className="md:col-span-3 flex gap-2">
+                                                        <div className="flex-grow">
+                                                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">KM</label>
+                                                            <input type="number" step="0.1" placeholder="0.0" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} />
+                                                        </div>
+                                                        <button type="button" onClick={() => openMapCheck(log)} title="Check distance on Google Maps" className="mb-0.5 px-2 bg-white border border-slate-300 rounded text-slate-500 hover:text-blue-600 hover:border-blue-400 h-[38px]"><i className="fa-solid fa-map-location-dot"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {travelLogs.length > 0 && (
+                                        <div className="mt-2 text-right text-sm font-bold text-slate-700 dark:text-slate-300">
+                                            Total Claimable: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* SECTION 3: Case Notes */}
+                                <div>
+                                    <h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">3. Shift Report</h4>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Summary of Support <span className="text-red-500">*</span></label>
+                                            <textarea required rows="3" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)} placeholder="Describe what you did during the shift..."></textarea>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Progress on Goals <span className="text-red-500">*</span></label>
+                                            <textarea required rows="2" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)} placeholder="How did this help the participant achieving their goals?"></textarea>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Incidents? <span className="text-red-500">*</span></label>
+                                            <select className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}>
+                                                <option value="None">No Incidents</option>
+                                                <option value="Yes">Yes (Provide details)</option>
+                                            </select>
+                                        </div>
+                                        {incidents === 'Yes' && (
+                                            <div className="animate-fade-in">
+                                                <label className="block text-xs font-bold text-red-600 uppercase mb-1">Incident Details</label>
+                                                <textarea required rows="2" className="w-full p-3 border border-red-200 dark:border-red-900 rounded-lg outline-none focus:ring-2 focus:ring-red-500 bg-red-50 dark:bg-red-900/20 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)} placeholder="Describe the incident..."></textarea>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+
+                        {/* Footer / Action */}
+                        <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                             <button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-md transition-transform transform hover:-translate-y-0.5 disabled:opacity-50 flex justify-center items-center">
+                                {loading ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>}
+                                {loading ? 'Submitting...' : 'Submit & Complete Shift'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -755,15 +904,39 @@
                                     <span><strong>Note:</strong> {s.cancellationReason}</span>
                                 </div>
                             )}
-                            {/* CASE NOTES DISPLAY (ADMIN) */}
-                            {s.caseNotes && (
+                            {/* CASE NOTES & TRAVEL DISPLAY (ADMIN/CLIENT) */}
+                            {(s.caseNotes || s.travel) && (
                                 <div className="mt-3 text-xs bg-slate-50 dark:bg-slate-700/50 p-3 rounded border border-slate-100 dark:border-slate-600">
-                                    <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Shift Report:</div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                        <div><span className="font-semibold">Summary:</span> {s.caseNotes.summary}</div>
-                                        <div><span className="font-semibold">Goals:</span> {s.caseNotes.goals}</div>
-                                        {s.caseNotes.incidents === 'Yes' && <div className="text-red-600 dark:text-red-400 font-bold">Incident Reported: {s.caseNotes.incidentDetails}</div>}
-                                    </div>
+                                    <div className="font-bold text-slate-700 dark:text-slate-300 mb-2 border-b border-slate-200 pb-1">Shift Report</div>
+                                    
+                                    {/* Times */}
+                                    {s.timesheet && (
+                                        <div className="mb-2 text-slate-500">
+                                            <span className="font-semibold">Actual Time:</span> {s.timesheet.start} - {s.timesheet.end}
+                                            {s.timesheet.start !== s.timesheet.scheduledStart && <span className="text-orange-500 ml-2">(Adjusted)</span>}
+                                        </div>
+                                    )}
+
+                                    {/* Travel */}
+                                    {s.travel && s.travel.totalKm > 0 && (
+                                        <div className="mb-2">
+                                            <span className="font-semibold text-brand-600"><i className="fa-solid fa-car"></i> Travel Claim: {s.travel.totalKm} km</span>
+                                            <ul className="mt-1 pl-4 list-disc text-slate-500">
+                                                {s.travel.logs.map((log, i) => (
+                                                    <li key={i}>{log.from} <i className="fa-solid fa-arrow-right mx-1 text-[8px]"></i> {log.to} ({log.km}km) - {log.reason}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Notes */}
+                                    {s.caseNotes && (
+                                        <div className="grid grid-cols-1 gap-1">
+                                            <div><span className="font-semibold">Summary:</span> {s.caseNotes.summary}</div>
+                                            <div><span className="font-semibold">Goals:</span> {s.caseNotes.goals}</div>
+                                            {s.caseNotes.incidents === 'Yes' && <div className="text-red-600 dark:text-red-400 font-bold">Incident: {s.caseNotes.incidentDetails}</div>}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
