@@ -459,10 +459,34 @@ const useAuthAndData = () => {
         } catch (e) { return { success: false, msg: e.message }; }
     };
 
+    // NEW: Revoke User Role logic
+    const revokeUserRole = async (uid, email) => {
+        try {
+            const batch = db.batch();
+            
+            // 1. Set user role back to unverified
+            const userRef = db.collection(USERS_PATH).doc(uid);
+            batch.update(userRef, { role: 'unverified' });
+
+            // 2. Check if they exist in workers collection and remove them to prevent access
+            if (email) {
+                const workerQuery = await db.collection(WORKERS_PATH).where("email", "==", email.toLowerCase()).get();
+                if (!workerQuery.empty) {
+                    workerQuery.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                }
+            }
+
+            await batch.commit();
+            return { success: true };
+        } catch (e) { return { success: false, msg: e.message }; }
+    };
+
     return { 
         user, isAdmin, isWorker, isClient, isAuthReady, shifts, workerShifts, workersList, usersList, isLoading, 
         login, signup, resetPassword, logout, updateProfile, bookShift, updateShiftStatus, 
         assignWorker, removeWorker, workerResponse, completeShift, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB,
-        verifyUserAsClient, promoteUserToWorker
+        verifyUserAsClient, promoteUserToWorker, revokeUserRole
     };
 };
