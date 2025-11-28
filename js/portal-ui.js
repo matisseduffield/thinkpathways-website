@@ -22,6 +22,32 @@ const ThemeToggle = () => {
     );
 };
 
+// --- NEW: SMART TIME SELECT COMPONENT ---
+const TimeSelect = ({ label, value, onChange, minTime }) => {
+    const times = [];
+    for (let i = 0; i < 24; i++) {
+        for (let j = 0; j < 60; j += 15) {
+            const hour = i.toString().padStart(2, '0');
+            const minute = j.toString().padStart(2, '0');
+            const timeStr = `${hour}:${minute}`;
+            times.push(timeStr);
+        }
+    }
+    const filteredTimes = minTime ? times.filter(t => t > minTime) : times;
+    return (
+        <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{label}</label>
+            <div className="relative">
+                <select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer" value={value} onChange={(e) => onChange(e.target.value)}>
+                    <option value="" disabled>Select Time</option>
+                    {filteredTimes.map(t => (<option key={t} value={t}>{t}</option>))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><i className="fa-regular fa-clock"></i></div>
+            </div>
+        </div>
+    );
+};
+
 // --- DOCUMENT MANAGER COMPONENT ---
 const DocumentManager = ({ folder, id, documents, onUpload, onDelete }) => {
     const [file, setFile] = useState(null);
@@ -380,32 +406,41 @@ const BookingModal = ({ onClose }) => {
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState(null);
     const [recurrence, setRecurrence] = useState('none'); 
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
+    const [duration, setDuration] = useState(0);
+
+    // Auto-calculate duration
+    useEffect(() => {
+        if(startTime && endTime) {
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            let diff = (end - start) / 1000 / 60 / 60;
+            if (diff < 0) diff += 24; 
+            setDuration(diff);
+        } else {
+            setDuration(0);
+        }
+    }, [startTime, endTime]);
     
     const handleSubmit = async (e) => {
         e.preventDefault(); 
         setLoading(true); 
         setMsg(null);
         const d = new FormData(e.target);
-        const start = d.get('startTime');
-        const end = d.get('endTime');
         
         if (new Date(d.get('date')) < new Date(new Date().setDate(new Date().getDate() + 1))) { 
             setMsg({type:'error', text:'Please select a date from tomorrow onwards.'}); 
             setLoading(false); 
             return; 
         }
-        if(!start || !end) { setMsg({type:'error', text:'Please select start and end times.'}); setLoading(false); return; }
-
-        const startDate = new Date(`2000-01-01T${start}`);
-        const endDate = new Date(`2000-01-01T${end}`);
-        let diff = (endDate - startDate) / 1000 / 60 / 60;
-        if (diff <= 0) diff += 24; 
+        if(!startTime || !endTime) { setMsg({type:'error', text:'Please select start and end times.'}); setLoading(false); return; }
         
         const result = await bookShift({ 
             date: d.get('date'), 
-            startTime: start,
-            endTime: end,
-            duration: diff.toFixed(1), 
+            startTime: startTime,
+            endTime: endTime,
+            duration: duration.toFixed(1), 
             service: d.get('service'), 
             recurrence: d.get('recurrence'), 
             endDate: d.get('endDate'), 
@@ -422,11 +457,19 @@ const BookingModal = ({ onClose }) => {
     };
     
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5"><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 border dark:border-slate-600 rounded-lg outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg relative animate-pop-in"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Request Session</h3>{msg && <div className={`p-3 mb-4 text-sm rounded border ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>{msg.text}</div>}<form onSubmit={handleSubmit} className="space-y-5">
+        <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Date</label><input type="date" name="date" required min={getTomorrowDate()} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" /></div>
+        
+        <div className="grid grid-cols-2 gap-4">
+            <TimeSelect label="Start Time" value={startTime} onChange={setStartTime} />
+            <TimeSelect label="End Time" value={endTime} onChange={setEndTime} minTime={startTime} />
+        </div>
+        {duration > 0 && (<div className="text-center p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm text-brand-700 dark:text-brand-300 font-bold"><i className="fa-regular fa-clock mr-2"></i> Total Duration: {duration.toFixed(1)} hrs</div>)}
+
         <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
                 <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block">Recurrence</label>
-                <select name="recurrence" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <select name="recurrence" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
                     <option value="none">One-off</option>
                     <option value="weekly">Weekly</option>
                     <option value="fortnightly">Fortnightly</option>
@@ -435,12 +478,12 @@ const BookingModal = ({ onClose }) => {
             {recurrence !== 'none' && (
                 <div className="col-span-2 animate-fade-in">
                     <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block">End Date (Series)</label>
-                    <input type="date" name="endDate" required className="w-full p-3 border dark:border-slate-600 rounded-lg outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" />
+                    <input type="date" name="endDate" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
                 </div>
             )}
         </div>
-        <div className="grid grid-cols-2 gap-4"><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Start</label><input type="time" name="startTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div><div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 block">Finish</label><input type="time" name="endTime" required className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white" /></div></div>
-        <select name="service" required defaultValue="" className="w-full p-3 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white"><option value="" disabled>Service Type...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select><textarea name="notes" rows="2" className="w-full p-3 border dark:border-slate-600 rounded-lg resize-none outline-none focus:border-brand-500 dark:bg-slate-700 dark:text-white" placeholder="Notes..."></textarea><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70 transition-colors">Submit Request</button></form></div></div>
+        
+        <div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Service Type</label><select name="service" required defaultValue="" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"><option value="" disabled>Select...</option><option>Community Access</option><option>In-Home Support</option><option>Skill Building</option><option>Complex Care</option></select></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Notes</label><textarea name="notes" rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl resize-none outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Specific requests..."></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3.5 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-70 transition-colors shadow-lg shadow-brand-500/20">Submit Request</button></form></div></div>
     );
 };
 
@@ -449,7 +492,7 @@ const CancellationModal = ({ shift, onClose, onConfirm }) => {
     const [loading, setLoading] = useState(false);
     const handleConfirm = async () => { setLoading(true); await onConfirm(shift.id, reason); setLoading(false); onClose(); };
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border rounded-lg mb-4 text-sm outline-none focus:border-red-500 dark:bg-slate-700 dark:text-white" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600"><i className="fa-solid fa-triangle-exclamation mr-2"></i> Cancel Session?</h3>{isShortNotice(shift.date) && <div className="bg-red-50 border border-red-100 p-3 rounded-lg mb-4 text-xs text-red-800"><strong>Notice:</strong> Within 48 hours. Fees may apply.</div>}<textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-2 border rounded-lg mb-4 text-sm outline-none focus:border-red-500 dark:bg-slate-700 dark:text-white" rows="2" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Keep</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50">Confirm</button></div></div></div>
     );
 };
 
