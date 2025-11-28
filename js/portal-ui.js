@@ -1,5 +1,3 @@
-// ... (Previous components: TurnstileWidget, ThemeToggle, DocumentManager, CalendarView, ProfileModal, WorkerDetailsModal, ClientDocsModal, CompleteShiftModal, AddWorkerModal, EditWorkerModal, AssignWorkerModal, AdminActionModal, DayDetailsModal, ClientCard, AdminDashboard, UnverifiedDashboard, Login, WorkerDashboard, ClientDashboard, App) - KEEP ALL THESE UNCHANGED EXCEPT BookingModal and TimeSelect ...
-
 // --- UTILITY COMPONENTS ---
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
@@ -21,6 +19,43 @@ const ThemeToggle = () => {
         <button onClick={() => setDarkMode(!darkMode)} className="w-10 h-10 rounded-full bg-slate-800 text-yellow-400 hover:bg-slate-700 transition-all shadow-md flex items-center justify-center">
             <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
+    );
+};
+
+// --- NEW: SMART TIME SELECT COMPONENT ---
+const TimeSelect = ({ label, value, onChange, minTime }) => {
+    const times = [];
+    for (let i = 0; i < 24; i++) {
+        for (let j = 0; j < 60; j += 15) {
+            const hour = i.toString().padStart(2, '0');
+            const minute = j.toString().padStart(2, '0');
+            const timeStr = `${hour}:${minute}`;
+            times.push(timeStr);
+        }
+    }
+    // Filter if minTime provided
+    const filteredTimes = minTime ? times.filter(t => t > minTime) : times;
+    
+    return (
+        <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{label}</label>
+            <div className="relative">
+                <select 
+                    required 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer" 
+                    value={value} 
+                    onChange={(e) => onChange(e.target.value)}
+                >
+                    <option value="" disabled>Select Time</option>
+                    {filteredTimes.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                    ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+                    <i className="fa-regular fa-clock"></i>
+                </div>
+            </div>
+        </div>
     );
 };
 
@@ -158,7 +193,7 @@ const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => { const 
 
 const DayDetailsModal = ({ shifts, onClose }) => { return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Shifts Details</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className="border border-slate-200 dark:border-slate-700 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50"><div className="flex justify-between items-center mb-1"><span className="font-bold text-slate-900 dark:text-white">{s.userName}</span><span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300">{s.service} • {s.startTime}-{s.endTime}</div></div>))}</div></div></div>); }
 
-// --- CLIENT CARD ---
+// --- REDESIGNED CLIENT CARD ---
 const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly, workersList, onViewWorker, onRemoveWorker, onOpenDocs }) => {
     const pendingCount = client.stats.pending;
     const upcomingCount = client.stats.upcoming;
@@ -179,6 +214,8 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    
+                    {/* LEFT: Date & Time */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
                         <div className="text-center sm:text-left min-w-[50px]">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">{s.dateDisplay.split(' ')[2]}</div>
@@ -189,14 +226,44 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             <i className="fa-regular fa-clock mr-2 text-slate-400"></i> {s.startTime} - {s.endTime}
                         </div>
                     </div>
+
+                    {/* CENTER: Service & Worker */}
                     <div className="sm:w-1/2">
                         <div className="flex items-center gap-2 mb-1"><h4 className="font-bold text-slate-800 dark:text-white">{s.service}</h4>{s.recurrence && s.recurrence !== 'none' && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase tracking-wide">{s.recurrence}</span>}</div>
-                        <div className="mt-2 flex items-center gap-2">{s.assignedWorkerEmail ? (<div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit"><div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div><span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span><span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span><button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button></div>) : (<button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors"><i className="fa-solid fa-user-plus"></i> Assign Worker</button>)}</div>
+                        
+                        <div className="mt-2 flex items-center gap-2">
+                            {s.assignedWorkerEmail ? (
+                                <div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit">
+                                    <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div>
+                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span>
+                                    <span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span>
+                                    <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button>
+                                </div>
+                            ) : (
+                                <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors">
+                                    <i className="fa-solid fa-user-plus"></i> Assign Worker
+                                </button>
+                            )}
+                        </div>
                         {s.notes && <div className="mt-2 text-xs text-slate-400 italic truncate max-w-xs"><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
                     </div>
+
+                    {/* RIGHT: Actions & Status */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-end justify-between sm:gap-2">
                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>{s.statusLabel}</span>
-                        <div className="flex items-center gap-2">{s.status === 'Pending' ? (<><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button></>) : (s.status === 'Confirmed' && (<button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>))}</div>
+                        
+                        <div className="flex items-center gap-2">
+                            {s.status === 'Pending' ? (
+                                <>
+                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button>
+                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button>
+                                </>
+                            ) : (
+                                s.status === 'Confirmed' && (
+                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>
+                                )
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -206,19 +273,80 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all hover:shadow-md mb-6 group">
             <div className="p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors" onClick={onExpand}>
-                <div className="flex items-center gap-5 mb-4 md:mb-0 w-full md:w-auto"><div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md ${pendingCount > 0 ? 'bg-amber-500' : 'bg-brand-600'}`}>{client.name.charAt(0).toUpperCase()}{pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}</div><div><h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p></div></div>
+                <div className="flex items-center gap-5 mb-4 md:mb-0 w-full md:w-auto">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md ${pendingCount > 0 ? 'bg-amber-500' : 'bg-brand-600'}`}>
+                        {client.name.charAt(0).toUpperCase()}
+                        {pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p>
+                    </div>
+                </div>
                 <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <div className="flex gap-3"><div className="flex flex-col items-center px-4"><span className="text-xl font-bold text-brand-600 dark:text-brand-400">{upcomingCount}</span><span className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Upcoming</span></div>{pendingCount > 0 && (<div className="flex flex-col items-center px-4 border-l border-slate-100 dark:border-slate-700"><span className="text-xl font-bold text-amber-500">{pendingCount}</span><span className="text-[10px] text-amber-500 uppercase font-bold tracking-wide">Pending</span></div>)}</div>
+                    <div className="flex gap-3">
+                        <div className="flex flex-col items-center px-4">
+                            <span className="text-xl font-bold text-brand-600 dark:text-brand-400">{upcomingCount}</span>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Upcoming</span>
+                        </div>
+                        {pendingCount > 0 && (
+                            <div className="flex flex-col items-center px-4 border-l border-slate-100 dark:border-slate-700">
+                                <span className="text-xl font-bold text-amber-500">{pendingCount}</span>
+                                <span className="text-[10px] text-amber-500 uppercase font-bold tracking-wide">Pending</span>
+                            </div>
+                        )}
+                    </div>
+                    {/* DOCS BUTTON ADDED HERE */}
                     <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}><i className="fa-solid fa-chevron-down text-xs"></i></div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
+                        <i className="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
                 </div>
             </div>
-            {isExpanded && (<div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">{!showUnassignedOnly ? (<>{pending.length > 0 && (<div><h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 pl-1 flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Action Required</h4><div className="space-y-3">{pending.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{scheduled.length > 0 && (<div><h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 pl-1 flex items-center mt-2"><span className="w-2 h-2 rounded-full bg-brand-500 mr-2"></span>Scheduled</h4><div className="space-y-3">{scheduled.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{history.length > 0 && (<div><h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1 mt-6">History</h4><div className="space-y-3 opacity-60 hover:opacity-100 transition-opacity">{history.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{scheduled.length === 0 && pending.length === 0 && history.length === 0 && (<div className="text-center py-8"><div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i className="fa-regular fa-calendar-xmark text-xl"></i></div><p className="text-sm text-slate-400">No shifts found for this client.</p></div>)}</>) : (<div className="space-y-3">{renderList.map(s => <ShiftItem key={s.id} s={s} />)}</div>)}</div>)}
+            
+            {/* EXPANDED AREA */}
+            {isExpanded && (
+                <div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">
+                    {!showUnassignedOnly ? (
+                        <>
+                            {pending.length > 0 && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 pl-1 flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Action Required</h4>
+                                    <div className="space-y-3">{pending.map(s => <ShiftItem key={s.id} s={s} />)}</div>
+                                </div>
+                            )}
+                            
+                            {scheduled.length > 0 && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 pl-1 flex items-center mt-2"><span className="w-2 h-2 rounded-full bg-brand-500 mr-2"></span>Scheduled</h4>
+                                    <div className="space-y-3">{scheduled.map(s => <ShiftItem key={s.id} s={s} />)}</div>
+                                </div>
+                            )}
+
+                            {history.length > 0 && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1 mt-6">History</h4>
+                                    <div className="space-y-3 opacity-60 hover:opacity-100 transition-opacity">{history.map(s => <ShiftItem key={s.id} s={s} />)}</div>
+                                </div>
+                            )}
+
+                            {scheduled.length === 0 && pending.length === 0 && history.length === 0 && (
+                                <div className="text-center py-8">
+                                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i className="fa-regular fa-calendar-xmark text-xl"></i></div>
+                                    <p className="text-sm text-slate-400">No shifts found for this client.</p>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="space-y-3">{renderList.map(s => <ShiftItem key={s.id} s={s} />)}</div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
 
-// --- ADMIN DASHBOARD ---
+// --- REDESIGNED ADMIN DASHBOARD ---
 const AdminDashboard = () => {
     const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker, revokeUserRole } = useContext(AuthContext);
     const [expandedClientId, setExpandedClientId] = useState(null);
@@ -289,30 +417,198 @@ const AdminDashboard = () => {
             
             <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 p-4 sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30"><i className="fa-solid fa-user-shield"></i></div><h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Admin<span className="text-slate-400 font-normal">Portal</span></h1></div>
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-full p-1 border border-slate-200 dark:border-slate-600"><button onClick={() => setActiveTab('bookings')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Bookings</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>People</button></div>
-                    <div className="flex gap-3 items-center"><button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button><div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div><ThemeToggle /><button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button><button onClick={logout} className="text-sm text-red-600 font-bold hover:text-red-500 transition-colors ml-2">Sign Out</button></div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30"><i className="fa-solid fa-user-shield"></i></div>
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Admin<span className="text-slate-400 font-normal">Portal</span></h1>
+                    </div>
+                    
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-full p-1 border border-slate-200 dark:border-slate-600">
+                        <button onClick={() => setActiveTab('bookings')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Bookings</button>
+                        <button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>People</button>
+                    </div>
+
+                    <div className="flex gap-3 items-center">
+                        <button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button>
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <ThemeToggle />
+                        <button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button>
+                        <button onClick={logout} className="text-sm text-red-600 font-bold hover:text-red-500 transition-colors ml-2">Sign Out</button>
+                    </div>
                 </div>
             </header>
 
             <main className="max-w-7xl mx-auto p-6 md:p-10">
                 {activeTab === 'bookings' && (
                     <>
-                        {alerts.length > 0 && (<div className="mb-10 animate-fade-in"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Task List</h3><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{alerts.map(s => (<div key={s.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-amber-400 shadow-sm hover:shadow-md transition-all flex justify-between items-center group"><div><div className="text-xs font-bold text-amber-600 uppercase mb-1">Request</div><p className="font-bold text-slate-900 dark:text-white">{s.userName}</p><p className="text-xs text-slate-500">{s.dateDisplay}</p></div><button onClick={() => setExpandedClientId(s.userId)} className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-arrow-right"></i></button></div>))}</div></div>)}
-                        <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6"><div><h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bookings</h2><div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Managing {clients.length} active clients</div></div><div className="flex flex-col sm:flex-row items-center gap-3"><div className="relative"><i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input type="text" placeholder="Search clients..." className="pl-9 pr-4 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-64 transition-all shadow-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div><div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><button onClick={() => setViewMode('list')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-list mr-2"></i>List</button><button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-calendar mr-2"></i>Calendar</button></div><button onClick={() => setShowUnassignedOnly(!showUnassignedOnly)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${showUnassignedOnly ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{showUnassignedOnly ? 'Showing Unassigned' : 'Filter Unassigned'}</button></div></div>
-                        {viewMode === 'list' ? (<div className="space-y-4">{filteredClients.length === 0 ? <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl"><i className="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i><p className="text-slate-500 font-medium">No clients found matching "{searchQuery}"</p></div> : filteredClients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} onRemoveWorker={removeWorker} showUnassignedOnly={showUnassignedOnly} workersList={workersList} onViewWorker={handleViewWorker} onOpenDocs={setClientDocsClient} />)}</div>) : (<CalendarView shifts={filteredShiftsForCalendar} onDateClick={setSelectedDayShifts} />)}
+                        {alerts.length > 0 && (
+                            <div className="mb-10 animate-fade-in">
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Task List</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {alerts.map(s => (
+                                        <div key={s.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-amber-400 shadow-sm hover:shadow-md transition-all flex justify-between items-center group">
+                                            <div>
+                                                <div className="text-xs font-bold text-amber-600 uppercase mb-1">Request</div>
+                                                <p className="font-bold text-slate-900 dark:text-white">{s.userName}</p>
+                                                <p className="text-xs text-slate-500">{s.dateDisplay}</p>
+                                            </div>
+                                            <button onClick={() => setExpandedClientId(s.userId)} className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-arrow-right"></i></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
+                            <div>
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bookings</h2>
+                                <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Managing {clients.length} active clients</div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                {/* NEW SEARCH INPUT */}
+                                <div className="relative">
+                                    <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search clients..." 
+                                        className="pl-9 pr-4 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-64 transition-all shadow-sm"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <button onClick={() => setViewMode('list')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-list mr-2"></i>List</button>
+                                    <button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-calendar mr-2"></i>Calendar</button>
+                                </div>
+                                <button 
+                                    onClick={() => setShowUnassignedOnly(!showUnassignedOnly)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${showUnassignedOnly ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                                >
+                                    {showUnassignedOnly ? 'Showing Unassigned' : 'Filter Unassigned'}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {viewMode === 'list' ? (
+                            <div className="space-y-4">
+                                {filteredClients.length === 0 ? (
+                                    <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+                                        <i className="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i>
+                                        <p className="text-slate-500 font-medium">No clients found matching "{searchQuery}"</p>
+                                    </div>
+                                ) : (
+                                    filteredClients.map(client => (
+                                        <ClientCard 
+                                            key={client.id} 
+                                            client={client} 
+                                            isExpanded={expandedClientId === client.id} 
+                                            onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} 
+                                            onUpdateStatus={updateShiftStatus} 
+                                            openActionModal={openActionModal} 
+                                            onAssign={setAssignModalShift} 
+                                            onRemoveWorker={removeWorker} 
+                                            showUnassignedOnly={showUnassignedOnly} 
+                                            workersList={workersList} 
+                                            onViewWorker={handleViewWorker} 
+                                            onOpenDocs={setClientDocsClient} 
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        ) : (
+                            <CalendarView shifts={filteredShiftsForCalendar} onDateClick={setSelectedDayShifts} />
+                        )}
                     </>
                 )}
                 
                 {activeTab === 'users' && (
                     <div className="animate-fade-in space-y-8">
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 flex justify-between items-center cursor-pointer" onClick={() => setIsVerificationExpanded(!isVerificationExpanded)}><h3 className="font-bold text-orange-800 dark:text-orange-200 flex items-center"><i className="fa-solid fa-hourglass-half mr-2"></i> Pending Verification ({pendingUsers.length})</h3><i className={`fa-solid fa-chevron-down text-orange-400 transition-transform ${isVerificationExpanded ? 'rotate-180' : ''}`}></i></div>
-                            {isVerificationExpanded && (<div className="p-0">{pendingUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No new signups waiting.</div> : <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-700 text-xs font-bold uppercase text-slate-500 dark:text-slate-400"><tr><th className="p-4">Name</th><th className="p-4">Email</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{pendingUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-4 font-bold text-slate-900 dark:text-white">{u.name}</td><td className="p-4 text-sm text-slate-500 dark:text-slate-300">{u.email}</td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => handleVerifyClient(u.id)} disabled={actionLoading === u.id} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">Client</button><button onClick={() => handlePromoteWorker(u.id, u)} disabled={actionLoading === u.id} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">Worker</button></div></td></tr>))}</tbody></table>}</div>)}
+                            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 flex justify-between items-center cursor-pointer" onClick={() => setIsVerificationExpanded(!isVerificationExpanded)}>
+                                <h3 className="font-bold text-orange-800 dark:text-orange-200 flex items-center"><i className="fa-solid fa-hourglass-half mr-2"></i> Pending Verification ({pendingUsers.length})</h3>
+                                <i className={`fa-solid fa-chevron-down text-orange-400 transition-transform ${isVerificationExpanded ? 'rotate-180' : ''}`}></i>
+                            </div>
+                            {isVerificationExpanded && (
+                                <div className="p-0">
+                                    {pendingUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No new signups waiting.</div> : 
+                                    <table className="w-full text-left">
+                                        <thead className="bg-slate-50 dark:bg-slate-700 text-xs font-bold uppercase text-slate-500 dark:text-slate-400"><tr><th className="p-4">Name</th><th className="p-4">Email</th><th className="p-4 text-right">Actions</th></tr></thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                            {pendingUsers.map(u => (
+                                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                    <td className="p-4 font-bold text-slate-900 dark:text-white">{u.name}</td>
+                                                    <td className="p-4 text-sm text-slate-500 dark:text-slate-300">{u.email}</td>
+                                                    <td className="p-4 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <button onClick={() => handleVerifyClient(u.id)} disabled={actionLoading === u.id} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">Client</button>
+                                                            <button onClick={() => handlePromoteWorker(u.id, u)} disabled={actionLoading === u.id} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">Worker</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>}
+                                </div>
+                            )}
                         </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-users mr-2 text-slate-400"></i> Clients ({clientUsers.length})</h3></div><div>{clientUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No clients yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{clientUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white">{u.name}</div><div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div></td><td className="p-3 text-right"><button onClick={() => handleRevokeRole(u.id, u.email)} disabled={actionLoading === u.id} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke Role"><i className="fa-solid fa-user-slash"></i></button></td></tr>))}</tbody></table>}</div></div>
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3><button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button></div><div>{teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{teamMembers.map(w => (<tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">{w.name}{!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}</div><div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>{w.userId && (<button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>)}</div></td></tr>))}</tbody></table>}</div></div>
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit">
+                                <div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
+                                    <h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-users mr-2 text-slate-400"></i> Clients ({clientUsers.length})</h3>
+                                </div>
+                                <div>
+                                    {clientUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No clients yet.</div> :
+                                    <table className="w-full text-left">
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                            {clientUsers.map(u => (
+                                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                    <td className="p-3">
+                                                        <div className="font-bold text-slate-900 text-sm dark:text-white">{u.name}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div>
+                                                    </td>
+                                                    <td className="p-3 text-right">
+                                                        <button onClick={() => handleRevokeRole(u.id, u.email)} disabled={actionLoading === u.id} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke Role"><i className="fa-solid fa-user-slash"></i></button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>}
+                                </div>
+                            </div>
+                            
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit">
+                                <div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3>
+                                    <button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button>
+                                </div>
+                                <div>
+                                    {teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> :
+                                    <table className="w-full text-left">
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                            {teamMembers.map(w => (
+                                                <tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                    <td className="p-3">
+                                                        <div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">
+                                                            {w.name}
+                                                            {!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div>
+                                                    </td>
+                                                    <td className="p-3 text-right">
+                                                        <div className="flex justify-end gap-1">
+                                                            <button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>
+                                                            {w.userId && (
+                                                                <button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
