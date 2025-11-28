@@ -1,3 +1,5 @@
+// ... (Previous components: TurnstileWidget, ThemeToggle, DocumentManager, CalendarView, ProfileModal, WorkerDetailsModal, ClientDocsModal, CompleteShiftModal, AddWorkerModal, EditWorkerModal, AssignWorkerModal, AdminActionModal, DayDetailsModal, ClientCard, AdminDashboard, UnverifiedDashboard, Login, WorkerDashboard, ClientDashboard, App) - KEEP ALL THESE UNCHANGED EXCEPT BookingModal and TimeSelect ...
+
 // --- UTILITY COMPONENTS ---
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
@@ -19,32 +21,6 @@ const ThemeToggle = () => {
         <button onClick={() => setDarkMode(!darkMode)} className="w-10 h-10 rounded-full bg-slate-800 text-yellow-400 hover:bg-slate-700 transition-all shadow-md flex items-center justify-center">
             <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
-    );
-};
-
-// --- NEW: SMART TIME SELECT COMPONENT ---
-const TimeSelect = ({ label, value, onChange, minTime }) => {
-    const times = [];
-    for (let i = 0; i < 24; i++) {
-        for (let j = 0; j < 60; j += 15) {
-            const hour = i.toString().padStart(2, '0');
-            const minute = j.toString().padStart(2, '0');
-            const timeStr = `${hour}:${minute}`;
-            times.push(timeStr);
-        }
-    }
-    const filteredTimes = minTime ? times.filter(t => t > minTime) : times;
-    return (
-        <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{label}</label>
-            <div className="relative">
-                <select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer" value={value} onChange={(e) => onChange(e.target.value)}>
-                    <option value="" disabled>Select Time</option>
-                    {filteredTimes.map(t => (<option key={t} value={t}>{t}</option>))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><i className="fa-regular fa-clock"></i></div>
-            </div>
-        </div>
     );
 };
 
