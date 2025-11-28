@@ -1,5 +1,4 @@
-// --- EXISTING COMPONENTS (Unchanged Logic, Improved Styles) ---
-
+// --- EXISTING COMPONENTS (Unchanged) ---
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
     useEffect(() => {
@@ -27,7 +26,6 @@ const ThemeToggle = () => {
     );
 };
 
-// --- CALENDAR VIEW (Minor Style Polish) ---
 const CalendarView = ({ shifts, onDateClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const year = currentDate.getFullYear();
@@ -90,9 +88,6 @@ const CalendarView = ({ shifts, onDateClick }) => {
     );
 };
 
-// --- MODALS (Kept functional but visual polish applied) ---
-// (Modals code remains mostly same structure, just ensuring classes match new aesthetic)
-
 const ProfileModal = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.displayName || '');
     const [loading, setLoading] = useState(false);
@@ -103,7 +98,6 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
     );
 };
 
-// ... Keeping other Modals logic identical but ensuring they work ...
 const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
     const [actualStartTime, setActualStartTime] = useState(shift.startTime);
     const [actualEndTime, setActualEndTime] = useState(shift.endTime);
@@ -123,7 +117,7 @@ const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-2xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800"><div><h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3><p className="text-sm text-slate-500">{shift.dateDisplay} • {shift.userName}</p></div><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark text-slate-500 dark:text-slate-300"></i></button></div><div className="p-6 overflow-y-auto bg-slate-50 dark:bg-slate-900/50"><form id="completeForm" onSubmit={handleSubmit} className="space-y-8">
             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">1. Time & Attendance</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Start Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Finish Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} /></div></div></div>
             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><div className="flex justify-between items-center mb-4"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4><button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-3 py-1.5 rounded-lg hover:bg-brand-100 font-bold border border-brand-200 transition-colors"><i className="fa-solid fa-plus mr-1"></i> Add Trip</button></div>{travelLogs.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-dashed border-slate-200">No travel recorded.</p>}<div className="space-y-3">{travelLogs.map((log, index) => (<div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group"><button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center shadow-sm hover:bg-red-200"><i className="fa-solid fa-xmark text-xs"></i></button><div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"><div className="md:col-span-3"><input type="text" placeholder="From" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="To" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="Reason" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} /></div><div className="md:col-span-3 flex gap-2"><input type="number" step="0.1" placeholder="KM" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} /><button type="button" onClick={() => openMapCheck(log)} className="px-2 bg-white border border-slate-300 rounded text-slate-500 hover:text-blue-600"><i className="fa-solid fa-map-location-dot"></i></button></div></div></div>))}</div>{travelLogs.length > 0 && (<div className="mt-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Total: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span></div>)}</div>
-            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Summary</label><textarea required rows="3" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Goals</label><textarea required rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Incidents?</label><select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No Incidents</option><option value="Yes">Yes (Provide details)</option></select></div>{incidents === 'Yes' && (<div className="animate-fade-in"><label className="block text-xs font-bold text-red-600 uppercase mb-1.5">Incident Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 rounded-lg bg-red-50 focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div>
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Summary</label><textarea required rows="3" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Goals</label><textarea required rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Incidents?</label><select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No</option><option value="Yes">Yes</option></select></div>{incidents === 'Yes' && (<div className="animate-fade-in"><label className="block text-xs font-bold text-red-600 uppercase mb-1.5">Incident Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 rounded-lg bg-red-50 focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div>
         </form></div><div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800"><button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/20 flex justify-center items-center transition-all transform hover:-translate-y-0.5">{loading ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>} {loading ? 'Submitting...' : 'Submit & Complete Shift'}</button></div></div></div>
     );
 };
@@ -357,6 +351,7 @@ const AdminDashboard = () => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const [isVerificationExpanded, setIsVerificationExpanded] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(''); // NEW SEARCH STATE
 
     const clients = useMemo(() => {
         const groups = {};
@@ -371,6 +366,22 @@ const AdminDashboard = () => {
         return Object.values(groups).sort((a, b) => a.nextShiftTime - b.nextShiftTime);
     }, [shifts]);
     
+    // NEW FILTERED LISTS
+    const filteredClients = useMemo(() => {
+        if (!searchQuery) return clients;
+        const lowerQuery = searchQuery.toLowerCase();
+        return clients.filter(c => 
+            c.name.toLowerCase().includes(lowerQuery) || 
+            c.email.toLowerCase().includes(lowerQuery)
+        );
+    }, [clients, searchQuery]);
+
+    const filteredShiftsForCalendar = useMemo(() => {
+        if (!searchQuery) return shifts;
+        const clientIds = new Set(filteredClients.map(c => c.id));
+        return shifts.filter(s => clientIds.has(s.userId));
+    }, [shifts, filteredClients, searchQuery]);
+
     const alerts = useMemo(() => shifts.filter(s => s.status === 'Pending'), [shifts]);
     const openActionModal = (shift, type) => setActionModal({ shift, type });
     const handleViewWorker = (email) => { const worker = workersList?.find(w => w.email.toLowerCase() === email.toLowerCase()); setSelectedWorker(worker || { name: 'Unknown', email: email, notes: 'Profile not found.' }); };
@@ -442,7 +453,19 @@ const AdminDashboard = () => {
                                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bookings</h2>
                                 <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Managing {clients.length} active clients</div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                {/* NEW SEARCH INPUT */}
+                                <div className="relative">
+                                    <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search clients..." 
+                                        className="pl-9 pr-4 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-64 transition-all shadow-sm"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+
                                 <div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
                                     <button onClick={() => setViewMode('list')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-list mr-2"></i>List</button>
                                     <button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-calendar mr-2"></i>Calendar</button>
@@ -458,24 +481,31 @@ const AdminDashboard = () => {
                         
                         {viewMode === 'list' ? (
                             <div className="space-y-4">
-                                {clients.map(client => (
-                                    <ClientCard 
-                                        key={client.id} 
-                                        client={client} 
-                                        isExpanded={expandedClientId === client.id} 
-                                        onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} 
-                                        onUpdateStatus={updateShiftStatus} 
-                                        openActionModal={openActionModal} 
-                                        onAssign={setAssignModalShift} 
-                                        onRemoveWorker={removeWorker} 
-                                        showUnassignedOnly={showUnassignedOnly} 
-                                        workersList={workersList} 
-                                        onViewWorker={handleViewWorker} 
-                                    />
-                                ))}
+                                {filteredClients.length === 0 ? (
+                                    <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+                                        <i className="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i>
+                                        <p className="text-slate-500 font-medium">No clients found matching "{searchQuery}"</p>
+                                    </div>
+                                ) : (
+                                    filteredClients.map(client => (
+                                        <ClientCard 
+                                            key={client.id} 
+                                            client={client} 
+                                            isExpanded={expandedClientId === client.id} 
+                                            onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} 
+                                            onUpdateStatus={updateShiftStatus} 
+                                            openActionModal={openActionModal} 
+                                            onAssign={setAssignModalShift} 
+                                            onRemoveWorker={removeWorker} 
+                                            showUnassignedOnly={showUnassignedOnly} 
+                                            workersList={workersList} 
+                                            onViewWorker={handleViewWorker} 
+                                        />
+                                    ))
+                                )}
                             </div>
                         ) : (
-                            <CalendarView shifts={shifts} onDateClick={setSelectedDayShifts} />
+                            <CalendarView shifts={filteredShiftsForCalendar} onDateClick={setSelectedDayShifts} />
                         )}
                     </>
                 )}
