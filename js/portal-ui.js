@@ -1,3 +1,7 @@
+// ... existing components ... (TurnstileWidget, ThemeToggle, CalendarView, Modals etc are unchanged)
+// We only need to replace the AdminDashboard component logic for the "users" tab.
+// Since we are replacing the whole file context, I will provide the complete UI file logic again with the change applied.
+
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
     useEffect(() => {
@@ -473,7 +477,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
 };
 
 const AdminDashboard = () => {
-    const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker } = useContext(AuthContext);
+    const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker, revokeUserRole } = useContext(AuthContext);
     const [expandedClientId, setExpandedClientId] = useState(null);
     const [assignModalShift, setAssignModalShift] = useState(null);
     const [actionModal, setActionModal] = useState(null); 
@@ -532,6 +536,14 @@ const AdminDashboard = () => {
         setActionLoading(uid);
         await promoteUserToWorker(uid, userData);
         setActionLoading(null);
+    };
+
+    const handleRevokeRole = async (uid, email) => {
+        if(confirm("Are you sure? This will remove their current role and reset them to 'Unverified'. If they are a worker, they will be removed from the team list.")) {
+            setActionLoading(uid);
+            await revokeUserRole(uid, email);
+            setActionLoading(null);
+        }
     };
 
     return (
@@ -629,22 +641,34 @@ const AdminDashboard = () => {
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex justify-end gap-2">
+                                                        {/* CASE 1: UNVERIFIED USER - Can appoint as Client OR Worker */}
                                                         {u.role !== 'client' && u.role !== 'worker' && (
-                                                            <button 
-                                                                onClick={() => handleVerifyClient(u.id)}
-                                                                disabled={actionLoading === u.id}
-                                                                className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/40"
-                                                            >
-                                                                {actionLoading === u.id ? '...' : 'Verify Client'}
-                                                            </button>
+                                                            <>
+                                                                <button 
+                                                                    onClick={() => handleVerifyClient(u.id)}
+                                                                    disabled={actionLoading === u.id}
+                                                                    className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/40"
+                                                                >
+                                                                    {actionLoading === u.id ? '...' : 'Appoint Client'}
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handlePromoteWorker(u.id, u)}
+                                                                    disabled={actionLoading === u.id}
+                                                                    className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/40"
+                                                                >
+                                                                    {actionLoading === u.id ? '...' : 'Appoint Worker'}
+                                                                </button>
+                                                            </>
                                                         )}
-                                                        {u.role !== 'worker' && (
+
+                                                        {/* CASE 2: VERIFIED USER (Client or Worker) - Can ONLY Revoke Role */}
+                                                        {(u.role === 'client' || u.role === 'worker') && (
                                                             <button 
-                                                                onClick={() => handlePromoteWorker(u.id, u)}
+                                                                onClick={() => handleRevokeRole(u.id, u.email)}
                                                                 disabled={actionLoading === u.id}
-                                                                className="text-xs bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1.5 rounded hover:bg-brand-100 dark:bg-brand-900/20 dark:border-brand-800 dark:text-brand-300 dark:hover:bg-brand-900/40"
+                                                                className="text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/40"
                                                             >
-                                                                {actionLoading === u.id ? '...' : 'Promote Worker'}
+                                                                {actionLoading === u.id ? '...' : 'Revoke Role'}
                                                             </button>
                                                         )}
                                                     </div>
@@ -669,6 +693,7 @@ const AdminDashboard = () => {
     );
 };
 
+// ... existing UnverifiedDashboard, Login, BookingModal, CancellationModal, WorkerDashboard, ClientDashboard, App components ... (unchanged)
 const UnverifiedDashboard = () => {
     const { logout, user } = useContext(AuthContext);
     return (
