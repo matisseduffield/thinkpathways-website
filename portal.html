@@ -63,6 +63,10 @@
         /* Dark mode overrides */
         .dark ::-webkit-scrollbar-track { background: #1e293b; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Custom scrollbar for small elements */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
@@ -118,19 +122,23 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    
+    <!-- Firebase (Must include Storage now!) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- 5. YOUR APPLICATION FILES -->
-    <!-- The ?v=3.0 query string forces the browser to re-download the file, ignoring old cache -->
+    <!-- Version 4.0 forces a fresh download -->
     
     <!-- Load Logic First (Firebase, Auth, Data) -->
-    <script type="text/babel" src="js/portal-logic.js?v=3.0"></script>
+    <script type="text/babel" src="js/portal-logic.js?v=4.0"></script>
     
     <!-- Load UI Second (Dashboards, Components) -->
-    <script type="text/babel" src="js/portal-ui.js?v=3.0"></script>
+    <script type="text/babel" src="js/portal-ui.js?v=4.0"></script>
 
     <!-- 6. START APP -->
     <script type="text/babel">

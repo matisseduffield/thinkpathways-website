@@ -1,4 +1,4 @@
-// --- EXISTING COMPONENTS (Unchanged) ---
+// --- UTILITY COMPONENTS ---
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
     useEffect(() => {
@@ -16,37 +16,70 @@ const TurnstileWidget = ({ onVerify }) => {
 const ThemeToggle = () => {
     const { darkMode, setDarkMode } = useContext(ThemeContext);
     return (
-        <button 
-            onClick={() => setDarkMode(!darkMode)} 
-            className="w-10 h-10 rounded-full bg-slate-800 text-yellow-400 hover:bg-slate-700 transition-all shadow-md flex items-center justify-center"
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
+        <button onClick={() => setDarkMode(!darkMode)} className="w-10 h-10 rounded-full bg-slate-800 text-yellow-400 hover:bg-slate-700 transition-all shadow-md flex items-center justify-center">
             <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
     );
 };
 
+// --- DOCUMENT MANAGER COMPONENT ---
+const DocumentManager = ({ folder, id, documents, onUpload, onDelete }) => {
+    const [file, setFile] = useState(null);
+    const [docName, setDocName] = useState('');
+    const [uploading, setUploading] = useState(false);
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if(!file) return;
+        setUploading(true);
+        await onUpload(folder, id, file, docName || file.name);
+        setUploading(false);
+        setFile(null);
+        setDocName('');
+    };
+
+    return (
+        <div className="mt-4">
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">Documents & Plans</h4>
+            <div className="space-y-2 mb-4">
+                {(!documents || documents.length === 0) ? (
+                    <p className="text-xs text-slate-400 italic">No documents uploaded.</p>
+                ) : (
+                    documents.map((doc, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-2 rounded-lg border border-slate-100 dark:border-slate-600">
+                            <div className="flex items-center overflow-hidden">
+                                <i className="fa-regular fa-file-pdf text-red-500 mr-2"></i>
+                                <div className="truncate text-sm text-slate-700 dark:text-slate-200" title={doc.name}>{doc.name}</div>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0 ml-2">
+                                <a href={doc.url} target="_blank" className="text-blue-500 hover:text-blue-700 p-1"><i className="fa-solid fa-external-link-alt"></i></a>
+                                <button onClick={() => onDelete(folder, id, doc)} className="text-slate-400 hover:text-red-500 p-1"><i className="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            <form onSubmit={handleUpload} className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                <input type="text" placeholder="Document Name" className="w-full p-2 mb-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={docName} onChange={e => setDocName(e.target.value)} />
+                <div className="flex gap-2">
+                    <input type="file" className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-slate-700 dark:file:text-slate-300" onChange={e => setFile(e.target.files[0])} />
+                    <button disabled={!file || uploading} className="bg-brand-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-brand-700 disabled:opacity-50">{uploading ? '...' : 'Upload'}</button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+// --- CALENDAR VIEW ---
 const CalendarView = ({ shifts, onDateClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month); 
-
-    const shiftsByDate = useMemo(() => {
-        const map = {};
-        shifts.forEach(s => {
-            if (!s.date) return;
-            if (s.status === 'Cancelled' || s.status === 'Declined') return;
-            if (!map[s.date]) map[s.date] = [];
-            map[s.date].push(s);
-        });
-        return map;
-    }, [shifts]);
-
+    const shiftsByDate = useMemo(() => { const map = {}; shifts.forEach(s => { if (!s.date) return; if (s.status === 'Cancelled' || s.status === 'Declined') return; if (!map[s.date]) map[s.date] = []; map[s.date].push(s); }); return map; }, [shifts]);
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-
     const renderDays = () => {
         const days = [];
         for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-28 bg-slate-50/50 border-r border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-700"></div>);
@@ -56,129 +89,70 @@ const CalendarView = ({ shifts, onDateClick }) => {
             const dateKey = `${year}-${monthStr}-${dayStr}`;
             const dayShifts = shiftsByDate[dateKey] || [];
             const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
-
             days.push(
                 <div key={d} onClick={() => dayShifts.length > 0 && onDateClick(dayShifts)} className={`h-28 border-r border-b border-slate-100 dark:border-slate-700 p-2 relative transition-all group ${dayShifts.length > 0 ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700' : ''} ${isToday ? 'bg-blue-50/30 dark:bg-blue-900/10' : 'bg-white dark:bg-slate-800'}`}>
                     <div className={`text-xs font-bold mb-2 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-brand-600 text-white shadow-md' : 'text-slate-400 group-hover:text-slate-600'}`}>{d}</div>
                     <div className="flex flex-col gap-1 overflow-y-auto max-h-[70px] custom-scrollbar">
-                        {dayShifts.map(s => (
-                            <div key={s.id} className={`text-[10px] px-2 py-1 rounded-md truncate font-medium border-l-2 ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-500' : s.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-500' : 'bg-slate-100 text-slate-600 border-slate-400'}`}>
-                                {s.userName || 'Shift'}
-                            </div>
-                        ))}
+                        {dayShifts.map(s => (<div key={s.id} className={`text-[10px] px-2 py-1 rounded-md truncate font-medium border-l-2 ${s.status === 'Confirmed' ? 'bg-green-50 text-green-700 border-green-500' : s.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-500' : 'bg-slate-100 text-slate-600 border-slate-400'}`}>{s.userName || 'Shift'}</div>))}
                     </div>
                 </div>
             );
         }
         return days;
     };
-
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in">
-            <div className="p-6 flex justify-between items-center bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white capitalize">{currentDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}</h3>
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
-                    <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 text-slate-500 hover:shadow-sm transition-all"><i className="fa-solid fa-chevron-left text-xs"></i></button>
-                    <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 text-slate-500 hover:shadow-sm transition-all"><i className="fa-solid fa-chevron-right text-xs"></i></button>
-                </div>
-            </div>
+            <div className="p-6 flex justify-between items-center bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700"><h3 className="text-lg font-bold text-slate-800 dark:text-white capitalize">{currentDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}</h3><div className="flex gap-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg"><button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 text-slate-500 hover:shadow-sm transition-all"><i className="fa-solid fa-chevron-left text-xs"></i></button><button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-600 text-slate-500 hover:shadow-sm transition-all"><i className="fa-solid fa-chevron-right text-xs"></i></button></div></div>
             <div className="grid grid-cols-7 text-center bg-slate-50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 border-b border-slate-100 dark:border-slate-700"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
             <div className="grid grid-cols-7 bg-slate-50 dark:bg-slate-800 border-l border-t border-slate-100 dark:border-slate-700">{renderDays()}</div>
         </div>
     );
 };
 
+// --- MODALS ---
+
 const ProfileModal = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.displayName || '');
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState('');
     const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const res = await onUpdate(name); if (res.success) { setMsg('Updated!'); setTimeout(onClose, 1000); } else { setMsg('Error.'); } setLoading(false); };
+    return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">My Profile</h3>{msg && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg mb-4 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i>{msg}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Full Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Email</label><input disabled className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-600/50 dark:text-slate-400" value={user.email} /></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg">{loading ? 'Saving...' : 'Save Changes'}</button></form></div></div>);
+};
+
+const WorkerDetailsModal = ({ worker, onClose }) => {
+    const { uploadDocument, deleteDocument } = useContext(AuthContext); 
+    if (!worker) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">My Profile</h3>{msg && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg mb-4 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i>{msg}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Full Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white transition-all" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Email</label><input disabled className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-600/50 dark:text-slate-400" value={user.email} /></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg shadow-brand-500/20 transition-all transform hover:-translate-y-0.5">{loading ? 'Saving...' : 'Save Changes'}</button></form></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><div className="text-center mb-6"><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4 shadow-inner">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{worker.email}</p></div><div className="overflow-y-auto pr-2"><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-left mb-4"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><DocumentManager folder="workers" id={worker.id} documents={worker.documents} onUpload={uploadDocument} onDelete={deleteDocument} /></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 mt-4">Close</button></div></div>
+    );
+};
+
+const ClientDocsModal = ({ client, onClose }) => {
+    const { uploadDocument, deleteDocument } = useContext(AuthContext);
+    if (!client) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><div className="mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><h3 className="text-xl font-bold text-slate-900 dark:text-white">{client.name}</h3><p className="text-sm text-slate-500">Document Management</p></div><DocumentManager folder="users" id={client.id} documents={client.documents} onUpload={uploadDocument} onDelete={deleteDocument} /><div className="mt-6 flex justify-end"><button onClick={onClose} className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg font-bold">Done</button></div></div></div>
     );
 };
 
 const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
-    const [actualStartTime, setActualStartTime] = useState(shift.startTime);
-    const [actualEndTime, setActualEndTime] = useState(shift.endTime);
-    const [travelLogs, setTravelLogs] = useState([]);
-    const [summary, setSummary] = useState('');
-    const [goals, setGoals] = useState('');
-    const [incidents, setIncidents] = useState('None');
-    const [incidentDetails, setIncidentDetails] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [actualStartTime, setActualStartTime] = useState(shift.startTime); const [actualEndTime, setActualEndTime] = useState(shift.endTime); const [travelLogs, setTravelLogs] = useState([]); const [summary, setSummary] = useState(''); const [goals, setGoals] = useState(''); const [incidents, setIncidents] = useState('None'); const [incidentDetails, setIncidentDetails] = useState(''); const [loading, setLoading] = useState(false);
     const addTravelLeg = () => { const lastLog = travelLogs[travelLogs.length - 1]; const defaultFrom = lastLog ? lastLog.to : ''; setTravelLogs([...travelLogs, { id: Date.now(), from: defaultFrom, to: '', reason: '', km: '' }]); };
     const removeTravelLeg = (id) => { setTravelLogs(travelLogs.filter(log => log.id !== id)); };
     const updateTravel = (id, field, value) => { setTravelLogs(travelLogs.map(log => log.id === id ? { ...log, [field]: value } : log)); };
     const totalKm = travelLogs.reduce((acc, curr) => acc + (parseFloat(curr.km) || 0), 0);
     const openMapCheck = (log) => { if(!log.from || !log.to) return; window.open(`https://www.google.com/maps/dir/${encodeURIComponent(log.from + ' SA')}/${encodeURIComponent(log.to + ' SA')}`, '_blank'); };
     const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const finalData = { actualStartTime, actualEndTime, scheduledStartTime: shift.startTime, scheduledEndTime: shift.endTime, travelLog: travelLogs, totalTravelKm: totalKm, summary, goals, incidents, incidentDetails: incidents === 'Yes' ? incidentDetails : 'N/A' }; await onConfirm(shift.id, finalData); setLoading(false); onClose(); };
-    return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-2xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800"><div><h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3><p className="text-sm text-slate-500">{shift.dateDisplay} • {shift.userName}</p></div><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark text-slate-500 dark:text-slate-300"></i></button></div><div className="p-6 overflow-y-auto bg-slate-50 dark:bg-slate-900/50"><form id="completeForm" onSubmit={handleSubmit} className="space-y-8">
-            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">1. Time & Attendance</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Start Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Finish Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} /></div></div></div>
-            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><div className="flex justify-between items-center mb-4"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4><button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-3 py-1.5 rounded-lg hover:bg-brand-100 font-bold border border-brand-200 transition-colors"><i className="fa-solid fa-plus mr-1"></i> Add Trip</button></div>{travelLogs.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-dashed border-slate-200">No travel recorded.</p>}<div className="space-y-3">{travelLogs.map((log, index) => (<div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group"><button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center shadow-sm hover:bg-red-200"><i className="fa-solid fa-xmark text-xs"></i></button><div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"><div className="md:col-span-3"><input type="text" placeholder="From" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="To" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="Reason" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} /></div><div className="md:col-span-3 flex gap-2"><input type="number" step="0.1" placeholder="KM" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} /><button type="button" onClick={() => openMapCheck(log)} className="px-2 bg-white border border-slate-300 rounded text-slate-500 hover:text-blue-600"><i className="fa-solid fa-map-location-dot"></i></button></div></div></div>))}</div>{travelLogs.length > 0 && (<div className="mt-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Total: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span></div>)}</div>
-            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Summary</label><textarea required rows="3" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Goals</label><textarea required rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Incidents?</label><select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No</option><option value="Yes">Yes</option></select></div>{incidents === 'Yes' && (<div className="animate-fade-in"><label className="block text-xs font-bold text-red-600 uppercase mb-1.5">Incident Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 rounded-lg bg-red-50 focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div>
-        </form></div><div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800"><button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/20 flex justify-center items-center transition-all transform hover:-translate-y-0.5">{loading ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>} {loading ? 'Submitting...' : 'Submit & Complete Shift'}</button></div></div></div>
-    );
+    return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-2xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800"><div><h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3><p className="text-sm text-slate-500">{shift.dateDisplay} • {shift.userName}</p></div><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center"><i className="fa-solid fa-xmark text-slate-500 dark:text-slate-300"></i></button></div><div className="p-6 overflow-y-auto bg-slate-50 dark:bg-slate-900/50"><form id="completeForm" onSubmit={handleSubmit} className="space-y-8"><div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">1. Time & Attendance</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Start Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1.5">Finish Time</label><input type="time" required className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} /></div></div></div><div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><div className="flex justify-between items-center mb-4"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4><button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-3 py-1.5 rounded-lg hover:bg-brand-100 font-bold border border-brand-200"><i className="fa-solid fa-plus mr-1"></i> Add Trip</button></div>{travelLogs.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-dashed border-slate-200">No travel recorded.</p>}<div className="space-y-3">{travelLogs.map((log, index) => (<div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group"><button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center shadow-sm hover:bg-red-200"><i className="fa-solid fa-xmark text-xs"></i></button><div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"><div className="md:col-span-3"><input type="text" placeholder="From" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="To" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="Reason" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} /></div><div className="md:col-span-3 flex gap-2"><input type="number" step="0.1" placeholder="KM" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} /><button type="button" onClick={() => openMapCheck(log)} className="px-2 bg-white border border-slate-300 rounded text-slate-500 hover:text-blue-600"><i className="fa-solid fa-map-location-dot"></i></button></div></div></div>))}</div>{travelLogs.length > 0 && (<div className="mt-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Total: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span></div>)}</div><div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h4 className="text-xs font-bold text-brand-600 uppercase tracking-wide mb-4">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Summary</label><textarea required rows="3" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Goals</label><textarea required rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Incidents?</label><select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No Incidents</option><option value="Yes">Yes (Provide details)</option></select></div>{incidents === 'Yes' && (<div className="animate-fade-in"><label className="block text-xs font-bold text-red-600 uppercase mb-1.5">Incident Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 rounded-lg bg-red-50 focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div></form></div><div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800"><button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/20 flex justify-center items-center transition-all transform hover:-translate-y-0.5">{loading ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>} {loading ? 'Submitting...' : 'Submit & Complete Shift'}</button></div></div></div>);
 };
+const AddWorkerModal = ({ onClose, onAdd }) => { const [data, setData] = useState({ name: '', email: '', notes: '' }); const [loading, setLoading] = useState(false); const [error, setError] = useState(''); const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); setError(''); const res = await onAdd(data); setLoading(false); if(res.success) onClose(); else setError(res.msg); }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Add New Worker</h3><form onSubmit={handleSubmit} className="space-y-4"><div><input required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Name" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input type="email" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Email" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Notes" rows="2" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>); };
+const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => { const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes }); const [loading, setLoading] = useState(false); const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); }; const handleDelete = async () => { if(confirm('Delete?')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Edit Team Member</h3><div className="space-y-4"><div><input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300" value={data.email} disabled /></div><div><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100">Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700">Save</button></div></div></div></div>); };
+const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => { const [email, setEmail] = useState(''); const [applyToFuture, setApplyToFuture] = useState(false); const [loading, setLoading] = useState(false); const isRecurring = shift.seriesId && shift.recurrence !== 'none'; const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email, applyToFuture, shift); setLoading(false); onClose(); }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Assign Worker</h3><p className="text-sm text-slate-500 mb-6">Select a worker for <strong>{shift.dateDisplay}</strong></p><form onSubmit={handleSubmit}><div className="mb-6"><select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select></div>{isRecurring && (<div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3"><input type="checkbox" id="futureAssign" className="mt-1 rounded text-brand-600 focus:ring-brand-500 w-4 h-4" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} /><label htmlFor="futureAssign" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none"><strong>Recurring Shift</strong><br/>Assign this worker to all future shifts in this series?</label></div>)}<div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold">Cancel</button><button disabled={loading} className="px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700">{loading ? '...' : 'Assign'}</button></div></form></div></div>); };
+const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => { const [reason, setReason] = useState(''); const [applyToFuture, setApplyToFuture] = useState(false); const [loading, setLoading] = useState(false); const isRecurring = shift.seriesId && shift.recurrence !== 'none'; const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason, applyToFuture, shift); setLoading(false); onClose(); }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in border border-slate-100 dark:border-slate-700"><h3 className="text-xl font-bold mb-4 text-red-600">Action: {actionType}</h3><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl mb-4 dark:bg-slate-700 dark:text-white" rows="3" placeholder="Reason..."></textarea>{isRecurring && (<div className="mb-6 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800 flex items-start gap-3"><input type="checkbox" id="futureCancel" className="mt-1 rounded text-red-600 focus:ring-red-500 w-4 h-4" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} /><label htmlFor="futureCancel" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none"><strong>Recurring Shift</strong><br/>Apply this action to all future shifts?</label></div>)}<div className="flex gap-3 justify-end"><button onClick={onClose} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-6 py-2.5 text-white bg-red-600 rounded-xl font-bold hover:bg-red-700">Confirm</button></div></div></div>); };
+const DayDetailsModal = ({ shifts, onClose }) => { return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Shifts Details</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className="border border-slate-200 dark:border-slate-700 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50"><div className="flex justify-between items-center mb-1"><span className="font-bold text-slate-900 dark:text-white">{s.userName}</span><span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300">{s.service} • {s.startTime}-{s.endTime}</div></div>))}</div></div></div>); }
 
-const AddWorkerModal = ({ onClose, onAdd }) => {
-    const [data, setData] = useState({ name: '', email: '', notes: '' });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); setError(''); const res = await onAdd(data); setLoading(false); if(res.success) onClose(); else setError(res.msg); };
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Add New Worker</h3><p className="text-sm text-slate-500 mb-6">Authorize a user to access the Worker Portal.</p>{error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg mb-4"><i className="fa-solid fa-circle-exclamation mr-2"></i>{error}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email</label><input type="email" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Notes</label><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="2" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-2 shadow-lg shadow-brand-500/20">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>
-    );
-};
-
-const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => {
-    const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes });
-    const [loading, setLoading] = useState(false);
-    const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); };
-    const handleDelete = async () => { if(confirm('Delete this worker?')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } };
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Edit Team Member</h3><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Name</label><input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email</label><input className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300" value={data.email} disabled /></div><div><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Notes</label><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30">Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20">Save</button></div></div></div></div>
-    );
-};
-
-const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => {
-    const [email, setEmail] = useState('');
-    const [applyToFuture, setApplyToFuture] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const isRecurring = shift.seriesId && shift.recurrence !== 'none';
-    const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email, applyToFuture, shift); setLoading(false); onClose(); };
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Assign Worker</h3><p className="text-sm text-slate-500 mb-6">Select a worker for <strong>{shift.dateDisplay}</strong></p><form onSubmit={handleSubmit}><div className="mb-6"><label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Team Member</label><select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select></div>{isRecurring && (<div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3"><input type="checkbox" id="futureAssign" className="mt-1 rounded text-brand-600 focus:ring-brand-500 w-4 h-4" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} /><label htmlFor="futureAssign" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none"><strong>Recurring Shift</strong><br/>Assign this worker to all future shifts in this series?</label></div>)}<div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold dark:text-slate-300 dark:hover:bg-slate-700">Cancel</button><button disabled={loading} className="px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 shadow-lg shadow-brand-500/20">{loading ? 'Assigning...' : 'Assign'}</button></div></form></div></div>
-    );
-};
-
-const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
-    const [reason, setReason] = useState('');
-    const [applyToFuture, setApplyToFuture] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const isRecurring = shift.seriesId && shift.recurrence !== 'none';
-    const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason, applyToFuture, shift); setLoading(false); onClose(); };
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in border border-slate-100 dark:border-slate-700"><h3 className={`text-xl font-bold mb-4 ${actionType === 'Declined' ? 'text-red-600' : 'text-red-600'} flex items-center`}><i className="fa-solid fa-triangle-exclamation mr-2"></i> {actionType === 'Declined' ? 'Decline Request' : 'Cancel Shift'}</h3><p className="text-slate-600 dark:text-slate-400 mb-2 text-sm">Reason (visible to client):</p><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-red-500 mb-4 dark:bg-slate-700 dark:text-white" rows="3"></textarea>{isRecurring && (<div className="mb-6 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800 flex items-start gap-3"><input type="checkbox" id="futureCancel" className="mt-1 rounded text-red-600 focus:ring-red-500 w-4 h-4" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} /><label htmlFor="futureCancel" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none"><strong>Recurring Shift</strong><br/>Apply this action to all future shifts in this series?</label></div>)}<div className="flex gap-3 justify-end"><button onClick={onClose} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold dark:text-slate-300 dark:hover:bg-slate-700">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-6 py-2.5 text-white bg-red-600 rounded-xl font-bold hover:bg-red-700 disabled:opacity-50 shadow-lg shadow-red-500/20">Confirm</button></div></div></div>
-    );
-};
-
-const WorkerDetailsModal = ({ worker, onClose }) => {
-    if (!worker) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative text-center border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4 shadow-inner">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{worker.email}</p><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-left mb-6"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes / Qualifications</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600">Close</button></div></div>
-    );
-};
-
-const DayDetailsModal = ({ shifts, onClose }) => {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Shifts Details</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className="border border-slate-200 dark:border-slate-700 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50"><div className="flex justify-between items-center mb-1"><span className="font-bold text-slate-900 dark:text-white">{s.userName}</span><span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300">{s.service} • {s.startTime}-{s.endTime}</div></div>))}</div></div></div>
-    );
-}
-
-// --- REDESIGNED CLIENT CARD ---
-const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly, workersList, onViewWorker, onRemoveWorker }) => {
+// --- CLIENT CARD (Redesigned) ---
+const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly, workersList, onViewWorker, onRemoveWorker, onOpenDocs }) => {
     const pendingCount = client.stats.pending;
     const upcomingCount = client.stats.upcoming;
     const scheduled = client.shifts.filter(s => s.status === 'Confirmed' && new Date(s.date) >= new Date().setHours(0,0,0,0)).sort((a, b) => getSortValue(a) - getSortValue(b));
@@ -190,8 +164,6 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
     const ShiftItem = ({ s }) => {
         const assignedWorker = s.assignedWorkerEmail ? workersList?.find(w => w.email.toLowerCase() === s.assignedWorkerEmail.toLowerCase()) : null;
         const workerDisplayName = assignedWorker ? assignedWorker.name : s.assignedWorkerEmail;
-        
-        // Dynamic Status Styling
         let statusColor = "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600";
         if (s.status === 'Confirmed') statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800";
         if (s.status === 'Pending') statusColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
@@ -200,8 +172,6 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    
-                    {/* LEFT: Date & Time */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
                         <div className="text-center sm:text-left min-w-[50px]">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">{s.dateDisplay.split(' ')[2]}</div>
@@ -212,49 +182,14 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             <i className="fa-regular fa-clock mr-2 text-slate-400"></i> {s.startTime} - {s.endTime}
                         </div>
                     </div>
-
-                    {/* CENTER: Service & Worker */}
                     <div className="sm:w-1/2">
-                        <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-bold text-slate-800 dark:text-white">{s.service}</h4>
-                            {s.recurrence && s.recurrence !== 'none' && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase tracking-wide">{s.recurrence}</span>}
-                        </div>
-                        
-                        <div className="mt-2 flex items-center gap-2">
-                            {s.assignedWorkerEmail ? (
-                                <div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit">
-                                    <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div>
-                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span>
-                                    <span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button>
-                                </div>
-                            ) : (
-                                <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors">
-                                    <i className="fa-solid fa-user-plus"></i> Assign Worker
-                                </button>
-                            )}
-                        </div>
+                        <div className="flex items-center gap-2 mb-1"><h4 className="font-bold text-slate-800 dark:text-white">{s.service}</h4>{s.recurrence && s.recurrence !== 'none' && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase tracking-wide">{s.recurrence}</span>}</div>
+                        <div className="mt-2 flex items-center gap-2">{s.assignedWorkerEmail ? (<div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit"><div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div><span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span><span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span><button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button></div>) : (<button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors"><i className="fa-solid fa-user-plus"></i> Assign Worker</button>)}</div>
                         {s.notes && <div className="mt-2 text-xs text-slate-400 italic truncate max-w-xs"><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
                     </div>
-
-                    {/* RIGHT: Actions & Status */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-end justify-between sm:gap-2">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>
-                            {s.statusLabel}
-                        </span>
-                        
-                        <div className="flex items-center gap-2">
-                            {s.status === 'Pending' ? (
-                                <>
-                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button>
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button>
-                                </>
-                            ) : (
-                                s.status === 'Confirmed' && (
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>
-                                )
-                            )}
-                        </div>
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>{s.statusLabel}</span>
+                        <div className="flex items-center gap-2">{s.status === 'Pending' ? (<><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button></>) : (s.status === 'Confirmed' && (<button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>))}</div>
                     </div>
                 </div>
             </div>
@@ -264,78 +199,19 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
     return (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all hover:shadow-md mb-6 group">
             <div className="p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors" onClick={onExpand}>
-                <div className="flex items-center gap-5 mb-4 md:mb-0 w-full md:w-auto">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md ${pendingCount > 0 ? 'bg-amber-500' : 'bg-brand-600'}`}>
-                        {client.name.charAt(0).toUpperCase()}
-                        {pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p>
-                    </div>
-                </div>
+                <div className="flex items-center gap-5 mb-4 md:mb-0 w-full md:w-auto"><div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md ${pendingCount > 0 ? 'bg-amber-500' : 'bg-brand-600'}`}>{client.name.charAt(0).toUpperCase()}{pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}</div><div><h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p></div></div>
                 <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <div className="flex gap-3">
-                        <div className="flex flex-col items-center px-4">
-                            <span className="text-xl font-bold text-brand-600 dark:text-brand-400">{upcomingCount}</span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Upcoming</span>
-                        </div>
-                        {pendingCount > 0 && (
-                            <div className="flex flex-col items-center px-4 border-l border-slate-100 dark:border-slate-700">
-                                <span className="text-xl font-bold text-amber-500">{pendingCount}</span>
-                                <span className="text-[10px] text-amber-500 uppercase font-bold tracking-wide">Pending</span>
-                            </div>
-                        )}
-                    </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
-                        <i className="fa-solid fa-chevron-down text-xs"></i>
-                    </div>
+                    <div className="flex gap-3"><div className="flex flex-col items-center px-4"><span className="text-xl font-bold text-brand-600 dark:text-brand-400">{upcomingCount}</span><span className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Upcoming</span></div>{pendingCount > 0 && (<div className="flex flex-col items-center px-4 border-l border-slate-100 dark:border-slate-700"><span className="text-xl font-bold text-amber-500">{pendingCount}</span><span className="text-[10px] text-amber-500 uppercase font-bold tracking-wide">Pending</span></div>)}</div>
+                    <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}><i className="fa-solid fa-chevron-down text-xs"></i></div>
                 </div>
             </div>
-            
-            {/* EXPANDED AREA */}
-            {isExpanded && (
-                <div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">
-                    {!showUnassignedOnly ? (
-                        <>
-                            {pending.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 pl-1 flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Action Required</h4>
-                                    <div className="space-y-3">{pending.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-                            
-                            {scheduled.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 pl-1 flex items-center mt-2"><span className="w-2 h-2 rounded-full bg-brand-500 mr-2"></span>Scheduled</h4>
-                                    <div className="space-y-3">{scheduled.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-
-                            {history.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1 mt-6">History</h4>
-                                    <div className="space-y-3 opacity-60 hover:opacity-100 transition-opacity">{history.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-
-                            {scheduled.length === 0 && pending.length === 0 && history.length === 0 && (
-                                <div className="text-center py-8">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i className="fa-regular fa-calendar-xmark text-xl"></i></div>
-                                    <p className="text-sm text-slate-400">No shifts found for this client.</p>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="space-y-3">{renderList.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                    )}
-                </div>
-            )}
+            {isExpanded && (<div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">{!showUnassignedOnly ? (<>{pending.length > 0 && (<div><h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 pl-1 flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Action Required</h4><div className="space-y-3">{pending.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{scheduled.length > 0 && (<div><h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 pl-1 flex items-center mt-2"><span className="w-2 h-2 rounded-full bg-brand-500 mr-2"></span>Scheduled</h4><div className="space-y-3">{scheduled.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{history.length > 0 && (<div><h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1 mt-6">History</h4><div className="space-y-3 opacity-60 hover:opacity-100 transition-opacity">{history.map(s => <ShiftItem key={s.id} s={s} />)}</div></div>)}{scheduled.length === 0 && pending.length === 0 && history.length === 0 && (<div className="text-center py-8"><div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i className="fa-regular fa-calendar-xmark text-xl"></i></div><p className="text-sm text-slate-400">No shifts found for this client.</p></div>)}</>) : (<div className="space-y-3">{renderList.map(s => <ShiftItem key={s.id} s={s} />)}</div>)}</div>)}
         </div>
     );
 };
 
-// --- REDESIGNED ADMIN DASHBOARD ---
+// --- ADMIN DASHBOARD ---
 const AdminDashboard = () => {
     const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker, revokeUserRole } = useContext(AuthContext);
     const [expandedClientId, setExpandedClientId] = useState(null);
@@ -348,15 +224,19 @@ const AdminDashboard = () => {
     const [selectedDayShifts, setSelectedDayShifts] = useState(null);
     const [selectedWorker, setSelectedWorker] = useState(null); 
     const [editingWorker, setEditingWorker] = useState(null);
+    const [clientDocsClient, setClientDocsClient] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
     const [isVerificationExpanded, setIsVerificationExpanded] = useState(true);
-    const [searchQuery, setSearchQuery] = useState(''); // NEW SEARCH STATE
+    const [searchQuery, setSearchQuery] = useState('');
 
     const clients = useMemo(() => {
         const groups = {};
         shifts.forEach(s => {
-            if (!groups[s.userId]) { groups[s.userId] = { id: s.userId, name: s.userName || 'Unknown', email: s.userEmail || 'No Email', shifts: [], stats: { upcoming: 0, pending: 0 }, nextShiftTime: Infinity }; }
+            if (!groups[s.userId]) { 
+                const userRec = usersList.find(u => u.id === s.userId);
+                groups[s.userId] = { id: s.userId, name: s.userName || 'Unknown', email: s.userEmail || 'No Email', documents: userRec ? userRec.documents : [], shifts: [], stats: { upcoming: 0, pending: 0 }, nextShiftTime: Infinity }; 
+            }
             groups[s.userId].shifts.push(s);
             const timeVal = getSortValue(s);
             const today = new Date().setHours(0,0,0,0);
@@ -364,16 +244,12 @@ const AdminDashboard = () => {
             if ((s.status === 'Confirmed' || s.status === 'Pending') && new Date(s.date) >= today) { groups[s.userId].stats.upcoming++; if (timeVal < groups[s.userId].nextShiftTime) { groups[s.userId].nextShiftTime = timeVal; } }
         });
         return Object.values(groups).sort((a, b) => a.nextShiftTime - b.nextShiftTime);
-    }, [shifts]);
+    }, [shifts, usersList]);
     
-    // NEW FILTERED LISTS
     const filteredClients = useMemo(() => {
         if (!searchQuery) return clients;
         const lowerQuery = searchQuery.toLowerCase();
-        return clients.filter(c => 
-            c.name.toLowerCase().includes(lowerQuery) || 
-            c.email.toLowerCase().includes(lowerQuery)
-        );
+        return clients.filter(c => c.name.toLowerCase().includes(lowerQuery) || c.email.toLowerCase().includes(lowerQuery));
     }, [clients, searchQuery]);
 
     const filteredShiftsForCalendar = useMemo(() => {
@@ -387,14 +263,11 @@ const AdminDashboard = () => {
     const handleViewWorker = (email) => { const worker = workersList?.find(w => w.email.toLowerCase() === email.toLowerCase()); setSelectedWorker(worker || { name: 'Unknown', email: email, notes: 'Profile not found.' }); };
     const handleVerifyClient = async (uid) => { setActionLoading(uid); await verifyUserAsClient(uid); setActionLoading(null); };
     const handlePromoteWorker = async (uid, userData) => { setActionLoading(uid); await promoteUserToWorker(uid, userData); setActionLoading(null); };
-    const handleRevokeRole = async (uid, email) => { if(confirm("Are you sure? This will reset them to 'Unverified'. If they are a worker, they will be removed from the team list.")) { setActionLoading(uid); await revokeUserRole(uid, email); setActionLoading(null); } };
+    const handleRevokeRole = async (uid, email) => { if(confirm("Reset to 'Unverified'?")) { setActionLoading(uid); await revokeUserRole(uid, email); setActionLoading(null); } };
 
     const pendingUsers = usersList.filter(u => !u.role || u.role === 'unverified');
     const clientUsers = usersList.filter(u => u.role === 'client');
-    const teamMembers = workersList.map(w => {
-        const userAccount = usersList.find(u => u.email.toLowerCase() === w.email.toLowerCase());
-        return { ...w, userId: userAccount ? userAccount.id : null };
-    });
+    const teamMembers = workersList.map(w => { const userAccount = usersList.find(u => u.email.toLowerCase() === w.email.toLowerCase()); return { ...w, userId: userAccount ? userAccount.id : null }; });
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-12 transition-colors">
@@ -404,153 +277,35 @@ const AdminDashboard = () => {
             {actionModal && <AdminActionModal shift={actionModal.shift} actionType={actionModal.type} onClose={() => setActionModal(null)} onConfirm={updateShiftStatus} />}
             {selectedDayShifts && <DayDetailsModal shifts={selectedDayShifts} onClose={() => setSelectedDayShifts(null)} />}
             {selectedWorker && <WorkerDetailsModal worker={selectedWorker} onClose={() => setSelectedWorker(null)} />}
+            {clientDocsClient && <ClientDocsModal client={clientDocsClient} onClose={() => setClientDocsClient(null)} />}
             {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
             
             <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 p-4 sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30"><i className="fa-solid fa-user-shield"></i></div>
-                        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Admin<span className="text-slate-400 font-normal">Portal</span></h1>
-                    </div>
-                    
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-full p-1 border border-slate-200 dark:border-slate-600">
-                        <button onClick={() => setActiveTab('bookings')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Bookings</button>
-                        <button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>People</button>
-                    </div>
-
-                    <div className="flex gap-3 items-center">
-                        <button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button>
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-                        <ThemeToggle />
-                        <button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button>
-                    </div>
+                    <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30"><i className="fa-solid fa-user-shield"></i></div><h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Admin<span className="text-slate-400 font-normal">Portal</span></h1></div>
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-full p-1 border border-slate-200 dark:border-slate-600"><button onClick={() => setActiveTab('bookings')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Bookings</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>People</button></div>
+                    <div className="flex gap-3 items-center"><button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button><div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div><ThemeToggle /><button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button></div>
                 </div>
             </header>
 
             <main className="max-w-7xl mx-auto p-6 md:p-10">
                 {activeTab === 'bookings' && (
                     <>
-                        {alerts.length > 0 && (
-                            <div className="mb-10 animate-fade-in">
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Task List</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {alerts.map(s => (
-                                        <div key={s.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-amber-400 shadow-sm hover:shadow-md transition-all flex justify-between items-center group">
-                                            <div>
-                                                <div className="text-xs font-bold text-amber-600 uppercase mb-1">Request</div>
-                                                <p className="font-bold text-slate-900 dark:text-white">{s.userName}</p>
-                                                <p className="text-xs text-slate-500">{s.dateDisplay}</p>
-                                            </div>
-                                            <button onClick={() => setExpandedClientId(s.userId)} className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-arrow-right"></i></button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bookings</h2>
-                                <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Managing {clients.length} active clients</div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-3">
-                                {/* NEW SEARCH INPUT */}
-                                <div className="relative">
-                                    <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search clients..." 
-                                        className="pl-9 pr-4 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-64 transition-all shadow-sm"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                                    <button onClick={() => setViewMode('list')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-list mr-2"></i>List</button>
-                                    <button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-calendar mr-2"></i>Calendar</button>
-                                </div>
-                                <button 
-                                    onClick={() => setShowUnassignedOnly(!showUnassignedOnly)}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${showUnassignedOnly ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
-                                >
-                                    {showUnassignedOnly ? 'Showing Unassigned' : 'Filter Unassigned'}
-                                </button>
-                            </div>
-                        </div>
-                        
-                        {viewMode === 'list' ? (
-                            <div className="space-y-4">
-                                {filteredClients.length === 0 ? (
-                                    <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
-                                        <i className="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i>
-                                        <p className="text-slate-500 font-medium">No clients found matching "{searchQuery}"</p>
-                                    </div>
-                                ) : (
-                                    filteredClients.map(client => (
-                                        <ClientCard 
-                                            key={client.id} 
-                                            client={client} 
-                                            isExpanded={expandedClientId === client.id} 
-                                            onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} 
-                                            onUpdateStatus={updateShiftStatus} 
-                                            openActionModal={openActionModal} 
-                                            onAssign={setAssignModalShift} 
-                                            onRemoveWorker={removeWorker} 
-                                            showUnassignedOnly={showUnassignedOnly} 
-                                            workersList={workersList} 
-                                            onViewWorker={handleViewWorker} 
-                                        />
-                                    ))
-                                )}
-                            </div>
-                        ) : (
-                            <CalendarView shifts={filteredShiftsForCalendar} onDateClick={setSelectedDayShifts} />
-                        )}
+                        {alerts.length > 0 && (<div className="mb-10 animate-fade-in"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Task List</h3><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{alerts.map(s => (<div key={s.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-amber-400 shadow-sm hover:shadow-md transition-all flex justify-between items-center group"><div><div className="text-xs font-bold text-amber-600 uppercase mb-1">Request</div><p className="font-bold text-slate-900 dark:text-white">{s.userName}</p><p className="text-xs text-slate-500">{s.dateDisplay}</p></div><button onClick={() => setExpandedClientId(s.userId)} className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-arrow-right"></i></button></div>))}</div></div>)}
+                        <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6"><div><h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bookings</h2><div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Managing {clients.length} active clients</div></div><div className="flex flex-col sm:flex-row items-center gap-3"><div className="relative"><i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input type="text" placeholder="Search clients..." className="pl-9 pr-4 py-2 rounded-lg text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-64 transition-all shadow-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div><div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><button onClick={() => setViewMode('list')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-list mr-2"></i>List</button><button onClick={() => setViewMode('calendar')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}><i className="fa-solid fa-calendar mr-2"></i>Calendar</button></div><button onClick={() => setShowUnassignedOnly(!showUnassignedOnly)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${showUnassignedOnly ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{showUnassignedOnly ? 'Showing Unassigned' : 'Filter Unassigned'}</button></div></div>
+                        {viewMode === 'list' ? (<div className="space-y-4">{filteredClients.length === 0 ? <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl"><i className="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i><p className="text-slate-500 font-medium">No clients found matching "{searchQuery}"</p></div> : filteredClients.map(client => <ClientCard key={client.id} client={client} isExpanded={expandedClientId === client.id} onExpand={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)} onUpdateStatus={updateShiftStatus} openActionModal={openActionModal} onAssign={setAssignModalShift} onRemoveWorker={removeWorker} showUnassignedOnly={showUnassignedOnly} workersList={workersList} onViewWorker={handleViewWorker} onOpenDocs={setClientDocsClient} />)}</div>) : (<CalendarView shifts={filteredShiftsForCalendar} onDateClick={setSelectedDayShifts} />)}
                     </>
                 )}
                 
-                {/* PEOPLE TAB (Reused from previous, kept identical logic) */}
                 {activeTab === 'users' && (
                     <div className="animate-fade-in space-y-8">
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 flex justify-between items-center cursor-pointer" onClick={() => setIsVerificationExpanded(!isVerificationExpanded)}>
-                                <h3 className="font-bold text-orange-800 dark:text-orange-200 flex items-center"><i className="fa-solid fa-hourglass-half mr-2"></i> Pending Verification ({pendingUsers.length})</h3>
-                                <i className={`fa-solid fa-chevron-down text-orange-400 transition-transform ${isVerificationExpanded ? 'rotate-180' : ''}`}></i>
-                            </div>
-                            {isVerificationExpanded && (
-                                <div className="p-0">
-                                    {pendingUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No new signups waiting.</div> : 
-                                    <table className="w-full text-left">
-                                        <thead className="bg-slate-50 dark:bg-slate-700 text-xs font-bold uppercase text-slate-500 dark:text-slate-400"><tr><th className="p-4">Name</th><th className="p-4">Email</th><th className="p-4 text-right">Actions</th></tr></thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                            {pendingUsers.map(u => (
-                                                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                                    <td className="p-4 font-bold text-slate-900 dark:text-white">{u.name}</td>
-                                                    <td className="p-4 text-sm text-slate-500 dark:text-slate-300">{u.email}</td>
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <button onClick={() => handleVerifyClient(u.id)} disabled={actionLoading === u.id} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">Client</button>
-                                                            <button onClick={() => handlePromoteWorker(u.id, u)} disabled={actionLoading === u.id} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">Worker</button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>}
-                                </div>
-                            )}
+                            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 flex justify-between items-center cursor-pointer" onClick={() => setIsVerificationExpanded(!isVerificationExpanded)}><h3 className="font-bold text-orange-800 dark:text-orange-200 flex items-center"><i className="fa-solid fa-hourglass-half mr-2"></i> Pending Verification ({pendingUsers.length})</h3><i className={`fa-solid fa-chevron-down text-orange-400 transition-transform ${isVerificationExpanded ? 'rotate-180' : ''}`}></i></div>
+                            {isVerificationExpanded && (<div className="p-0">{pendingUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No new signups waiting.</div> : <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-700 text-xs font-bold uppercase text-slate-500 dark:text-slate-400"><tr><th className="p-4">Name</th><th className="p-4">Email</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{pendingUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-4 font-bold text-slate-900 dark:text-white">{u.name}</td><td className="p-4 text-sm text-slate-500 dark:text-slate-300">{u.email}</td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => handleVerifyClient(u.id)} disabled={actionLoading === u.id} className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">Client</button><button onClick={() => handlePromoteWorker(u.id, u)} disabled={actionLoading === u.id} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">Worker</button></div></td></tr>))}</tbody></table>}</div>)}
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit">
-                                <div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-users mr-2 text-slate-400"></i> Clients ({clientUsers.length})</h3></div>
-                                <div>{clientUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No clients yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{clientUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white">{u.name}</div><div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div></td><td className="p-3 text-right"><button onClick={() => handleRevokeRole(u.id, u.email)} disabled={actionLoading === u.id} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke Role"><i className="fa-solid fa-user-slash"></i></button></td></tr>))}</tbody></table>}</div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit">
-                                <div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3><button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button></div>
-                                <div>{teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{teamMembers.map(w => (<tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">{w.name}{!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}</div><div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>{w.userId && (<button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>)}</div></td></tr>))}</tbody></table>}</div>
-                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-users mr-2 text-slate-400"></i> Clients ({clientUsers.length})</h3></div><div>{clientUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No clients yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{clientUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white">{u.name}</div><div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div></td><td className="p-3 text-right"><button onClick={() => handleRevokeRole(u.id, u.email)} disabled={actionLoading === u.id} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke Role"><i className="fa-solid fa-user-slash"></i></button></td></tr>))}</tbody></table>}</div></div>
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3><button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button></div><div>{teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{teamMembers.map(w => (<tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">{w.name}{!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}</div><div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>{w.userId && (<button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>)}</div></td></tr>))}</tbody></table>}</div></div>
                         </div>
                     </div>
                 )}
@@ -558,12 +313,6 @@ const AdminDashboard = () => {
         </div>
     );
 };
-
-// ... Keeping UnverifiedDashboard, Login, BookingModal, CancellationModal, WorkerDashboard, ClientDashboard, App identical to before ...
-// (I will omit the full repetition here to keep the answer concise, but assume the rest of the file remains exactly as it was in the previous step. The critical changes were in AdminDashboard and ClientCard).
-
-// NOTE FOR USER: The rest of the file (WorkerDashboard, ClientDashboard, Login, App) remains UNCHANGED.
-// When pasting, you can keep the bottom half of your file if you prefer, or ask me to output the COMPLETE file again if you want to be safe.
 
 const UnverifiedDashboard = () => {
     const { logout, user } = useContext(AuthContext);

@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component {
 }
 
 // --- FIREBASE INIT ---
-let auth, db, configMissing = false;
+let auth, db, storage, configMissing = false;
 try {
     if (window.__firebase_config && window.__firebase_config.apiKey) {
         if (!firebase.apps.length) {
@@ -25,6 +25,7 @@ try {
         }
         auth = firebase.auth();
         db = firebase.firestore();
+        storage = firebase.storage(); // Init Storage
     } else {
         configMissing = true;
     }
@@ -238,6 +239,7 @@ const useAuthAndData = () => {
             email: email.toLowerCase(),
             name: name,
             role: 'unverified',
+            documents: [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -408,6 +410,7 @@ const useAuthAndData = () => {
                 name: workerData.name,
                 email: workerData.email.toLowerCase(),
                 notes: workerData.notes,
+                documents: [], 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             return { success: true };
@@ -432,7 +435,10 @@ const useAuthAndData = () => {
 
     const verifyUserAsClient = async (uid) => {
         try {
-            await db.collection(USERS_PATH).doc(uid).update({ role: 'client' });
+            await db.collection(USERS_PATH).doc(uid).update({ 
+                role: 'client',
+                documents: []
+            });
             return { success: true };
         } catch (e) { return { success: false, msg: e.message }; }
     };
@@ -450,6 +456,7 @@ const useAuthAndData = () => {
                     name: userData.name,
                     email: userData.email.toLowerCase(),
                     notes: 'Promoted from User List',
+                    documents: [],
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                  });
             }
@@ -459,7 +466,6 @@ const useAuthAndData = () => {
         } catch (e) { return { success: false, msg: e.message }; }
     };
 
-    // NEW: Revoke User Role logic
     const revokeUserRole = async (uid, email) => {
         try {
             const batch = db.batch();
@@ -468,7 +474,7 @@ const useAuthAndData = () => {
             const userRef = db.collection(USERS_PATH).doc(uid);
             batch.update(userRef, { role: 'unverified' });
 
-            // 2. Check if they exist in workers collection and remove them to prevent access
+            // 2. Check if they exist in workers collection and remove them
             if (email) {
                 const workerQuery = await db.collection(WORKERS_PATH).where("email", "==", email.toLowerCase()).get();
                 if (!workerQuery.empty) {
@@ -483,10 +489,43 @@ const useAuthAndData = () => {
         } catch (e) { return { success: false, msg: e.message }; }
     };
 
+    // --- DOCUMENT UPLOAD LOGIC ---
+    const uploadDocument = async (folder, id, file, docName) => {
+        if (!storage) return { success: false, msg: 'Storage not enabled.' };
+        try {
+            const ref = storage.ref().child(`${folder}/${id}/${Date.now()}_${file.name}`);
+            const snapshot = await ref.put(file);
+            const url = await snapshot.ref.getDownloadURL();
+            
+            const docRef = db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id);
+            await docRef.update({
+                documents: firebase.firestore.FieldValue.arrayUnion({
+                    name: docName || file.name,
+                    url: url,
+                    uploadedAt: Date.now()
+                })
+            });
+            return { success: true };
+        } catch (e) { 
+            if(e.code === 'not-found') return { success: false, msg: "Record not found." };
+            return { success: false, msg: e.message }; 
+        }
+    };
+
+    const deleteDocument = async (folder, id, docObject) => {
+        try {
+            const docRef = db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id);
+            await docRef.update({
+                documents: firebase.firestore.FieldValue.arrayRemove(docObject)
+            });
+            return { success: true };
+        } catch (e) { return { success: false, msg: e.message }; }
+    }
+
     return { 
         user, isAdmin, isWorker, isClient, isAuthReady, shifts, workerShifts, workersList, usersList, isLoading, 
         login, signup, resetPassword, logout, updateProfile, bookShift, updateShiftStatus, 
         assignWorker, removeWorker, workerResponse, completeShift, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB,
-        verifyUserAsClient, promoteUserToWorker, revokeUserRole
+        verifyUserAsClient, promoteUserToWorker, revokeUserRole, uploadDocument, deleteDocument
     };
 };
