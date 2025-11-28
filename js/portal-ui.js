@@ -1,4 +1,4 @@
-// --- EXISTING COMPONENTS (Unchanged) ---
+// --- EXISTING COMPONENTS ---
 const TurnstileWidget = ({ onVerify }) => {
     const containerRef = useRef(null);
     useEffect(() => {
@@ -88,16 +88,45 @@ const CalendarView = ({ shifts, onDateClick }) => {
     );
 };
 
-// ... ProfileModal, CompleteShiftModal, AddWorkerModal, EditWorkerModal, AssignWorkerModal, AdminActionModal, WorkerDetailsModal, DayDetailsModal, ClientCard ...
-// (Retaining these to ensure complete file functionality when copied)
-
 const ProfileModal = ({ user, onClose, onUpdate }) => {
     const [name, setName] = useState(user.displayName || '');
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState('');
-    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const res = await onUpdate(name); if (res.success) { setMsg('Updated!'); setTimeout(onClose, 1000); } else { setMsg('Error.'); } setLoading(false); };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const res = await onUpdate(name);
+        if (res.success) {
+            setMsg('Profile updated successfully!');
+            setTimeout(onClose, 1000);
+        } else {
+            setMsg('Error updating profile.');
+        }
+        setLoading(false);
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">My Profile</h3>{msg && <div className="p-2 bg-green-50 text-green-700 text-sm rounded mb-3">{msg}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Full Name</label><input required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded outline-none dark:bg-slate-700 dark:text-white" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email</label><input disabled className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-600 dark:text-slate-300 text-slate-500" value={user.email} /></div><button disabled={loading} className="w-full bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700 disabled:opacity-50 mt-2">{loading ? 'Saving...' : 'Update Details'}</button></form></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">My Profile</h3>
+                {msg && <div className="p-2 bg-green-50 text-green-700 text-sm rounded mb-3">{msg}</div>}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Full Name</label>
+                        <input required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded outline-none dark:bg-slate-700 dark:text-white" value={name} onChange={e=>setName(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email (Read Only)</label>
+                        <input disabled className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-600 dark:text-slate-300 text-slate-500" value={user.email} />
+                    </div>
+                    <button disabled={loading} className="w-full bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700 disabled:opacity-50 mt-2">
+                        {loading ? 'Saving...' : 'Update Details'}
+                    </button>
+                </form>
+            </div>
+        </div>
     );
 };
 
@@ -110,22 +139,83 @@ const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
     const [incidents, setIncidents] = useState('None');
     const [incidentDetails, setIncidentDetails] = useState('');
     const [loading, setLoading] = useState(false);
-    const addTravelLeg = () => { const lastLog = travelLogs[travelLogs.length - 1]; const defaultFrom = lastLog ? lastLog.to : ''; setTravelLogs([...travelLogs, { id: Date.now(), from: defaultFrom, to: '', reason: '', km: '' }]); };
-    const removeTravelLeg = (id) => { setTravelLogs(travelLogs.filter(log => log.id !== id)); };
-    const updateTravel = (id, field, value) => { setTravelLogs(travelLogs.map(log => log.id === id ? { ...log, [field]: value } : log)); };
+
+    const addTravelLeg = () => {
+        const lastLog = travelLogs[travelLogs.length - 1];
+        const defaultFrom = lastLog ? lastLog.to : ''; 
+        setTravelLogs([...travelLogs, { id: Date.now(), from: defaultFrom, to: '', reason: '', km: '' }]);
+    };
+
+    const removeTravelLeg = (id) => {
+        setTravelLogs(travelLogs.filter(log => log.id !== id));
+    };
+
+    const updateTravel = (id, field, value) => {
+        setTravelLogs(travelLogs.map(log => 
+            log.id === id ? { ...log, [field]: value } : log
+        ));
+    };
+
     const totalKm = travelLogs.reduce((acc, curr) => acc + (parseFloat(curr.km) || 0), 0);
-    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const finalData = { actualStartTime, actualEndTime, scheduledStartTime: shift.startTime, scheduledEndTime: shift.endTime, travelLog: travelLogs, totalTravelKm: totalKm, summary, goals, incidents, incidentDetails: incidents === 'Yes' ? incidentDetails : 'N/A' }; await onConfirm(shift.id, finalData); setLoading(false); onClose(); };
+
+    const openMapCheck = (log) => {
+        if(!log.from || !log.to) return;
+        const url = `https://www.google.com/maps/dir/${encodeURIComponent(log.from + ' SA')}/${encodeURIComponent(log.to + ' SA')}`;
+        window.open(url, '_blank');
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const finalData = {
+            actualStartTime, actualEndTime, scheduledStartTime: shift.startTime, scheduledEndTime: shift.endTime,
+            travelLog: travelLogs, totalTravelKm: totalKm,
+            summary, goals, incidents, incidentDetails: incidents === 'Yes' ? incidentDetails : 'N/A' 
+        };
+        await onConfirm(shift.id, finalData);
+        setLoading(false);
+        onClose();
+    };
+
     return (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]"><div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900"><div><h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3><p className="text-xs text-slate-500">{shift.dateDisplay} • {shift.userName}</p></div><button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button></div><div className="p-6 overflow-y-auto"><form id="completeForm" onSubmit={handleSubmit} className="space-y-8"><div><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">1. Time & Attendance</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 mb-1">Start Time</label><input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">Finish Time</label><input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} /></div></div></div><div><div className="flex justify-between items-end mb-3 border-b border-slate-100 pb-2"><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4><button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-2 py-1 rounded hover:bg-brand-100 font-bold border border-brand-200"><i className="fa-solid fa-plus mr-1"></i> Add Trip</button></div>{travelLogs.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">No travel recorded. Click "Add Trip" if you travelled.</p>}<div className="space-y-3">{travelLogs.map((log, index) => (<div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group"><button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500"><i className="fa-solid fa-trash-can"></i></button><div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"><div className="md:col-span-3"><input type="text" placeholder="From" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="To" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} /></div><div className="md:col-span-3"><input type="text" placeholder="Reason" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} /></div><div className="md:col-span-3"><input type="number" step="0.1" placeholder="KM" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} /></div></div></div>))}</div>{travelLogs.length > 0 && (<div className="mt-2 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Total: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span></div>)}</div><div><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Summary <span className="text-red-500">*</span></label><textarea required rows="3" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Goals <span className="text-red-500">*</span></label><textarea required rows="2" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Incidents? <span className="text-red-500">*</span></label><select className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No</option><option value="Yes">Yes</option></select></div>{incidents === 'Yes' && (<div><label className="block text-xs font-bold text-red-600 uppercase mb-1">Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 dark:border-red-900 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div></form></div><div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"><button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-md flex justify-center items-center">{loading ? 'Submitting...' : 'Submit & Complete Shift'}</button></div></div></div>
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-0 rounded-2xl shadow-xl w-full max-w-2xl animate-pop-in relative overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                    <div><h3 className="text-xl font-bold text-slate-900 dark:text-white">Complete Shift</h3><p className="text-xs text-slate-500">{shift.dateDisplay} • {shift.userName}</p></div>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+                <div className="p-6 overflow-y-auto">
+                    <form id="completeForm" onSubmit={handleSubmit} className="space-y-8">
+                        <div><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">1. Time & Attendance</h4>
+                            <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-slate-500 mb-1">Start Time</label><input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualStartTime} onChange={e => setActualStartTime(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">Finish Time</label><input type="time" required className="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={actualEndTime} onChange={e => setActualEndTime(e.target.value)} /></div></div>
+                        </div>
+                        <div>
+                            <div className="flex justify-between items-end mb-3 border-b border-slate-100 pb-2"><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide">2. Travel Log</h4><button type="button" onClick={addTravelLeg} className="text-xs bg-brand-50 text-brand-600 px-2 py-1 rounded hover:bg-brand-100 font-bold border border-brand-200"><i className="fa-solid fa-plus mr-1"></i> Add Trip</button></div>
+                            {travelLogs.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">No travel recorded. Click "Add Trip" if you travelled.</p>}
+                            <div className="space-y-3">{travelLogs.map((log, index) => (<div key={log.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 relative group"><button type="button" onClick={() => removeTravelLeg(log.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500"><i className="fa-solid fa-trash-can"></i></button><div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"><div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">From</label><input type="text" placeholder="Suburb" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.from} onChange={e => updateTravel(log.id, 'from', e.target.value)} /></div><div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">To</label><input type="text" placeholder="Suburb" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.to} onChange={e => updateTravel(log.id, 'to', e.target.value)} /></div><div className="md:col-span-3"><label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Reason</label><input type="text" placeholder="Reason" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={log.reason} onChange={e => updateTravel(log.id, 'reason', e.target.value)} /></div><div className="md:col-span-3 flex gap-2"><div className="flex-grow"><label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">KM</label><input type="number" step="0.1" placeholder="0.0" className="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white font-mono font-bold" value={log.km} onChange={e => updateTravel(log.id, 'km', e.target.value)} /></div><button type="button" onClick={() => openMapCheck(log)} title="Check distance" className="mb-0.5 px-2 bg-white border border-slate-300 rounded text-slate-500 hover:text-blue-600 hover:border-blue-400 h-[38px]"><i className="fa-solid fa-map-location-dot"></i></button></div></div></div>))}</div>
+                            {travelLogs.length > 0 && (<div className="mt-2 text-right text-sm font-bold text-slate-700 dark:text-slate-300">Total Claimable: <span className="text-brand-600 text-lg">{totalKm.toFixed(1)} km</span></div>)}
+                        </div>
+                        <div><h4 className="text-sm font-bold text-brand-600 uppercase tracking-wide mb-3 border-b border-slate-100 pb-2">3. Shift Report</h4><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Summary <span className="text-red-500">*</span></label><textarea required rows="3" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={summary} onChange={e => setSummary(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Goals <span className="text-red-500">*</span></label><textarea required rows="2" className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={goals} onChange={e => setGoals(e.target.value)}></textarea></div><div><label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Incidents? <span className="text-red-500">*</span></label><select className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white" value={incidents} onChange={e => setIncidents(e.target.value)}><option value="None">No</option><option value="Yes">Yes</option></select></div>{incidents === 'Yes' && (<div><label className="block text-xs font-bold text-red-600 uppercase mb-1">Details</label><textarea required rows="2" className="w-full p-3 border border-red-200 dark:border-red-900 rounded-lg bg-red-50 dark:bg-red-900/20 dark:text-white" value={incidentDetails} onChange={e => setIncidentDetails(e.target.value)}></textarea></div>)}</div></div>
+                    </form>
+                </div>
+                <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                     <button form="completeForm" disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 shadow-md flex justify-center items-center">
+                        {loading ? <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> : <i className="fa-solid fa-check-double mr-2"></i>}
+                        {loading ? 'Submitting...' : 'Submit & Complete Shift'}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 
 const AddWorkerModal = ({ onClose, onAdd }) => {
     const [data, setData] = useState({ name: '', email: '', notes: '' });
     const [loading, setLoading] = useState(false);
-    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const res = await onAdd(data); setLoading(false); if(res.success) onClose(); };
+    const [error, setError] = useState('');
+    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); setError(''); const res = await onAdd(data); setLoading(false); if(res.success) onClose(); else setError(res.msg); };
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Add New Worker</h3><form onSubmit={handleSubmit} className="space-y-4"><div><input required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="Name" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input type="email" required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="Email" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><textarea className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" placeholder="Notes" rows="2" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded font-bold hover:bg-brand-700">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Add New Worker</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Authorize a user to access the Worker Portal.</p>{error && <div className="p-2 bg-red-50 text-red-600 text-xs rounded mb-3">{error}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Name</label><input required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded focus:border-brand-500 outline-none dark:bg-slate-700 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email</label><input type="email" required className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded focus:border-brand-500 outline-none dark:bg-slate-700 dark:text-white" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Notes</label><textarea className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded focus:border-brand-500 outline-none dark:bg-slate-700 dark:text-white" rows="2" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-2.5 rounded font-bold hover:bg-brand-700 disabled:opacity-50">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>
     );
 };
 
@@ -133,9 +223,9 @@ const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => {
     const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes });
     const [loading, setLoading] = useState(false);
     const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); };
-    const handleDelete = async () => { if(confirm('Are you sure?')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } };
+    const handleDelete = async () => { if(confirm('Are you sure you want to delete this worker? This cannot be undone.')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } };
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Edit Team Member</h3><div className="space-y-4"><div><input className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-slate-100 dark:bg-slate-600 dark:text-slate-300" value={data.email} disabled /></div><div><textarea className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded dark:bg-slate-700 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-2 rounded font-bold hover:bg-red-100">Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700">Save</button></div></div></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Edit Team Member</h3><div className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Name</label><input className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded outline-none dark:bg-slate-700 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Email</label><input className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded outline-none bg-slate-100 dark:bg-slate-600 dark:text-slate-300" value={data.email} disabled /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Notes</label><textarea className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded outline-none dark:bg-slate-700 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded font-bold hover:bg-red-100 dark:hover:bg-red-900/50"><i className="fa-solid fa-trash mr-2"></i> Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-2 rounded font-bold hover:bg-brand-700">Save Changes</button></div></div></div></div>
     );
 };
 
@@ -143,31 +233,105 @@ const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => {
     const [email, setEmail] = useState('');
     const [applyToFuture, setApplyToFuture] = useState(false);
     const [loading, setLoading] = useState(false);
-    const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email, applyToFuture, shift); setLoading(false); onClose(); };
+    const isRecurring = shift.seriesId && shift.recurrence !== 'none';
+
+    const handleSubmit = async (e) => { 
+        e.preventDefault(); 
+        if (!email) return; 
+        setLoading(true); 
+        await onAssign(shift.id, email, applyToFuture, shift); 
+        setLoading(false); 
+        onClose(); 
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Assign Worker</h3><form onSubmit={handleSubmit}><select required className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 bg-white dark:bg-slate-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select><div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Cancel</button><button disabled={loading} className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700">{loading ? 'Assigning...' : 'Assign'}</button></div></form></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md animate-pop-in relative">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Assign Worker</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Select a worker for <strong>{shift.dateDisplay}</strong>:</p>
+                
+                <form onSubmit={handleSubmit}>
+                    <select required className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 mb-4 outline-none bg-white dark:bg-slate-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}>
+                        <option value="" disabled selected>Select a Worker</option>
+                        {workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}
+                    </select>
+
+                    {isRecurring && (
+                        <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex items-start gap-3">
+                            <input type="checkbox" id="futureAssign" className="mt-1 rounded text-brand-600 focus:ring-brand-500" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} />
+                            <label htmlFor="futureAssign" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                                <strong>Recurring Shift Detected</strong><br/>
+                                Assign this worker to all future shifts in this series?
+                            </label>
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 justify-end">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
+                        <button disabled={loading} className="px-4 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 disabled:opacity-50">
+                            {loading ? 'Assigning...' : 'Assign'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     );
 };
 
 const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => {
     const [reason, setReason] = useState('');
+    const [applyToFuture, setApplyToFuture] = useState(false);
     const [loading, setLoading] = useState(false);
-    const handleConfirm = async () => { if (!reason) return; setLoading(true); await onConfirm(shift.id, actionType, reason, false, shift); setLoading(false); onClose(); };
+    const isRecurring = shift.seriesId && shift.recurrence !== 'none';
+
+    const handleConfirm = async () => { 
+        if (!reason) return; 
+        setLoading(true); 
+        await onConfirm(shift.id, actionType, reason, applyToFuture, shift); 
+        setLoading(false); 
+        onClose(); 
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in"><h3 className="text-xl font-bold mb-4 text-red-600">Action: {actionType}</h3><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg mb-4 dark:bg-slate-700 dark:text-white" rows="3" placeholder="Reason..."></textarea><div className="flex gap-3 justify-end"><button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg">Back</button><button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700">Confirm</button></div></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in">
+                <h3 className={`text-xl font-bold mb-4 ${actionType === 'Declined' ? 'text-red-600' : 'text-red-600'} flex items-center`}>
+                    <i className="fa-solid fa-triangle-exclamation mr-2"></i> {actionType === 'Declined' ? 'Decline Request' : 'Cancel Shift'}
+                </h3>
+                
+                <p className="text-slate-600 dark:text-slate-400 mb-4">Reason (visible to client):</p>
+                <textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-sm mb-4 dark:bg-slate-700 dark:text-white" rows="3"></textarea>
+                
+                {isRecurring && (
+                    <div className="mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800 flex items-start gap-3">
+                        <input type="checkbox" id="futureCancel" className="mt-1 rounded text-red-600 focus:ring-red-500" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} />
+                        <label htmlFor="futureCancel" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                            <strong>Recurring Shift</strong><br/>
+                            Apply this action to all future shifts in this series?
+                        </label>
+                    </div>
+                )}
+
+                <div className="flex gap-3 justify-end">
+                    <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg">Back</button>
+                    <button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 text-white bg-red-600 rounded-lg font-bold hover:bg-red-700 disabled:opacity-50">Confirm</button>
+                </div>
+            </div>
+        </div>
     );
 };
 
 const WorkerDetailsModal = ({ worker, onClose }) => {
     if (!worker) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative text-center"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{worker.email}</p><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-lg p-4 text-left mb-4"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 rounded-lg font-bold">Close</button></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative text-center"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4 shadow-inner">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{worker.email}</p><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-lg p-4 text-left mb-4"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes / Qualifications</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-600">Close</button></div></div>
     );
 };
 
 const DayDetailsModal = ({ shifts, onClose }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Shifts Details</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className="border border-slate-200 dark:border-slate-700 p-3 rounded-lg bg-slate-50 dark:bg-slate-700"><div className="flex justify-between"><span className="font-bold text-slate-900 dark:text-white">{s.userName}</span><span className="text-xs font-bold uppercase">{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300 mt-1">{s.service} • {s.startTime}-{s.endTime}</div></div>))}</div></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-2xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Shifts on {shifts[0]?.isProjection ? new Date(shifts[0].date).toLocaleDateString() : shifts[0]?.dateDisplay}</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className={`border border-slate-200 dark:border-slate-700 p-3 rounded-lg bg-slate-50 dark:bg-slate-700 ${s.isProjection ? 'opacity-75 border-dashed' : ''}`}><div className="flex justify-between"><span className="font-bold text-slate-900 dark:text-white">{s.userName} {s.isProjection && <span className="text-[10px] text-brand-600 ml-1">(Recurring)</span>}</span><span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300 mt-1">{s.service} • {s.startTime}-{s.endTime}</div>{s.assignedWorkerEmail && <div className="text-xs text-blue-600 dark:text-blue-400 mt-1"><i className="fa-solid fa-user-check"></i> {s.assignedWorkerEmail}</div>}</div>))}</div></div></div>
     );
 }
 
@@ -245,7 +409,6 @@ const AdminDashboard = () => {
     const handleRevokeRole = async (uid, email) => { if(confirm("Are you sure? This will reset them to 'Unverified'. If they are a worker, they will be removed from the team list.")) { setActionLoading(uid); await revokeUserRole(uid, email); setActionLoading(null); } };
 
     // --- REFINED USER LIST LOGIC ---
-    // 1. Pending Verification: Not a client, not a worker (role check AND DB check)
     const pendingUsers = usersList.filter(u => {
         const isClient = u.role === 'client';
         const isWorkerRole = u.role === 'worker';
@@ -253,11 +416,8 @@ const AdminDashboard = () => {
         return !isClient && !isWorkerRole && !isInWorkersDB;
     });
 
-    // 2. Clients: Just role check
     const clientUsers = usersList.filter(u => u.role === 'client');
 
-    // 3. Workers: Use workersList as source of truth for display (to show all team members even if no user account),
-    //    BUT map them to user accounts if they exist for "Revoke" functionality.
     const teamMembers = workersList.map(w => {
         const userAccount = usersList.find(u => u.email.toLowerCase() === w.email.toLowerCase());
         return { ...w, userId: userAccount ? userAccount.id : null };
@@ -273,7 +433,24 @@ const AdminDashboard = () => {
             {selectedWorker && <WorkerDetailsModal worker={selectedWorker} onClose={() => setSelectedWorker(null)} />}
             {isProfileOpen && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} onUpdate={updateProfile} />}
             
-            <header className="bg-slate-900 dark:bg-slate-950 shadow-md p-4 sticky top-0 z-20"><div className="max-w-7xl mx-auto flex justify-between items-center"><div className="flex items-center gap-3 text-white"><i className="fa-solid fa-user-shield text-xl"></i><h1 className="text-xl font-bold tracking-tight">Admin Portal</h1></div><div className="flex gap-4 items-center"><ThemeToggle /><div className="h-6 w-px bg-slate-700 mx-2"></div><button onClick={() => setActiveTab('bookings')} className={`text-sm ${activeTab === 'bookings' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Bookings</button><button onClick={() => setActiveTab('users')} className={`text-sm ${activeTab === 'users' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>People</button><div className="w-px h-5 bg-slate-700 mx-2"></div><button onClick={() => setIsProfileOpen(true)} className="text-slate-400 hover:text-white"><i className="fa-solid fa-user-circle"></i></button><button onClick={logout} className="text-sm text-red-400 font-bold hover:text-red-300">Sign Out</button></div></div></header>
+            <header className="bg-slate-900 dark:bg-slate-950 shadow-md p-4 sticky top-0 z-20">
+                <div className="max-w-7xl mx-auto flex justify-between items-center">
+                    <div className="flex items-center gap-3 text-white">
+                        <i className="fa-solid fa-user-shield text-xl"></i>
+                        <h1 className="text-xl font-bold tracking-tight">Admin Portal</h1>
+                    </div>
+                    <div className="flex gap-4 items-center">
+                        <ThemeToggle />
+                        <div className="h-6 w-px bg-slate-700 mx-2"></div>
+                        <button onClick={() => setActiveTab('bookings')} className={`text-sm ${activeTab === 'bookings' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>Bookings</button>
+                        <button onClick={() => setActiveTab('users')} className={`text-sm ${activeTab === 'users' ? 'text-white font-bold' : 'text-slate-400 hover:text-white'}`}>People</button>
+                        <div className="w-px h-5 bg-slate-700 mx-2"></div>
+                        <button onClick={() => window.location.reload()} className="text-slate-400 hover:text-white" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button>
+                        <button onClick={() => setIsProfileOpen(true)} className="text-slate-400 hover:text-white"><i className="fa-solid fa-user-circle"></i></button>
+                        <button onClick={logout} className="text-sm text-red-400 font-bold hover:text-red-300">Sign Out</button>
+                    </div>
+                </div>
+            </header>
             <main className="max-w-7xl mx-auto p-4 md:p-8">
                 {activeTab === 'bookings' && (
                     <>
