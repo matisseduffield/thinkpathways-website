@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CSP: Allows scripts/styles from CDNs and Firebase -->
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    
     <title>My Pathway Portal - Think Pathways</title>
     
+    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
     
+    <!-- CSS Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -32,6 +38,7 @@
             }
         }
         
+        // --- APP CONFIGURATION ---
         window.__firebase_config = {
              apiKey: "AIzaSyDO315mAW8JphkSPqcp8Z9VPakBIUlCrl8", 
              authDomain: "thinkpathways.firebaseapp.com", 
@@ -46,24 +53,30 @@
     </script>
     
     <style>
+        /* Custom Scrollbar & Error Display */
         #global-error-display { display: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Dark mode overrides */
         .dark ::-webkit-scrollbar-track { background: #1e293b; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
     
-    <!-- IMMEDIATE LOADING STATE (Pure HTML/CSS) -->
+    <!-- 1. IMMEDIATE PRE-LOADER (Pure HTML/CSS) -->
+    <!-- This shows while the huge React/Firebase libraries are downloading -->
     <div id="app-loader" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 flex items-center justify-center z-50 transition-opacity duration-500">
         <div class="text-center">
             <div class="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-4"></div>
             <h2 class="text-xl font-bold text-slate-700 dark:text-slate-300">Loading Portal...</h2>
         </div>
     </div>
+
+    <!-- Script to remove loader (Called by React when ready) -->
     <script>
         window.removeLoader = function() {
             const loader = document.getElementById('app-loader');
@@ -74,30 +87,54 @@
         }
     </script>
 
-    <!-- App Root -->
+    <!-- 2. ERROR DISPLAY (For runtime crashes) -->
+    <div id="global-error-display" class="fixed inset-0 bg-white z-[100] flex items-center justify-center p-8">
+        <div class="max-w-lg w-full bg-red-50 border border-red-200 p-6 rounded-xl shadow-2xl">
+            <h2 class="text-xl font-bold text-red-800 mb-2">Portal Failed to Load</h2>
+            <p class="text-sm text-red-600 mb-4">This is usually caused by a security setting or a blocked script.</p>
+            <pre id="global-error-message" class="bg-white p-4 rounded border border-red-100 text-xs overflow-auto font-mono text-red-500 mb-4 h-32"></pre>
+            <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-bold text-sm">Reload Page</button>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('error', function(e) {
+            // Only show if the loader is still present (meaning app failed to start)
+            if(document.getElementById('app-loader')) {
+                const display = document.getElementById('global-error-display');
+                const msg = document.getElementById('global-error-message');
+                if (display && msg) {
+                    display.style.display = 'flex';
+                    msg.textContent = `System Error: ${e.message}`;
+                    console.error("Global Error:", e);
+                }
+            }
+        });
+    </script>
+
+    <!-- 3. APP ROOT -->
     <div id="root"></div>
 
-    <!-- 1. Load Libraries -->
+    <!-- 4. LIBRARIES -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Babel (Compiler) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 2. Load Your New Files (ORDER MATTERS) -->
-    <!-- Load logic first so AuthContext is created -->
-    <script type="text/babel" src="js/portal-logic.js"></script>
+    <!-- 5. YOUR APPLICATION FILES -->
+    <!-- The ?v=2.0 query string forces the browser to re-download the file, ignoring old cache -->
     
-    <!-- Load UI second so it can use the logic -->
-    <script type="text/babel" src="js/portal-ui.js"></script>
+    <!-- Load Logic First (Firebase, Auth, Data) -->
+    <script type="text/babel" src="js/portal-logic.js?v=2.0"></script>
+    
+    <!-- Load UI Second (Dashboards, Components) -->
+    <script type="text/babel" src="js/portal-ui.js?v=2.0"></script>
 
-    <!-- 3. Mount Application -->
+    <!-- 6. START APP -->
     <script type="text/babel">
-        // Start the React App
+        // Mount the React Application
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
