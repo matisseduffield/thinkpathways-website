@@ -126,30 +126,46 @@ const useAuthAndData = () => {
                     setIsAdmin(false);
                 }
 
-                // 2. Check Worker
-                try {
-                    const q = db.collection(WORKERS_PATH).where("email", "==", email);
-                    const snapshot = await q.get();
-                    if (!snapshot.empty) {
-                        setIsWorker(true);
-                        setWorkerProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
-                    } else {
-                        setIsWorker(false);
-                        setWorkerProfile(null);
-                    }
-                } catch (err) { setIsWorker(false); }
-
-                // 3. Check User Role
+                // 2. Determine Role (UPDATED LOGIC: TRUST USER DOC FIRST)
+                // This fixes the issue where workers couldn't verify because they couldn't read the 'workers' collection
                 if (!adminStatus) {
                     try {
                         const userDoc = await db.collection(USERS_PATH).doc(u.uid).get();
                         if (userDoc.exists) {
                             const userData = userDoc.data();
-                            setIsClient(userData.role === 'client'); 
+                            
+                            // Check Role Field directly
+                            if (userData.role === 'worker') {
+                                setIsWorker(true);
+                                setIsClient(false);
+                                
+                                // Try to fetch detailed profile (might fail if rules restricted, but user is logged in)
+                                try {
+                                    const q = db.collection(WORKERS_PATH).where("email", "==", email);
+                                    const snapshot = await q.get();
+                                    if (!snapshot.empty) {
+                                        setWorkerProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+                                    }
+                                } catch(e) { console.log("Detailed worker profile restricted, basic access granted."); }
+
+                            } else if (userData.role === 'client') {
+                                setIsClient(true);
+                                setIsWorker(false);
+                            } else {
+                                // Unverified or other
+                                setIsWorker(false);
+                                setIsClient(false);
+                            }
                         } else {
-                            setIsClient(false); 
+                            // No user doc?
+                            setIsClient(false);
+                            setIsWorker(false);
                         }
-                    } catch (e) { setIsClient(false); }
+                    } catch (e) { 
+                        console.error("Role Check Error", e);
+                        setIsClient(false); 
+                        setIsWorker(false);
+                    }
                 }
             } else {
                 setUser(null);
@@ -173,6 +189,8 @@ const useAuthAndData = () => {
         if (!isAdmin && !isWorker && !isClient) return;
 
         setIsLoading(true);
+        
+        // Admins see all, Workers/Clients see filtered via Firestore Rules + Client Side Logic
         const unsubscribe = db.collection(COLLECTION_PATH).onSnapshot((snapshot) => {
             const data = snapshot.docs.map(doc => {
                 const d = doc.data();
@@ -197,12 +215,17 @@ const useAuthAndData = () => {
             if (isAdmin) {
                 setShifts(data);
             } else if (isWorker) {
+                // Filter for assigned worker (extra safety)
                 const assigned = data.filter(s => s.assignedWorkerEmail && s.assignedWorkerEmail.toLowerCase() === user.email.toLowerCase());
                 setWorkerShifts(assigned);
             } else {
+                // Filter for client (extra safety)
                 const myShifts = data.filter(s => s.userId === user.uid);
                 setShifts(myShifts);
             }
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Data Fetch Error:", error);
             setIsLoading(false);
         });
         return () => unsubscribe();
