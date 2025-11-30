@@ -22,12 +22,11 @@ const ThemeToggle = () => {
     );
 };
 
-// --- NEW: SMART TIME SELECT COMPONENT (15-min increments) ---
+// --- SMART TIME SELECT ---
 const TimeSelect = ({ label, value, onChange, minTime }) => {
-    // Generate times from 06:00 to 23:45 in 15 min intervals
     const times = useMemo(() => {
         const t = [];
-        for (let i = 6; i < 24; i++) { // Start at 6 AM
+        for (let i = 6; i < 24; i++) { 
             for (let j = 0; j < 60; j += 15) {
                 const hour = i.toString().padStart(2, '0');
                 const minute = j.toString().padStart(2, '0');
@@ -36,82 +35,57 @@ const TimeSelect = ({ label, value, onChange, minTime }) => {
         }
         return t;
     }, []);
-
-    // Filter to ensure End Time > Start Time
     const filteredTimes = minTime ? times.filter(t => t > minTime) : times;
-    
     return (
         <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{label}</label>
             <div className="relative">
-                <select 
-                    required 
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer font-mono" 
-                    value={value} 
-                    onChange={(e) => onChange(e.target.value)}
-                >
+                <select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer font-mono" value={value} onChange={(e) => onChange(e.target.value)}>
                     <option value="" disabled>Select...</option>
                     {filteredTimes.map(t => {
-                        // Convert 24h to 12h for display only
                         const [h, m] = t.split(':');
-                        const hour = parseInt(h);
-                        const ampm = hour >= 12 ? 'PM' : 'AM';
-                        const displayHour = hour % 12 || 12;
-                        const displayTime = `${displayHour}:${m} ${ampm}`;
-                        return <option key={t} value={t}>{displayTime}</option>;
+                        const ampm = parseInt(h) >= 12 ? 'PM' : 'AM';
+                        const displayHour = parseInt(h) % 12 || 12;
+                        return <option key={t} value={t}>{`${displayHour}:${m} ${ampm}`}</option>;
                     })}
                 </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-                    <i className="fa-regular fa-clock"></i>
-                </div>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><i className="fa-regular fa-clock"></i></div>
             </div>
         </div>
     );
 };
 
-// --- DOCUMENT MANAGER COMPONENT ---
+// --- HELPER: COMPLIANCE BADGE ---
+const ComplianceBadge = ({ date, label }) => {
+    if (!date) return <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded border border-slate-200">Missing {label}</span>;
+    const isExpired = new Date(date) < new Date();
+    return (
+        <span className={`text-[10px] px-2 py-1 rounded border ${isExpired ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+            {label}: {isExpired ? 'Expired' : 'Valid'}
+        </span>
+    );
+};
+
+// --- DOCUMENT MANAGER ---
 const DocumentManager = ({ folder, id, documents, onUpload, onDelete }) => {
     const [file, setFile] = useState(null);
     const [docName, setDocName] = useState('');
     const [uploading, setUploading] = useState(false);
-
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        if(!file) return;
-        setUploading(true);
-        await onUpload(folder, id, file, docName || file.name);
-        setUploading(false);
-        setFile(null);
-        setDocName('');
-    };
-
+    const handleUpload = async (e) => { e.preventDefault(); if(!file) return; setUploading(true); await onUpload(folder, id, file, docName || file.name); setUploading(false); setFile(null); setDocName(''); };
     return (
         <div className="mt-4">
             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">Documents & Plans</h4>
             <div className="space-y-2 mb-4">
-                {(!documents || documents.length === 0) ? (
-                    <p className="text-xs text-slate-400 italic">No documents uploaded.</p>
-                ) : (
-                    documents.map((doc, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-2 rounded-lg border border-slate-100 dark:border-slate-600">
-                            <div className="flex items-center overflow-hidden">
-                                <i className="fa-regular fa-file-pdf text-red-500 mr-2"></i>
-                                <div className="truncate text-sm text-slate-700 dark:text-slate-200" title={doc.name}>{doc.name}</div>
-                            </div>
-                            <div className="flex gap-2 flex-shrink-0 ml-2">
-                                <a href={doc.url} target="_blank" className="text-blue-500 hover:text-blue-700 p-1"><i className="fa-solid fa-external-link-alt"></i></a>
-                                <button onClick={() => onDelete(folder, id, doc)} className="text-slate-400 hover:text-red-500 p-1"><i className="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    ))
-                )}
+                {(!documents || documents.length === 0) ? <p className="text-xs text-slate-400 italic">No documents uploaded.</p> : documents.map((doc, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-2 rounded-lg border border-slate-100 dark:border-slate-600">
+                        <div className="flex items-center overflow-hidden"><i className="fa-regular fa-file-pdf text-red-500 mr-2"></i><div className="truncate text-sm text-slate-700 dark:text-slate-200" title={doc.name}>{doc.name}</div></div>
+                        <div className="flex gap-2 flex-shrink-0 ml-2"><a href={doc.url} target="_blank" className="text-blue-500 hover:text-blue-700 p-1"><i className="fa-solid fa-external-link-alt"></i></a><button onClick={() => onDelete(folder, id, doc)} className="text-slate-400 hover:text-red-500 p-1"><i className="fa-solid fa-trash"></i></button></div>
+                    </div>
+                ))}
             </div>
             <form onSubmit={handleUpload} className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                 <input type="text" placeholder="Document Name" className="w-full p-2 mb-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={docName} onChange={e => setDocName(e.target.value)} />
-                <div className="flex gap-2">
-                    <input type="file" className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-slate-700 dark:file:text-slate-300" onChange={e => setFile(e.target.files[0])} />
-                    <button disabled={!file || uploading} className="bg-brand-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-brand-700 disabled:opacity-50">{uploading ? '...' : 'Upload'}</button>
-                </div>
+                <div className="flex gap-2"><input type="file" className="text-xs text-slate-500" onChange={e => setFile(e.target.files[0])} /><button disabled={!file || uploading} className="bg-brand-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-brand-700 disabled:opacity-50">{uploading ? '...' : 'Upload'}</button></div>
             </form>
         </div>
     );
@@ -159,18 +133,34 @@ const CalendarView = ({ shifts, onDateClick }) => {
 // --- MODALS ---
 
 const ProfileModal = ({ user, onClose, onUpdate }) => {
+    const { isWorker, workerProfile, uploadDocument, deleteDocument } = useContext(AuthContext);
     const [name, setName] = useState(user.displayName || '');
+    const [screening, setScreening] = useState(workerProfile?.screeningExpiry || '');
+    const [firstAid, setFirstAid] = useState(workerProfile?.firstAidExpiry || '');
+    const [cpr, setCpr] = useState(workerProfile?.cprExpiry || '');
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState('');
-    const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); const res = await onUpdate(name); if (res.success) { setMsg('Updated!'); setTimeout(onClose, 1000); } else { setMsg('Error.'); } setLoading(false); };
-    return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">My Profile</h3>{msg && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg mb-4 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i>{msg}</div>}<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Full Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white transition-all" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Email</label><input disabled className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-600/50 dark:text-slate-400" value={user.email} /></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg">{loading ? 'Saving...' : 'Save Changes'}</button></form></div></div>);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const complianceData = isWorker ? { screeningExpiry: screening, firstAidExpiry: firstAid, cprExpiry: cpr } : null;
+        const res = await onUpdate(name, complianceData);
+        if (res.success) { setMsg('Updated!'); setTimeout(onClose, 1000); } else { setMsg('Error.'); }
+        setLoading(false);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">My Profile</h3>{msg && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg mb-4 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i>{msg}</div>}<div className="overflow-y-auto pr-2"><form id="profileForm" onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Full Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white transition-all" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Email</label><input disabled className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-600/50 dark:text-slate-400" value={user.email} /></div>
+        {isWorker && workerProfile && (<div className="pt-4 border-t border-slate-100 dark:border-slate-600"><h4 className="text-sm font-bold text-brand-600 mb-3">Compliance Expiry Dates</h4><div className="grid grid-cols-2 gap-3 mb-4"><div><label className="block text-[10px] font-bold text-slate-400 uppercase">Screening Check</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={screening} onChange={e => setScreening(e.target.value)} /></div><div><label className="block text-[10px] font-bold text-slate-400 uppercase">First Aid</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={firstAid} onChange={e => setFirstAid(e.target.value)} /></div><div><label className="block text-[10px] font-bold text-slate-400 uppercase">CPR</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={cpr} onChange={e => setCpr(e.target.value)} /></div></div><DocumentManager folder="workers" id={workerProfile.id} documents={workerProfile.documents} onUpload={uploadDocument} onDelete={deleteDocument} /></div>)}</form></div><button form="profileForm" disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg">{loading ? 'Saving...' : 'Save Changes'}</button></div></div>
+    );
 };
 
 const WorkerDetailsModal = ({ worker, onClose }) => {
     const { uploadDocument, deleteDocument } = useContext(AuthContext); 
     if (!worker) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><div className="text-center mb-6"><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4 shadow-inner">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{worker.email}</p></div><div className="overflow-y-auto pr-2"><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-left mb-4"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><DocumentManager folder="workers" id={worker.id} documents={worker.documents} onUpload={uploadDocument} onDelete={deleteDocument} /></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 mt-4">Close</button></div></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-sm animate-pop-in relative border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><div className="text-center mb-6"><div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 text-3xl font-bold mx-auto mb-4 shadow-inner">{worker.name ? worker.name.charAt(0).toUpperCase() : 'W'}</div><h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{worker.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{worker.email}</p><div className="flex gap-2 justify-center mt-2 flex-wrap"><ComplianceBadge date={worker.screeningExpiry} label="Screening" /><ComplianceBadge date={worker.firstAidExpiry} label="First Aid" /></div></div><div className="overflow-y-auto pr-2"><div className="bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-left mb-4"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p><p className="text-sm text-slate-600 dark:text-slate-300">{worker.notes || 'No notes available.'}</p></div><DocumentManager folder="workers" id={worker.id} documents={worker.documents} onUpload={uploadDocument} onDelete={deleteDocument} /></div><button onClick={onClose} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 mt-4">Close</button></div></div>
     );
 };
 
@@ -195,7 +185,7 @@ const CompleteShiftModal = ({ shift, onClose, onConfirm }) => {
 
 const AddWorkerModal = ({ onClose, onAdd }) => { const [data, setData] = useState({ name: '', email: '', notes: '' }); const [loading, setLoading] = useState(false); const [error, setError] = useState(''); const handleSubmit = async (e) => { e.preventDefault(); setLoading(true); setError(''); const res = await onAdd(data); setLoading(false); if(res.success) onClose(); else setError(res.msg); }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Add New Worker</h3><form onSubmit={handleSubmit} className="space-y-4"><div><input required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Name" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input type="email" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Email" value={data.email} onChange={e=>setData({...data, email: e.target.value})} /></div><div><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Notes" rows="2" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><button disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700">{loading ? 'Adding...' : 'Add Worker'}</button></form></div></div>); };
 
-const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => { const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes }); const [loading, setLoading] = useState(false); const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); }; const handleDelete = async () => { if(confirm('Delete?')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Edit Team Member</h3><div className="space-y-4"><div><input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} /></div><div><input className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300" value={data.email} disabled /></div><div><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})}></textarea></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100">Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700">Save</button></div></div></div></div>); };
+const EditWorkerModal = ({ worker, onClose, onUpdate, onDelete }) => { const [data, setData] = useState({ name: worker.name, email: worker.email, notes: worker.notes, screeningExpiry: worker.screeningExpiry || '', firstAidExpiry: worker.firstAidExpiry || '', cprExpiry: worker.cprExpiry || '' }); const [loading, setLoading] = useState(false); const handleUpdate = async () => { setLoading(true); await onUpdate(worker.id, data); setLoading(false); onClose(); }; const handleDelete = async () => { if(confirm('Delete?')) { setLoading(true); await onDelete(worker.id); setLoading(false); onClose(); } }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Edit Team Member</h3><div className="space-y-4"><div><input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={data.name} onChange={e=>setData({...data, name: e.target.value})} placeholder="Name"/></div><div><input className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300" value={data.email} disabled /></div><div><textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="3" value={data.notes} onChange={e=>setData({...data, notes: e.target.value})} placeholder="Notes"></textarea></div><div className="pt-2 border-t border-slate-100 dark:border-slate-700"><h4 className="text-xs font-bold text-brand-600 mb-2">Compliance Expiry</h4><div className="grid grid-cols-2 gap-2"><div><label className="text-[10px] text-slate-400 uppercase block">Screening</label><input type="date" className="w-full p-2 border rounded dark:bg-slate-700 dark:text-white" value={data.screeningExpiry} onChange={e=>setData({...data, screeningExpiry: e.target.value})} /></div><div><label className="text-[10px] text-slate-400 uppercase block">First Aid</label><input type="date" className="w-full p-2 border rounded dark:bg-slate-700 dark:text-white" value={data.firstAidExpiry} onChange={e=>setData({...data, firstAidExpiry: e.target.value})} /></div><div><label className="text-[10px] text-slate-400 uppercase block">CPR</label><input type="date" className="w-full p-2 border rounded dark:bg-slate-700 dark:text-white" value={data.cprExpiry} onChange={e=>setData({...data, cprExpiry: e.target.value})} /></div></div></div><div className="flex gap-3 pt-4"><button onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100">Delete</button><button onClick={handleUpdate} disabled={loading} className="flex-1 bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700">Save</button></div></div></div></div>); };
 
 const AssignWorkerModal = ({ shift, workersList, onClose, onAssign }) => { const [email, setEmail] = useState(''); const [applyToFuture, setApplyToFuture] = useState(false); const [loading, setLoading] = useState(false); const isRecurring = shift.seriesId && shift.recurrence !== 'none'; const handleSubmit = async (e) => { e.preventDefault(); if (!email) return; setLoading(true); await onAssign(shift.id, email, applyToFuture, shift); setLoading(false); onClose(); }; return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Assign Worker</h3><p className="text-sm text-slate-500 mb-6">Select a worker for <strong>{shift.dateDisplay}</strong></p><form onSubmit={handleSubmit}><div className="mb-6"><select required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)}><option value="" disabled selected>Select a Worker</option>{workersList && workersList.map(w => <option key={w.id} value={w.email}>{w.name} ({w.email})</option>)}</select></div>{isRecurring && (<div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-3"><input type="checkbox" id="futureAssign" className="mt-1 rounded text-brand-600 focus:ring-brand-500 w-4 h-4" checked={applyToFuture} onChange={e => setApplyToFuture(e.target.checked)} /><label htmlFor="futureAssign" className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none"><strong>Recurring Shift</strong><br/>Assign this worker to all future shifts in this series?</label></div>)}<div className="flex gap-3 justify-end"><button type="button" onClick={onClose} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-bold">Cancel</button><button disabled={loading} className="px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700">{loading ? '...' : 'Assign'}</button></div></form></div></div>); };
 
@@ -224,8 +214,6 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    
-                    {/* LEFT: Date & Time */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
                         <div className="text-center sm:text-left min-w-[50px]">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">{s.dateDisplay.split(' ')[2]}</div>
@@ -236,44 +224,14 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             <i className="fa-regular fa-clock mr-2 text-slate-400"></i> {s.startTime} - {s.endTime}
                         </div>
                     </div>
-
-                    {/* CENTER: Service & Worker */}
                     <div className="sm:w-1/2">
                         <div className="flex items-center gap-2 mb-1"><h4 className="font-bold text-slate-800 dark:text-white">{s.service}</h4>{s.recurrence && s.recurrence !== 'none' && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase tracking-wide">{s.recurrence}</span>}</div>
-                        
-                        <div className="mt-2 flex items-center gap-2">
-                            {s.assignedWorkerEmail ? (
-                                <div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit">
-                                    <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div>
-                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span>
-                                    <span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button>
-                                </div>
-                            ) : (
-                                <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors">
-                                    <i className="fa-solid fa-user-plus"></i> Assign Worker
-                                </button>
-                            )}
-                        </div>
+                        <div className="mt-2 flex items-center gap-2">{s.assignedWorkerEmail ? (<div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit"><div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div><span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span><span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span><button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button></div>) : (<button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors"><i className="fa-solid fa-user-plus"></i> Assign Worker</button>)}</div>
                         {s.notes && <div className="mt-2 text-xs text-slate-400 italic truncate max-w-xs"><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
                     </div>
-
-                    {/* RIGHT: Actions & Status */}
                     <div className="sm:w-1/4 flex flex-row sm:flex-col items-end justify-between sm:gap-2">
                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>{s.statusLabel}</span>
-                        
-                        <div className="flex items-center gap-2">
-                            {s.status === 'Pending' ? (
-                                <>
-                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button>
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button>
-                                </>
-                            ) : (
-                                s.status === 'Confirmed' && (
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>
-                                )
-                            )}
-                        </div>
+                        <div className="flex items-center gap-2">{s.status === 'Pending' ? (<><button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors shadow-sm" title="Approve"><i className="fa-solid fa-check"></i></button><button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm" title="Decline"><i className="fa-solid fa-xmark"></i></button></>) : (s.status === 'Confirmed' && (<button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors">Cancel</button>))}</div>
                     </div>
                     
                     {/* --- SHIFT REPORT VISIBILITY --- */}
@@ -319,8 +277,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                         {pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p>
+                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
@@ -336,7 +293,6 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             </div>
                         )}
                     </div>
-                    {/* DOCS BUTTON ADDED HERE */}
                     <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
                         <i className="fa-solid fa-chevron-down text-xs"></i>
@@ -344,7 +300,6 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                 </div>
             </div>
             
-            {/* EXPANDED AREA */}
             {isExpanded && (
                 <div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">
                     {!showUnassignedOnly ? (
@@ -388,7 +343,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
 
 // --- ADMIN DASHBOARD ---
 const AdminDashboard = () => {
-    const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker, revokeUserRole } = useContext(AuthContext);
+    const { shifts, workersList, usersList, user, logout, updateShiftStatus, assignWorker, removeWorker, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB, updateProfile, verifyUserAsClient, promoteUserToWorker, revokeUserRole, exportToCSV } = useContext(AuthContext);
     const [expandedClientId, setExpandedClientId] = useState(null);
     const [assignModalShift, setAssignModalShift] = useState(null);
     const [actionModal, setActionModal] = useState(null); 
@@ -467,7 +422,11 @@ const AdminDashboard = () => {
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30"><i className="fa-solid fa-user-shield"></i></div><h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Admin<span className="text-slate-400 font-normal">Portal</span></h1></div>
                     <div className="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-full p-1 border border-slate-200 dark:border-slate-600"><button onClick={() => setActiveTab('bookings')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'bookings' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Bookings</button><button onClick={() => setActiveTab('users')} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>People</button></div>
-                    <div className="flex gap-3 items-center"><button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button><div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div><ThemeToggle /><button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button><button onClick={logout} className="text-sm text-red-600 font-bold hover:text-red-500 transition-colors ml-2">Sign Out</button></div>
+                    <div className="flex gap-3 items-center">
+                        <button onClick={exportToCSV} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Export CSV"><i className="fa-solid fa-file-csv"></i></button>
+                        <button onClick={() => window.location.reload()} className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="Refresh Data"><i className="fa-solid fa-rotate-right"></i></button>
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <ThemeToggle /><button onClick={() => setIsProfileOpen(true)} className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-white flex items-center justify-center transition-colors"><i className="fa-solid fa-user"></i></button><button onClick={logout} className="text-sm text-red-600 font-bold hover:text-red-500 transition-colors ml-2">Sign Out</button></div>
                 </div>
             </header>
 
@@ -488,7 +447,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-users mr-2 text-slate-400"></i> Clients ({clientUsers.length})</h3></div><div>{clientUsers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No clients yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{clientUsers.map(u => (<tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white">{u.name}</div><div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div></td><td className="p-3 text-right"><button onClick={() => handleRevokeRole(u.id, u.email)} disabled={actionLoading === u.id} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke Role"><i className="fa-solid fa-user-slash"></i></button></td></tr>))}</tbody></table>}</div></div>
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3><button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button></div><div>{teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{teamMembers.map(w => (<tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">{w.name}{!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}</div><div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>{w.userId && (<button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>)}</div></td></tr>))}</tbody></table>}</div></div>
+                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-fit"><div className="p-4 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-white flex items-center"><i className="fa-solid fa-briefcase mr-2 text-slate-400"></i> Team ({teamMembers.length})</h3><button onClick={() => setShowWorkerModal(true)} className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i className="fa-solid fa-plus mr-1"></i> Add</button></div><div>{teamMembers.length === 0 ? <div className="p-6 text-center text-slate-400 italic text-sm">No workers yet.</div> : <table className="w-full text-left"><tbody className="divide-y divide-slate-100 dark:divide-slate-700">{teamMembers.map(w => (<tr key={w.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td className="p-3"><div className="font-bold text-slate-900 text-sm dark:text-white flex items-center">{w.name}{!w.userId && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase dark:bg-slate-600 dark:text-slate-300">Invited</span>}</div><div className="text-xs text-slate-500 dark:text-slate-400">{w.email}</div><div className="flex gap-2 mt-1 flex-wrap"><ComplianceBadge date={w.screeningExpiry} label="Screening" /><ComplianceBadge date={w.firstAidExpiry} label="First Aid" /><ComplianceBadge date={w.cprExpiry} label="CPR" /></div></td><td className="p-3 text-right"><div className="flex justify-end gap-1"><button onClick={() => setEditingWorker(w)} className="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded dark:hover:bg-blue-900/30 dark:text-blue-400" title="Edit Profile"><i className="fa-solid fa-pen"></i></button>{w.userId && (<button onClick={() => handleRevokeRole(w.userId, w.email)} disabled={actionLoading === w.userId} className="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-red-900/30 dark:text-red-400" title="Revoke User Access"><i className="fa-solid fa-user-slash"></i></button>)}</div></td></tr>))}</tbody></table>}</div></div>
                         </div>
                     </div>
                 )}
