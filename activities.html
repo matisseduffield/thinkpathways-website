@@ -14,7 +14,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts: Inter for high readability -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Vanilla Tilt for 3D Effects -->
@@ -35,7 +35,6 @@
                     },
                     animation: {
                         'blob': 'blob 10s infinite',
-                        'float': 'float 6s ease-in-out infinite',
                     },
                     keyframes: {
                         blob: {
@@ -43,8 +42,7 @@
                             '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
                             '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                             '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        },
-                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } }
+                        }
                     }
                 }
             }
@@ -66,7 +64,7 @@
         .tilt-card {
             transform-style: preserve-3d;
             transform: perspective(1000px);
-            backface-visibility: hidden; /* Fix chrome flickering */
+            backface-visibility: hidden;
         }
         .tilt-content {
             transform: translateZ(20px);
@@ -74,22 +72,10 @@
 
         /* Filter Button Active State */
         .filter-btn.active {
-            background-color: #0ea5e9; /* Brand 500 */
+            background-color: #0ea5e9;
             color: white;
             border-color: #0ea5e9;
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }
-
-        /* Sticky Filters */
-        .sticky-filters {
-            position: sticky;
-            top: 90px; /* Below nav */
-            z-index: 40;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-            backdrop-filter: blur(8px);
-            border-radius: 99px;
-            display: inline-flex;
         }
 
         /* Staggered Entrance Animation */
@@ -136,7 +122,6 @@
                     <a href="index.html#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-md hover:shadow-lg hover:-translate-y-0.5">Contact Us</a>
                 </div>
 
-                <!-- Portal Login Button -->
                 <div class="hidden md:flex items-center ml-4">
                     <a href="portal.html" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-slate-900 transition-all flex items-center gap-2 border border-transparent hover:border-brand-400 shadow-sm">
                         <i class="fa-solid fa-lock text-brand-400 text-xs"></i> Portal Login
@@ -151,7 +136,6 @@
             </div>
         </div>
 
-        <!-- Mobile Menu Panel -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="index.html#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
@@ -166,20 +150,29 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow relative w-full overflow-hidden" onmousemove="parallax(event)">
+    <main class="flex-grow relative w-full overflow-hidden">
         
-        <!-- Interactive Parallax Background -->
+        <!-- Interactive Parallax Background (FIXED) -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-            <div data-speed="2" class="parallax-blob absolute top-20 -left-10 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div data-speed="-2" class="parallax-blob absolute top-60 -right-20 w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
-            <div data-speed="1" class="parallax-blob absolute bottom-20 left-20 w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
+            <!-- Blob 1 -->
+            <div class="parallax-layer absolute top-20 -left-10" data-speed="4">
+                <div class="w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            </div>
+            <!-- Blob 2 -->
+            <div class="parallax-layer absolute top-60 -right-20" data-speed="-4">
+                <div class="w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
+            </div>
+            <!-- Blob 3 -->
+            <div class="parallax-layer absolute bottom-20 left-20" data-speed="2">
+                <div class="w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
+            </div>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
             
             <!-- Hero Header -->
             <div class="text-center max-w-3xl mx-auto mb-10">
-                <div class="inline-flex items-center justify-center p-2 px-4 mb-6 bg-white/80 backdrop-blur-sm rounded-full border border-brand-200 shadow-sm animate-float">
+                <div class="inline-flex items-center justify-center p-2 px-4 mb-6 bg-white/80 backdrop-blur-sm rounded-full border border-brand-200 shadow-sm animate-pulse">
                     <span class="text-brand-700 text-xs font-bold uppercase tracking-widest flex items-center">
                         <span class="w-2 h-2 bg-accent-500 rounded-full mr-2"></span> Daily Life & Goals
                     </span>
@@ -192,7 +185,7 @@
                 </p>
             </div>
 
-            <!-- Filter Controls (Centred and Sticky) -->
+            <!-- Filter Controls -->
             <div class="flex justify-center mb-16 relative z-30">
                 <div class="glass px-2 py-2 rounded-full flex flex-wrap gap-2 justify-center shadow-lg" id="filter-container">
                     <button class="filter-btn active px-5 py-2 rounded-full text-slate-600 font-bold text-sm transition-all hover:bg-slate-100" data-filter="all">All</button>
@@ -202,7 +195,7 @@
                 </div>
             </div>
 
-            <!-- Dynamic Grid (Auto-Animate enabled) -->
+            <!-- Dynamic Grid -->
             <div id="activity-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[minmax(320px, auto)]">
                 
                 <!-- 1. Cooking (Skills) - LARGE -->
@@ -466,14 +459,14 @@
         function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
         
         // --- Parallax Effect ---
-        function parallax(e) {
-            document.querySelectorAll('.parallax-blob').forEach(blob => {
-                const speed = blob.getAttribute('data-speed');
-                const x = (window.innerWidth - e.pageX * speed) / 100;
-                const y = (window.innerHeight - e.pageY * speed) / 100;
-                blob.style.transform = `translateX(${x}px) translateY(${y}px)`;
+        document.addEventListener('mousemove', (e) => {
+            document.querySelectorAll('.parallax-layer').forEach(layer => {
+                const speed = layer.getAttribute('data-speed');
+                const x = (window.innerWidth - e.pageX * speed) / 80;
+                const y = (window.innerHeight - e.pageY * speed) / 80;
+                layer.style.transform = `translateX(${x}px) translateY(${y}px)`;
             });
-        }
+        });
 
         // --- Filtering Logic ---
         document.addEventListener('DOMContentLoaded', () => {
