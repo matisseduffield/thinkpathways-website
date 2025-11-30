@@ -3,109 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Think Pathways - NDIS Disability Support Adelaide | In-Home & Community</title>
+    <title>Think Pathways - NDIS Disability Support Adelaide</title>
     
     <!-- SEO & Meta Tags -->
-    <meta name="description" content="Think Pathways provides trusted NDIS disability support in Adelaide. We specialize in community access, in-home care, and skill building. Compassionate, local support workers.">
-    <meta name="keywords" content="NDIS Adelaide, Disability Support Worker Adelaide, Community Access, In-Home Support, Mentoring, Think Pathways, NDIS Provider South Australia, Disability Services SA">
+    <meta name="description" content="Think Pathways provides trusted NDIS disability support in Adelaide. We specialize in community access, in-home care, and skill building.">
+    <meta name="keywords" content="NDIS Adelaide, Disability Support Worker Adelaide, Community Access, In-Home Support, Mentoring, Think Pathways">
     <meta name="author" content="Think Pathways">
     <meta name="robots" content="index, follow">
     
-    <!-- Canonical URL (Tells Google this is the main page) -->
+    <!-- Canonical & Open Graph -->
     <link rel="canonical" href="https://thinkpathways.com/" />
-
-    <!-- Social Media / Sharing Tags (Open Graph) -->
     <meta property="og:title" content="Think Pathways - Trusted NDIS Support in Adelaide">
-    <meta property="og:description" content="Empowering independence through trusted NDIS support services. Compassionate, local care tailored to your goals.">
+    <meta property="og:description" content="Empowering independence through trusted NDIS support services.">
     <meta property="og:image" content="https://thinkpathways.com/logo.png">
     <meta property="og:url" content="https://thinkpathways.com/">
     <meta property="og:type" content="website">
-    <meta property="og:locale" content="en_AU">
 
-    <!-- FAVICON SETUP FOR GOOGLE SEARCH -->
-    <!-- 1. The actual file (Upload 'logo.png' to your root folder) -->
+    <!-- Favicons -->
     <link rel="icon" type="image/png" href="logo.png" sizes="96x96">
     <link rel="shortcut icon" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
-    
-    <!-- 2. Fallback SVG (Keep this for browsers, but Google prefers the png above) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial, sans-serif%22 font-size=%2255%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>TP</text></svg>">
-
-    <!-- STRUCTURED DATA (JSON-LD) - This tells Google you are a business -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "Think Pathways",
-      "image": "https://thinkpathways.com/logo.png",
-      "url": "https://thinkpathways.com/",
-      "telephone": "+61420673303",
-      "email": "care@thinkpathways.com",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Adelaide",
-        "addressRegion": "SA",
-        "addressCountry": "AU"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": "-34.9285",
-        "longitude": "138.6007"
-      },
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday"
-        ],
-        "opens": "09:00",
-        "closes": "17:00"
-      },
-      "priceRange": "$$",
-      "founder": {
-        "@type": "Person",
-        "name": "Matisse Duffield"
-      },
-      "description": "Think Pathways provides compassionate, NDIS-compatible disability support services in Adelaide, specializing in community access and in-home support."
-    }
-    </script>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome for Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts: Inter for high readability -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Vanilla Tilt Library for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
 
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9', // Sky blue
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            900: '#0c4a6e',
-                        },
-                        accent: {
-                            500: '#10b981', // Emerald green
-                        }
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        accent: { 500: '#10b981' }
                     },
                     animation: {
                         'blob': 'blob 7s infinite',
                         'float': 'float 6s ease-in-out infinite',
+                        'typewriter': 'typewriter 4s steps(40) infinite alternate',
+                        'blink': 'blink 1s step-end infinite'
                     },
                     keyframes: {
                         blob: {
@@ -114,10 +59,8 @@
                             '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
                             '100%': { transform: 'translate(0px, 0px) scale(1)' },
                         },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
+                        blink: { '50%': { borderColor: 'transparent' } }
                     }
                 }
             }
@@ -125,83 +68,63 @@
     </script>
     
     <style>
-        /* Custom accessibility focus styles */
-        *:focus-visible {
-            outline: 4px solid #facc15; /* Bright yellow focus for accessibility */
-            outline-offset: 2px;
+        /* Glassmorphism Class */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
-        /* Scroll Reveal Animation Classes */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Glowing Button Effect */
-        .btn-glow {
-            position: relative;
-            overflow: hidden;
+        /* Typewriter Cursor */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+            color: #0ea5e9;
         }
-        .btn-glow::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 3s infinite;
+        
+        /* 3D Tilt Enhancements */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
         }
-        @keyframes shimmer {
-            0% { left: -100%; }
-            20% { left: 100%; }
-            100% { left: 100%; }
+        .tilt-content {
+            transform: translateZ(20px);
         }
 
-        /* High Contrast Mode Overrides */
-        .high-contrast {
-            background-color: #000000 !important;
-            color: #ffff00 !important;
-        }
-        .high-contrast * {
-            background-color: #000000 !important;
-            color: #ffff00 !important;
-            border-color: #ffff00 !important;
-        }
-        .high-contrast img, .high-contrast svg {
-            filter: grayscale(100%) contrast(150%);
-        }
-        .high-contrast .blob { display: none; } /* Hide distracting blobs in HC mode */
-        
+        /* Scroll Reveal */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* High Contrast Overrides */
+        .high-contrast { background-color: #000 !important; color: #ff0 !important; }
+        .high-contrast * { background-color: #000 !important; color: #ff0 !important; border-color: #ff0 !important; }
+        .high-contrast .glass { background: #000 !important; backdrop-filter: none !important; border: 2px solid #ff0 !important; }
+        .high-contrast .blob { display: none; }
     </style>
 </head>
-<body class="font-sans text-slate-800 bg-slate-50 antialiased relative">
+<body class="font-sans text-slate-800 bg-slate-50 antialiased relative selection:bg-brand-200 selection:text-brand-900">
 
-    <!-- Accessibility: Skip to Content -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50">
-        Skip to main content
-    </a>
+    <!-- Accessibility Skip -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50">Skip to content</a>
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="glass sticky top-0 z-50 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
                 <div class="flex items-center">
-                    <!-- Logo Icon -->
                     <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white">
+                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
                             <i class="fa-solid fa-hands-holding-circle text-xl"></i>
                         </div>
                         <span class="font-bold text-xl text-slate-900 tracking-tight">Think Pathways</span>
                     </div>
                 </div>
                 
-                <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
                     <a href="#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
@@ -209,245 +132,217 @@
                     <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
                     <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
                     <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
-                    <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-sm hover:shadow-md">
-                        Contact Us
-                    </a>
+                    <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">Contact Us</a>
                 </div>
-
-                <!-- Portal Button (Right Aligned on Desktop) -->
                 <div class="hidden md:flex items-center ml-4">
                     <a href="portal.html" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-800 transition-all flex items-center gap-2 border border-transparent hover:border-brand-400 shadow-sm">
                         <i class="fa-solid fa-lock text-brand-400 text-xs"></i> Portal Login
                     </a>
                 </div>
-
-                <!-- Mobile menu button -->
                 <div class="flex items-center md:hidden">
-                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2" aria-label="Toggle menu">
-                        <i class="fa-solid fa-bars text-2xl"></i>
-                    </button>
+                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
                 </div>
             </div>
         </div>
-
-        <!-- Mobile Menu Panel -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100">
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 glass">
             <div class="px-4 pt-2 pb-6 space-y-2">
                 <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
                 <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
                 <a href="activities.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Activities</a>
                 <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
                 <a href="portal.html" class="block px-3 py-3 text-base font-medium text-slate-900 bg-slate-100 rounded-md font-bold"><i class="fa-solid fa-lock mr-2"></i>Client Portal</a>
-                <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">About Us</a>
-                <a href="#faq" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">FAQ</a>
                 <a href="#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section (With Animation) -->
-    <section id="home" class="relative bg-white overflow-hidden">
-        <div class="max-w-7xl mx-auto">
-            <div class="relative z-10 pb-8 bg-white/90 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-20 px-4 sm:px-6 lg:px-8 backdrop-blur-sm">
-                
-                <!-- Animated Blobs (Background Decoration) -->
-                <div class="absolute top-0 -left-4 w-72 h-72 bg-brand-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob blob -z-10"></div>
-                <div class="absolute top-0 -right-4 w-72 h-72 bg-accent-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 blob -z-10"></div>
-                <div class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 blob -z-10"></div>
+    <!-- Hero Section -->
+    <section id="home" class="relative bg-slate-50 overflow-hidden min-h-[90vh] flex items-center">
+        <!-- Background Blobs -->
+        <div class="absolute top-0 -left-4 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob blob"></div>
+        <div class="absolute top-0 -right-4 w-96 h-96 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 blob"></div>
+        <div class="absolute -bottom-32 left-20 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 blob"></div>
 
-                <main id="main-content" class="mt-10 mx-auto max-w-7xl sm:mt-12 md:mt-16 lg:mt-20 xl:mt-28 reveal">
-                    <div class="sm:text-center lg:text-left">
-                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-200 bg-brand-50 text-brand-800 text-xs font-semibold uppercase tracking-wide mb-4 shadow-sm">
-                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                            Accepting New Referrals
-                        </div>
-                        <h1 class="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
-                            <span class="block xl:inline">Compassionate care</span>
-                            <span class="block text-brand-600 xl:inline">tailored to you.</span>
-                        </h1>
-                        <p class="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            At <strong>Think Pathways</strong>, we provide person-centered disability support services designed to help you live independently and achieve your goals. NDIS compatible support with a focus on dignity and respect.
-                        </p>
-                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-3">
-                            <div class="rounded-full shadow-lg">
-                                <a href="#contact" class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 md:text-lg transition-all btn-glow transform hover:-translate-y-1">
-                                    Get Started
-                                </a>
-                            </div>
-                            <div class="mt-3 sm:mt-0 sm:ml-3">
-                                <a href="#services" class="w-full flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-brand-700 bg-brand-50 hover:bg-brand-100 md:text-lg transition-all">
-                                    View Services
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        </div>
-        <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-slate-50 flex items-center justify-center">
-            <!-- Custom Cartoon Illustration -->
-            <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full object-center animate-float" src="https://i.imgur.com/o73sFO7.png" alt="Cartoon illustration of a female support worker pushing an elderly man in a wheelchair">
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="py-20 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center reveal">
-                <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">Our Services</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                    Supporting your independence
-                </p>
-                <p class="mt-4 max-w-2xl text-xl text-slate-500 mx-auto">
-                    We offer a comprehensive range of disability support services tailored to your NDIS plan and personal goals.
-                </p>
-            </div>
-
-            <div class="mt-16">
-                <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    <!-- Service 1 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-house-user text-brand-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">In-Home Support</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Assistance with daily living tasks, personal care, and household management to help you maintain your independence at home.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Service 2 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-people-group text-accent-500 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">Community Access</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Support to participate in community activities, social groups, appointments, and recreational events.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Service 3 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-graduation-cap text-purple-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">Skill Development</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Mentoring and training to build life skills such as cooking, budgeting, travel training, and technology use.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Service 4 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-car text-orange-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">Transport Assistance</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Safe and reliable transport to get you to your appointments, work, or social engagements on time.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Service 5 -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-heart-pulse text-red-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">Complex Care</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Specialized support for participants with high intensity daily personal activities or complex health needs.
-                            </p>
-                        </div>
-                    </div>
-
-                     <!-- Service 6 -->
-                     <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 reveal">
-                        <div class="p-6">
-                            <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fa-solid fa-clipboard-list text-teal-600 text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-slate-900">Plan Management</h3>
-                            <p class="mt-2 text-base text-slate-500">
-                                Assistance with managing your NDIS funding, paying invoices, and tracking your budget expenditure.
-                            </p>
-                        </div>
-                    </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="text-center lg:text-left reveal">
+                <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-200 bg-white/80 backdrop-blur-sm text-brand-800 text-xs font-semibold uppercase tracking-wide mb-6 shadow-sm">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span> Accepting New Referrals
                 </div>
-
-                <!-- PRICING BUTTON -->
-                <div class="mt-16 text-center reveal">
-                    <a href="pricing.html" class="inline-flex items-center px-6 py-3 border border-brand-600 text-base font-medium rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-sm hover:shadow-md">
-                        <i class="fa-solid fa-tag mr-2"></i> View Full Pricing Guide
+                <h1 class="text-5xl tracking-tight font-extrabold text-slate-900 sm:text-6xl md:text-7xl mb-6">
+                    Compassionate care for <br>
+                    <!-- TYPEWRITER EFFECT -->
+                    <span class="text-brand-600 typing-cursor" id="typewriter">Your Independence.</span>
+                </h1>
+                <p class="mt-4 text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                    At <strong>Think Pathways</strong>, we provide person-centered NDIS support designed to help you live independently. We focus on dignity, respect, and achieving your unique goals.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="#contact" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-brand-500/30 transition-all transform hover:-translate-y-1 text-center">
+                        Get Started
+                    </a>
+                    <a href="#services" class="px-8 py-4 text-lg font-medium rounded-full text-brand-700 bg-white hover:bg-brand-50 border border-brand-100 shadow-sm hover:shadow-md transition-all text-center">
+                        View Services
                     </a>
                 </div>
-
+            </div>
+            <div class="relative lg:h-full flex items-center justify-center reveal">
+                <!-- 3D Tilt on Hero Image -->
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 glass p-2" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                    <img class="rounded-2xl w-full object-cover shadow-inner" src="https://i.imgur.com/o73sFO7.png" alt="Disability support illustration">
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Activities CTA Section -->
-    <section class="py-16 bg-brand-50 border-t border-b border-brand-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-            <h2 class="text-3xl font-extrabold text-slate-900 mb-4">See Support in Action</h2>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
-                We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate to help you achieve your goals.
+    <!-- Services Section (With 3D Tilt Cards) -->
+    <section id="services" class="py-24 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center reveal mb-16">
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm">Our Services</h2>
+                <p class="mt-2 text-4xl font-extrabold text-slate-900">Supporting your independence</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Service Card 1 -->
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-perspective="1000">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-2xl shadow-sm">
+                            <i class="fa-solid fa-house-user"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">In-Home Support</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Assistance with daily living tasks, personal care, and household management to help you maintain your independence.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Service Card 2 -->
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-500 text-2xl shadow-sm">
+                            <i class="fa-solid fa-people-group"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Community Access</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Support to participate in community activities, social groups, appointments, and recreational events.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Service Card 3 -->
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-2xl shadow-sm">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Skill Development</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Mentoring and training to build life skills such as cooking, budgeting, travel training, and technology use.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Service Card 4 -->
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-2xl shadow-sm">
+                            <i class="fa-solid fa-car"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Transport Assistance</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Safe and reliable transport to get you to your appointments, work, or social engagements on time.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Service Card 5 -->
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-2xl shadow-sm">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Complex Care</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Specialized support for participants with high intensity daily personal activities or complex health needs.
+                        </p>
+                    </div>
+                </div>
+
+                 <!-- Service Card 6 -->
+                 <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                    <div class="tilt-content">
+                        <div class="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-2xl shadow-sm">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Plan Management</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            Assistance with managing your NDIS funding, paying invoices, and tracking your budget expenditure.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center reveal">
+                <a href="pricing.html" class="inline-flex items-center px-8 py-4 border border-brand-600 text-base font-bold rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-md hover:shadow-lg">
+                    View Pricing Guide <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Activities Banner -->
+    <section class="py-20 bg-brand-600 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 pattern-dots"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">See Support in Action</h2>
+            <p class="text-xl text-brand-100 max-w-2xl mx-auto mb-10">
+                We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate.
             </p>
-            <a href="activities.html" class="inline-flex items-center px-8 py-4 border border-transparent text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg transition-all transform hover:-translate-y-1 btn-glow">
-                View Our Activities <i class="fa-solid fa-arrow-right ml-3"></i>
+            <a href="activities.html" class="inline-flex items-center px-8 py-4 border-2 border-white text-lg font-bold rounded-full text-brand-700 bg-white hover:bg-brand-50 shadow-lg transition-all transform hover:-translate-y-1">
+                View Activities
             </a>
         </div>
     </section>
 
-    <!-- NEW: Our Core Values Section -->
-    <section class="py-16 bg-white">
+    <!-- NEW: Our Core Values Section (Restored) -->
+    <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12 reveal">
-                <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">Our Philosophy</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                    Values that drive our care
-                </p>
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm">Our Philosophy</h2>
+                <p class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">Values that drive our care</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center reveal">
-                <div class="p-6">
-                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-hand-holding-heart text-2xl text-brand-600"></i>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal">
+                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
+                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-hand-holding-heart text-3xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">Empowerment</h3>
-                    <p class="text-slate-600">We focus on building your skills and confidence so you can live life on your own terms.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Empowerment</h3>
+                    <p class="text-slate-600">Building your skills and confidence so you can live life on your own terms.</p>
                 </div>
-                <div class="p-6">
-                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-shield-halved text-2xl text-brand-600"></i>
+                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
+                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-shield-halved text-3xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">Integrity</h3>
-                    <p class="text-slate-600">Honest, transparent, and reliable support. We do what we say we will do, every time.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Integrity</h3>
+                    <p class="text-slate-600">Honest, transparent, and reliable support. We do what we say we will do.</p>
                 </div>
-                <div class="p-6">
-                    <div class="mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-users text-2xl text-brand-600"></i>
+                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
+                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-users text-3xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">Connection</h3>
-                    <p class="text-slate-600">Fostering genuine relationships and helping you connect meaningfully with your community.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Connection</h3>
+                    <p class="text-slate-600">Fostering genuine relationships and meaningful community connections.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Onboarding Journey (How It Works) -->
-    <section class="py-16 bg-slate-50">
+    <!-- Onboarding Journey (Restored) -->
+    <section class="py-20 bg-slate-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 reveal">
-                <h2 class="text-3xl font-extrabold text-slate-900">Your Journey with Us</h2>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Your Journey with Us</h2>
                 <p class="mt-4 text-lg text-slate-500">We make getting started simple and stress-free.</p>
             </div>
 
@@ -457,7 +352,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
                     <!-- Step 1 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
+                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             1
                         </div>
@@ -466,7 +361,7 @@
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
+                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             2
                         </div>
@@ -475,7 +370,7 @@
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative group hover:border-brand-200 transition-colors hover:shadow-md">
+                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
                         <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             3
                         </div>
@@ -489,7 +384,7 @@
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm relative hover:shadow-md transition-shadow">
+                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
                         <div class="w-12 h-12 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
                             <i class="fa-solid fa-check"></i>
                         </div>
@@ -501,33 +396,36 @@
         </div>
     </section>
 
-    <!-- MEET THE FOUNDER SECTION -->
-    <section id="about" class="py-20 bg-white">
+    <!-- MEET THE FOUNDER SECTION (Restored) -->
+    <section id="about" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-slate-50 rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100 reveal">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-center">
+            <div class="glass rounded-3xl p-8 md:p-12 shadow-xl border border-slate-100 reveal">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
                     
                     <!-- Profile Image Column -->
-                    <div class="md:col-span-1 text-center">
+                    <div class="md:col-span-1 text-center relative group">
+                        <div class="absolute inset-0 bg-brand-200 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
                         <div class="relative inline-block">
-                            <div class="absolute inset-0 bg-brand-200 rounded-full blur-xl opacity-50"></div>
-                            <img src="https://i.imgur.com/o73sFO7.png" alt="Matisse Duffield" class="relative w-48 h-48 md:w-56 md:h-56 rounded-full object-cover border-4 border-white shadow-lg">
+                            <img src="https://i.imgur.com/o73sFO7.png" alt="Matisse Duffield" class="relative w-56 h-56 md:w-64 md:h-64 rounded-full object-cover border-4 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg text-brand-600">
+                                <i class="fa-solid fa-quote-right text-xl"></i>
+                            </div>
                         </div>
                         <div class="mt-6">
                             <h3 class="text-2xl font-bold text-slate-900">Matisse Duffield</h3>
-                            <p class="text-brand-600 font-medium">Founder & Director</p>
+                            <p class="text-brand-600 font-medium uppercase tracking-wide text-sm">Founder & Director</p>
                         </div>
                     </div>
 
                     <!-- Text Column -->
                     <div class="md:col-span-2">
-                        <div class="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            <i class="fa-solid fa-quote-left text-brand-400"></i> My Philosophy
+                        <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <i class="fa-solid fa-star text-brand-400"></i> My Philosophy
                         </div>
                         <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
-                            "Support is about walking <span class="text-brand-600">with</span> you, not just for you."
+                            "Support is about walking <span class="text-brand-600 underline decoration-brand-300 decoration-4 underline-offset-4">with</span> you, not just for you."
                         </h2>
-                        <div class="prose text-slate-600 text-lg leading-relaxed space-y-4">
+                        <div class="prose text-slate-600 text-lg leading-relaxed space-y-6">
                             <p>
                                 I started Think Pathways with a simple belief: everyone deserves support that actually <em>listens</em>. I've seen too many participants treated as just a number in a system.
                             </p>
@@ -537,15 +435,18 @@
                         </div>
                         
                         <!-- Signature / Trust Signals -->
-                        <div class="mt-8 pt-8 border-t border-slate-200 flex flex-wrap gap-6">
-                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                                <i class="fa-solid fa-certificate text-brand-500"></i> Fully Insured
+                        <div class="mt-10 pt-8 border-t border-slate-200 flex flex-wrap gap-8">
+                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                                <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-certificate"></i></div>
+                                Fully Insured
                             </div>
-                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                                <i class="fa-solid fa-check-circle text-brand-500"></i> NDIS Worker Screened
+                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-check-circle"></i></div>
+                                NDIS Worker Screened
                             </div>
-                            <div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                                <i class="fa-solid fa-heart-pulse text-brand-500"></i> First Aid Certified
+                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                                <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-heart-pulse"></i></div>
+                                First Aid Certified
                             </div>
                         </div>
                     </div>
@@ -555,7 +456,7 @@
         </div>
     </section>
 
-    <!-- Testimonial Section -->
+    <!-- Testimonial Section (Restored) -->
     <section class="py-24 bg-gradient-to-br from-brand-700 to-brand-900 relative overflow-hidden">
         <!-- Decorative Background Elements -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
@@ -589,44 +490,44 @@
         </div>
     </section>
 
-    <!-- FAQ Section -->
-    <section id="faq" class="py-16 bg-white">
+    <!-- FAQ Section (Restored) -->
+    <section id="faq" class="py-20 bg-white">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12 reveal">
+            <div class="text-center mb-16 reveal">
                 <h2 class="text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
                 <p class="mt-4 text-lg text-slate-500">Common questions about our services and NDIS support.</p>
             </div>
             
             <div class="space-y-6">
                 <!-- FAQ Item 1 -->
-                <div class="bg-slate-50 rounded-lg p-6 reveal">
-                    <h3 class="text-lg font-medium text-slate-900 flex items-center">
-                        <i class="fa-solid fa-circle-question text-brand-500 mr-3"></i>
+                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
+                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-circle-question"></i></div>
                         Are you NDIS registered?
                     </h3>
-                    <p class="mt-2 text-slate-500 ml-8">
+                    <p class="text-slate-600 ml-14 leading-relaxed">
                         We are an NDIS compatible provider. We can support participants who are Plan Managed or Self Managed. 
                     </p>
                 </div>
 
                 <!-- FAQ Item 2 -->
-                <div class="bg-slate-50 rounded-lg p-6 reveal">
-                    <h3 class="text-lg font-medium text-slate-900 flex items-center">
-                        <i class="fa-solid fa-map-location-dot text-brand-500 mr-3"></i>
+                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
+                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-map-location-dot"></i></div>
                         What areas do you service?
                     </h3>
-                    <p class="mt-2 text-slate-500 ml-8">
+                    <p class="text-slate-600 ml-14 leading-relaxed">
                         We currently provide support services across the Greater Metropolitan area. Please contact us to check if we have a worker in your specific suburb.
                     </p>
                 </div>
 
                 <!-- FAQ Item 3 -->
-                <div class="bg-slate-50 rounded-lg p-6 reveal">
-                    <h3 class="text-lg font-medium text-slate-900 flex items-center">
-                        <i class="fa-solid fa-calendar-check text-brand-500 mr-3"></i>
+                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
+                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-calendar-check"></i></div>
                         Is there a waiting list?
                     </h3>
-                    <p class="mt-2 text-slate-500 ml-8">
+                    <p class="text-slate-600 ml-14 leading-relaxed">
                         We currently have capacity to take on new participants. Once we understand your needs, we can usually start services within 1-2 weeks.
                     </p>
                 </div>
@@ -634,65 +535,76 @@
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="py-16 bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden reveal">
-                <div class="grid grid-cols-1 lg:grid-cols-2">
-                    <!-- Contact Info (Centered Content) -->
-                    <div class="bg-brand-600 p-10 text-white flex flex-col justify-center h-full">
-                        <div>
-                            <h3 class="text-2xl font-bold mb-6">Get in touch</h3>
-                            <p class="text-brand-100 mb-8">
-                                Ready to discuss your support needs? Fill out the form or contact us directly. We are here to help you navigate your journey.
-                            </p>
+    <!-- Contact Section (Glassmorphism) -->
+    <section id="contact" class="py-20 bg-slate-50 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
+            <div class="absolute top-20 right-0 w-96 h-96 bg-brand-300 rounded-full blur-3xl mix-blend-multiply"></div>
+            <div class="absolute bottom-0 left-20 w-72 h-72 bg-accent-300 rounded-full blur-3xl mix-blend-multiply"></div>
+        </div>
 
-                            <div class="space-y-6">
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-phone mt-1 text-brand-200 w-6"></i>
-                                    <span class="ml-3">+61 420 673 303</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="glass rounded-3xl shadow-2xl overflow-hidden reveal border border-white/50">
+                <div class="grid grid-cols-1 lg:grid-cols-2">
+                    <!-- Contact Info -->
+                    <div class="bg-slate-900 p-12 text-white flex flex-col justify-center">
+                        <h3 class="text-3xl font-bold mb-6">Get in touch</h3>
+                        <p class="text-slate-400 mb-10 text-lg">
+                            Ready to discuss your support needs? Fill out the form or contact us directly.
+                        </p>
+                        <div class="space-y-8">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa-solid fa-phone text-brand-400"></i>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-envelope mt-1 text-brand-200 w-6"></i>
-                                    <span class="ml-3">care@thinkpathways.com</span>
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase font-bold">Call Us</p>
+                                    <p class="text-xl font-medium">+61 420 673 303</p>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-location-dot mt-1 text-brand-200 w-6"></i>
-                                    <span class="ml-3">Serving the Greater Area of Adelaide,<br>South Australia</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa-solid fa-envelope text-brand-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase font-bold">Email Us</p>
+                                    <p class="text-xl font-medium">care@thinkpathways.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fa-solid fa-location-dot text-brand-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400 uppercase font-bold">Service Area</p>
+                                    <p class="text-xl font-medium">Adelaide, South Australia</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Contact Form -->
-                    <div class="p-10">
+                    <div class="p-12 bg-white/50 backdrop-blur-sm">
                         <form action="https://formspree.io/f/xkgagpzz" method="POST" class="space-y-6">
-                            <!-- Redirect to success page -->
                             <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
-                            <!-- Subject line for your email notification -->
-                            <input type="hidden" name="_subject" value="New Contact Form Submission">
-
+                            <input type="hidden" name="_subject" value="New Website Inquiry">
+                            
                             <div>
-                                <label for="name" class="block text-sm font-medium text-slate-700">Full Name</label>
-                                <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500 sm:text-sm">
+                                <label for="name" class="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
+                                <input type="text" name="name" id="name" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
                             </div>
-
                             <div>
-                                <label for="email" class="block text-sm font-medium text-slate-700">Email Address</label>
-                                <input type="email" name="email" id="email" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500 sm:text-sm">
+                                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
+                                <input type="email" name="email" id="email" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
                             </div>
-
                             <div>
-                                <label for="phone" class="block text-sm font-medium text-slate-700">Phone Number</label>
-                                <input type="tel" name="phone" id="phone" class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500 sm:text-sm">
+                                <label for="phone" class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
+                                <input type="tel" name="phone" id="phone" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
                             </div>
-
                             <div>
-                                <label for="message" class="block text-sm font-medium text-slate-700">How can we help?</label>
-                                <textarea id="message" name="message" rows="4" required class="mt-1 block w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500 sm:text-sm"></textarea>
+                                <label for="message" class="block text-sm font-bold text-slate-700 mb-1">How can we help?</label>
+                                <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm"></textarea>
                             </div>
-
-                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors">
+                            <button type="submit" class="w-full py-4 px-6 text-white font-bold bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
                                 Send Message
                             </button>
                         </form>
@@ -703,81 +615,68 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-white pt-12 pb-8">
+    <footer class="bg-slate-900 text-white pt-16 pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                         <div class="w-8 h-8 bg-brand-500 rounded flex items-center justify-center text-white">
-                            <i class="fa-solid fa-hands-holding-circle"></i>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-6">
+                         <div class="w-10 h-10 bg-brand-500 rounded-lg flex items-center justify-center text-white">
+                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
                         </div>
-                        <span class="font-bold text-lg tracking-tight">Think Pathways</span>
+                        <span class="font-bold text-2xl tracking-tight">Think Pathways</span>
                     </div>
-                    <p class="text-slate-400 text-sm">
-                        Empowering individuals with disabilities to live life their way.
+                    <p class="text-slate-400 text-lg max-w-sm leading-relaxed">
+                        Empowering individuals with disabilities to live life their way. Trusted, local, and compassionate support in Adelaide.
                     </p>
                 </div>
                 
                 <div>
-                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Quick Links</h4>
-                    <ul class="space-y-2 text-slate-400 text-sm">
-                        <li><a href="#home" class="hover:text-white transition-colors">Home</a></li>
-                        <li><a href="#services" class="hover:text-white transition-colors">Our Services</a></li>
-                        <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
-                        <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
-                        <li><a href="activities.html" class="hover:text-white transition-colors">Activities</a></li>
-                        <li><a href="#faq" class="hover:text-white transition-colors">FAQ</a></li>
-                        <li><a href="#contact" class="hover:text-white transition-colors">Contact</a></li>
+                    <h4 class="text-lg font-bold mb-6 text-white">Quick Links</h4>
+                    <ul class="space-y-3 text-slate-400">
+                        <li><a href="#home" class="hover:text-brand-400 transition-colors">Home</a></li>
+                        <li><a href="#services" class="hover:text-brand-400 transition-colors">Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-brand-400 transition-colors">Make a Referral</a></li>
+                        <li><a href="activities.html" class="hover:text-brand-400 transition-colors">Activities</a></li>
+                        <li><a href="#contact" class="hover:text-brand-400 transition-colors">Contact</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-lg font-semibold mb-4 text-brand-400">Legal & Support</h4>
-                    <ul class="space-y-2 text-slate-400 text-sm">
-                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="terms.html" class="hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="feedback.html" class="hover:text-white transition-colors">Feedback & Complaints</a></li>
-                        <li><a href="incident.html" class="hover:text-white transition-colors">Incident Reporting</a></li>
+                    <h4 class="text-lg font-bold mb-6 text-white">Legal</h4>
+                    <ul class="space-y-3 text-slate-400">
+                        <li><a href="privacy.html" class="hover:text-brand-400 transition-colors">Privacy Policy</a></li>
+                        <li><a href="terms.html" class="hover:text-brand-400 transition-colors">Terms of Service</a></li>
+                        <li><a href="feedback.html" class="hover:text-brand-400 transition-colors">Feedback</a></li>
+                        <li><a href="incident.html" class="hover:text-brand-400 transition-colors">Incident Reporting</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
-                <p>
-                    &copy; 2025 Think Pathways. All rights reserved. 
-                    <span class="mx-2 text-slate-700">|</span> 
-                    ABN 74 169 269 966
-                </p>
+                <p>&copy; 2025 Think Pathways. All rights reserved. | ABN 74 169 269 966</p>
             </div>
         </div>
     </footer>
 
-    <!-- FEATURE 2: Accessibility Toolbar -->
-    <!-- Fixed floating button -->
+    <!-- Accessibility Toolbar -->
     <div class="fixed bottom-4 left-4 z-50">
-        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center shadow-brand-500/50" aria-label="Accessibility Tools">
             <i class="fa-solid fa-universal-access text-2xl"></i>
         </button>
-
-        <!-- Menu (Hidden by default) -->
-        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
             <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
-            
-            <div class="space-y-3">
-                <!-- Text Size -->
+            <div class="space-y-4">
                 <div>
-                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
+                    <p class="text-xs text-slate-500 mb-1 uppercase font-bold">Text Size</p>
                     <div class="flex gap-2">
-                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
-                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
-                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">+</button>
                     </div>
                 </div>
-
-                <!-- Contrast -->
                 <div>
-                    <p class="text-xs text-slate-500 mb-1">Display</p>
-                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                    <p class="text-xs text-slate-500 mb-1 uppercase font-bold">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-3 rounded-lg text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400 transition-colors">
                         <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
                     </button>
                 </div>
@@ -785,9 +684,50 @@
         </div>
     </div>
 
-    <!-- JavaScript for Interactions -->
+    <!-- Scripts -->
     <script>
-        // Testimonial Carousel Data
+        // --- Typewriter Effect Logic ---
+        const words = ["Your Independence.", "Your Community.", "Your Goals.", "Your Life."];
+        let i = 0;
+        let timer;
+
+        function typeWriter() {
+            const heading = document.getElementById("typewriter");
+            const word = words[i];
+            let charIndex = 0;
+            
+            // Clear previous
+            heading.textContent = "";
+            
+            // Typing loop
+            const typeInterval = setInterval(() => {
+                heading.textContent += word.charAt(charIndex);
+                charIndex++;
+                if (charIndex >= word.length) {
+                    clearInterval(typeInterval);
+                    // Wait before deleting (or switching)
+                    setTimeout(() => {
+                        deleteWord();
+                    }, 2000);
+                }
+            }, 100);
+        }
+
+        function deleteWord() {
+            const heading = document.getElementById("typewriter");
+            let word = heading.textContent;
+            const deleteInterval = setInterval(() => {
+                word = word.slice(0, -1);
+                heading.textContent = word;
+                if (word.length === 0) {
+                    clearInterval(deleteInterval);
+                    i = (i + 1) % words.length;
+                    typeWriter();
+                }
+            }, 50);
+        }
+        
+        // --- Testimonial Logic (Restored) ---
         const testimonials = [
             {
                 quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism.",
@@ -802,34 +742,24 @@
                 author: "Jordan T."
             }
         ];
-
+        
         let currentTestimonialIndex = 0;
-        const container = document.getElementById('testimonial-container');
         let testimonialInterval;
-
-        // Initialize Carousel
+        
         function initCarousel() {
-            // Check if container exists before running
+            const container = document.getElementById('testimonial-container');
             if (!container) return;
-
+            
             container.innerHTML = testimonials.map((t, index) => `
                 <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${index === 0 ? 'opacity-100 translate-x-0 scale-100 z-10' : 'opacity-0 translate-x-8 scale-95 z-0'}">
-                    
-                    <!-- The Card -->
-                    <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center relative w-full mx-4 transform transition-transform hover:-translate-y-1 duration-300">
-                        
-                        <!-- Floating Quote Icon -->
+                    <div class="glass rounded-3xl p-8 md:p-12 text-center relative w-full mx-4 transform transition-transform hover:-translate-y-1 duration-300 border border-white/50 shadow-xl">
                         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-brand-500 rounded-full flex items-center justify-center text-white text-2xl shadow-lg border-4 border-brand-700">
                             <i class="fa-solid fa-quote-right"></i>
                         </div>
-
-                        <!-- Quote Text -->
                         <blockquote class="text-xl md:text-2xl font-medium text-slate-700 mt-8 mb-10 leading-relaxed font-serif">
                             "${t.quote}"
                         </blockquote>
-
-                        <!-- Author Info with Avatar -->
-                        <div class="flex items-center justify-center gap-4 border-t border-slate-100 pt-6">
+                        <div class="flex items-center justify-center gap-4 border-t border-slate-200 pt-6">
                             <div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xl shadow-inner border border-brand-100">
                                 ${t.author.charAt(0)}
                             </div>
@@ -839,13 +769,11 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             `).join('');
-            
             startTestimonialCycle();
         }
-
+        
         function updateSlides() {
             const slides = document.querySelectorAll('.testimonial-slide');
             slides.forEach((slide, index) => {
@@ -858,7 +786,7 @@
                 }
             });
         }
-
+        
         function nextTestimonial() {
             clearInterval(testimonialInterval);
             currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonials.length;
@@ -880,76 +808,43 @@
             }, 6000); 
         }
 
-        // Intersection Observer for Scroll Reveal
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Only animate once
-                }
-            });
-        }, observerOptions);
-
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            typeWriter(); 
             initCarousel();
             
-            // Observe elements with 'reveal' class
-            document.querySelectorAll('.reveal').forEach((element) => {
-                observer.observe(element);
+            VanillaTilt.init(document.querySelectorAll(".tilt-card"), {
+                max: 10,
+                speed: 400,
+                glare: true,
+                "max-glare": 0.2,
             });
-        });
-
-        // Mobile Menu Toggle
-        function toggleMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        // Close mobile menu when clicking a link
-        document.querySelectorAll('#mobile-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                document.getElementById('mobile-menu').classList.add('hidden');
-            });
-        });
-
-        // --- Accessibility Toolbar Logic ---
-        function toggleA11yMenu() {
-            const menu = document.getElementById('a11y-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        // Text Resize
-        let currentZoom = 100;
-        function resizeText(direction) {
-            if (direction === 0) currentZoom = 100;
-            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
-            else currentZoom = Math.max(currentZoom - 10, 90);
             
+            // Scroll Reveal
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        // Mobile Menu
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        
+        // Accessibility
+        let currentZoom = 100;
+        function resizeText(dir) {
+            if (dir === 0) currentZoom = 100;
+            else currentZoom = Math.max(90, Math.min(150, currentZoom + (dir * 10)));
             document.documentElement.style.fontSize = currentZoom + '%';
         }
-
-        // High Contrast Toggle
         function toggleContrast() {
             document.body.classList.toggle('high-contrast');
-            
-            // Persist choice
-            if (document.body.classList.contains('high-contrast')) {
-                localStorage.setItem('highContrast', 'true');
-            } else {
-                localStorage.removeItem('highContrast');
-            }
+            localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
         }
-
-        // Load saved preference
-        if (localStorage.getItem('highContrast') === 'true') {
-            document.body.classList.add('high-contrast');
-        }
+        if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
     </script>
 </body>
 </html>
