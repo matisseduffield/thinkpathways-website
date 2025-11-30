@@ -86,19 +86,19 @@
             transition: width 0.1s;
         }
 
-        /* Cursor Glow Effect */
+        /* ENHANCED Cursor Glow Effect */
         #cursor-glow {
             position: fixed;
             top: 0;
             left: 0;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+            width: 800px;
+            height: 800px;
+            /* Multi-color gradient for richer effect */
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, rgba(16, 185, 129, 0.15) 30%, rgba(255, 255, 255, 0) 70%);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
-            /* Z-Index increased to 40 so it floats above section backgrounds but below Nav (50) */
-            z-index: 40;
+            z-index: 40; /* Above backgrounds */
             mix-blend-mode: multiply;
             transition: opacity 0.5s ease;
         }
@@ -123,7 +123,17 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
         }
+        
+        /* Sticky Nav Shrink Effect */
+        nav.scrolled {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
         .dark .glass {
             background: rgba(30, 41, 59, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -150,11 +160,6 @@
         .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
         
-        /* Marquee Container */
-        .marquee-container:hover .animate-marquee {
-            animation-play-state: paused;
-        }
-
         /* High Contrast Overrides */
         .high-contrast { background-color: #000 !important; color: #ff0 !important; }
         .high-contrast * { background-color: #000 !important; color: #ff0 !important; border-color: #ff0 !important; }
@@ -167,24 +172,24 @@
     <!-- 1. Scroll Progress Bar -->
     <div id="scroll-progress"></div>
 
-    <!-- 2. Interactive Cursor Glow (Z-Index Fixed) -->
+    <!-- 2. Interactive Cursor Glow (ENHANCED) -->
     <div id="cursor-glow"></div>
 
     <!-- 3. Back to Top Button -->
-    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="back-to-top" class="fixed bottom-24 right-6 z-50 bg-brand-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 border-2 border-white/20">
-        <i class="fa-solid fa-arrow-up"></i>
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="back-to-top" class="fixed bottom-8 right-8 z-50 bg-brand-600 text-white w-14 h-14 rounded-full shadow-2xl hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 border-4 border-white">
+        <i class="fa-solid fa-arrow-up text-xl"></i>
     </button>
 
     <!-- Accessibility Skip -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50 font-bold">Skip to content</a>
 
     <!-- Navigation -->
-    <nav class="glass sticky top-0 z-50 shadow-sm transition-all duration-300">
+    <nav id="navbar" class="glass sticky top-0 z-50 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20">
+            <div class="flex justify-between h-20 items-center transition-all duration-300" id="nav-container">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-500/30 transition-transform hover:rotate-12">
                             <i class="fa-solid fa-hands-holding-circle text-xl"></i>
                         </div>
                         <span class="font-bold text-xl text-slate-900 tracking-tight">Think Pathways</span>
@@ -751,32 +756,6 @@
         </div>
     </footer>
 
-    <!-- Accessibility Toolbar -->
-    <div class="fixed bottom-4 left-4 z-50">
-        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
-            <i class="fa-solid fa-universal-access text-2xl"></i>
-        </button>
-        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
-            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
-            <div class="space-y-3">
-                <div>
-                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
-                    <div class="flex gap-2">
-                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
-                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
-                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 mb-1">Display</p>
-                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
-                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Firebase SDK (Add before </body> if not already there) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -801,6 +780,16 @@
                 const y = (window.innerHeight - e.pageY * speed) / 100;
                 blob.style.transform = `translateX(${x}px) translateY(${y}px)`;
             });
+        });
+
+        // --- Sticky Navbar Effect ---
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
         });
 
         // --- Scroll Progress & Back To Top ---
