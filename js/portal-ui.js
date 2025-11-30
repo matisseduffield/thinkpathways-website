@@ -1077,7 +1077,8 @@ const ClientDashboard = () => {
 
                     {/* 3. ACTION COLUMN (CLIENT SPECIFIC) */}
                     <div className="md:w-auto flex-shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between gap-3 border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor} flex items-center gap-1`}>
+                            {s.workerStatus === 'Completed' && <i className="fa-solid fa-check"></i>}
                             {s.statusLabel}
                         </span>
 
@@ -1097,46 +1098,6 @@ const ClientDashboard = () => {
                     </div>
 
                 </div>
-                
-                {/* --- SHIFT REPORT VISIBILITY --- */}
-                {(s.workerStatus === 'Completed' && (s.caseNotes || s.travel)) && (
-                    <div className="mt-3 w-full bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-600 pt-3 px-2">
-                            <div className="flex justify-between items-center mb-2">
-                            <div className="text-xs font-bold text-brand-600 uppercase">Shift Report</div>
-                            <button onClick={downloadPDF} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-100 flex items-center text-slate-600 shadow-sm"><i className="fa-solid fa-file-pdf mr-1 text-red-500"></i> Download PDF</button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                            <div>
-                                <p className="font-semibold text-slate-700 dark:text-slate-300">Summary:</p>
-                                <p className="text-slate-600 dark:text-slate-400 mb-2">{s.caseNotes?.summary || 'N/A'}</p>
-                                <p className="font-semibold text-slate-700 dark:text-slate-300">Goals:</p>
-                                <p className="text-slate-600 dark:text-slate-400">{s.caseNotes?.goals || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <div className="mb-2">
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Time: </span>
-                                    <span className="text-slate-600 dark:text-slate-400">{s.timesheet?.start} - {s.timesheet?.end}</span>
-                                </div>
-                                {s.travel?.totalKm > 0 && (
-                                    <div className="mb-2">
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
-                                        <span className="text-slate-600 dark:text-slate-400">{s.travel.totalKm} km</span>
-                                        <ul className="mt-1 pl-4 list-disc text-[10px] text-slate-500">
-                                            {s.travel.logs.map((log, i) => (
-                                                <li key={i}>{log.from} to {log.to} ({log.km}km)</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {s.caseNotes?.incidents === 'Yes' && (
-                                    <div className="bg-red-50 text-red-700 p-2 rounded border border-red-100">
-                                        <strong>Incident:</strong> {s.caseNotes.incidentDetails}
-                                    </div>
-                                )}
-                            </div>
-                            </div>
-                    </div>
-                )}
             </div>
         );
     };
