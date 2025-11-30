@@ -72,7 +72,6 @@
 <body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
     
     <!-- 1. IMMEDIATE PRE-LOADER (Pure HTML/CSS) -->
-    <!-- This shows while the huge React/Firebase libraries are downloading -->
     <div id="app-loader" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 flex items-center justify-center z-50 transition-opacity duration-500">
         <div class="text-center">
             <div class="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -80,7 +79,7 @@
         </div>
     </div>
 
-    <!-- Script to remove loader (Called by React when ready) -->
+    <!-- Script to remove loader -->
     <script>
         window.removeLoader = function() {
             const loader = document.getElementById('app-loader');
@@ -102,7 +101,6 @@
     </div>
     <script>
         window.addEventListener('error', function(e) {
-            // Only show if the loader is still present (meaning app failed to start)
             if(document.getElementById('app-loader')) {
                 const display = document.getElementById('global-error-display');
                 const msg = document.getElementById('global-error-message');
@@ -118,12 +116,12 @@
     <!-- 3. APP ROOT -->
     <div id="root"></div>
 
-    <!-- 4. LIBRARIES -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 4. LIBRARIES (OPTIMIZED FOR PRODUCTION) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     
-    <!-- Firebase (Must include Storage now!) -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -132,17 +130,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- 5. YOUR APPLICATION FILES -->
-    <!-- Version 4.0 forces a fresh download -->
-    
-    <!-- Load Logic First (Firebase, Auth, Data) -->
-    <script type="text/babel" src="js/portal-logic.js?v=7.0"></script>
-    
-    <!-- Load UI Second (Dashboards, Components) -->
-    <script type="text/babel" src="js/portal-ui.js?v=7.0"></script>
+    <!-- Updated version string for cache busting -->
+    <script type="text/babel" src="js/portal-logic.js?v=8.0"></script>
+    <script type="text/babel" src="js/portal-ui.js?v=8.0"></script>
 
     <!-- 6. START APP -->
     <script type="text/babel">
-        // Mount the React Application
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>

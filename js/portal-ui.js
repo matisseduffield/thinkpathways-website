@@ -96,8 +96,13 @@ const CalendarView = ({ shifts, onDateClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDay = getFirstDayOfMonth(year, month); 
+    
+    // Optimized: Memoize calendar calculations to prevent re-calc on every render
+    const { daysInMonth, firstDay } = useMemo(() => ({
+        daysInMonth: getDaysInMonth(year, month),
+        firstDay: getFirstDayOfMonth(year, month)
+    }), [year, month]);
+
     const shiftsByDate = useMemo(() => { const map = {}; shifts.forEach(s => { if (!s.date) return; if (s.status === 'Cancelled' || s.status === 'Declined') return; if (!map[s.date]) map[s.date] = []; map[s.date].push(s); }); return map; }, [shifts]);
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -193,13 +198,27 @@ const AdminActionModal = ({ shift, actionType, onClose, onConfirm }) => { const 
 
 const DayDetailsModal = ({ shifts, onClose }) => { return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-lg animate-pop-in relative max-h-[80vh] overflow-y-auto border border-slate-100 dark:border-slate-700"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Shifts Details</h3><div className="space-y-3">{shifts.map((s, idx) => (<div key={idx} className="border border-slate-200 dark:border-slate-700 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50"><div className="flex justify-between items-center mb-1"><span className="font-bold text-slate-900 dark:text-white">{s.userName}</span><span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${s.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{s.status}</span></div><div className="text-sm text-slate-600 dark:text-slate-300">{s.service} • {s.startTime}-{s.endTime}</div></div>))}</div></div></div>); }
 
-// --- CLIENT CARD ---
+// --- CLIENT CARD (ADMIN VIEW) ---
 const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly, workersList, onViewWorker, onRemoveWorker, onOpenDocs }) => {
     const pendingCount = client.stats.pending;
     const upcomingCount = client.stats.upcoming;
-    const scheduled = client.shifts.filter(s => s.status === 'Confirmed' && new Date(s.date) >= new Date().setHours(0,0,0,0)).sort((a, b) => getSortValue(a) - getSortValue(b));
-    const pending = client.shifts.filter(s => s.status === 'Pending').sort((a, b) => getSortValue(a) - getSortValue(b));
-    const history = client.shifts.filter(s => s.status === 'Cancelled' || s.status === 'Declined' || new Date(s.date) < new Date().setHours(0,0,0,0)).sort((a, b) => getSortValue(b) - getSortValue(a));
+    
+    // Optimized: Memoize filtering and sorting to prevent re-calc on every render
+    const { scheduled, pending, history } = useMemo(() => {
+        const today = new Date().setHours(0, 0, 0, 0);
+        return {
+            scheduled: client.shifts
+                .filter(s => s.status === 'Confirmed' && new Date(s.date) >= today)
+                .sort((a, b) => getSortValue(a) - getSortValue(b)),
+            pending: client.shifts
+                .filter(s => s.status === 'Pending')
+                .sort((a, b) => getSortValue(a) - getSortValue(b)),
+            history: client.shifts
+                .filter(s => s.status === 'Cancelled' || s.status === 'Declined' || new Date(s.date) < today)
+                .sort((a, b) => getSortValue(b) - getSortValue(a))
+        };
+    }, [client.shifts]);
+
     const renderList = showUnassignedOnly ? scheduled.filter(s => !s.assignedWorkerEmail) : [...scheduled, ...pending, ...history];
     if (showUnassignedOnly && renderList.length === 0) return null;
 
@@ -942,6 +961,186 @@ const ClientDashboard = () => {
 
     const nextShift = upcomingShifts.length > 0 ? upcomingShifts[0] : null;
 
+    // --- CLIENT-SPECIFIC SHIFT ITEM ---
+    const ClientShiftItem = ({ s }) => {
+        let statusColor = "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600";
+        if (s.status === 'Confirmed') statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800";
+        if (s.status === 'Pending') statusColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
+        if (s.status === 'Cancelled' || s.status === 'Declined') statusColor = "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+
+        // --- PDF GENERATION HANDLER ---
+        const downloadPDF = () => {
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(`
+                <html>
+                <head>
+                    <title>Shift Report - ${s.dateDisplay}</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>@media print { body { margin: 0; } .no-print { display: none; } }</style>
+                </head>
+                <body class="p-10 font-sans bg-white">
+                    <div class="max-w-2xl mx-auto border border-gray-200 p-8 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h1 class="text-2xl font-bold text-slate-900">Shift Report</h1>
+                            <div class="text-right">
+                                <p class="font-bold text-brand-600">Think Pathways</p>
+                                <p class="text-xs text-gray-500">${new Date().toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Client</p><p class="font-medium">${s.userName}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Worker</p><p class="font-medium">${s.assignedWorkerEmail || 'Unknown'}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Date</p><p class="font-medium">${s.dateDisplay}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Time</p><p class="font-medium">${s.timesheet?.start || s.startTime} - ${s.timesheet?.end || s.endTime}</p></div>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Summary of Support</p>
+                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.summary || 'No summary provided.'}</div>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Goal Progress</p>
+                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.goals || 'No goals recorded.'}</div>
+                        </div>
+                        
+                        ${s.travel?.totalKm > 0 ? `
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel Claim (${s.travel.totalKm} km)</p>
+                            <table class="w-full text-xs text-left border-collapse border border-gray-200">
+                                <thead class="bg-gray-50"><tr><th class="p-2 border">From</th><th class="p-2 border">To</th><th class="p-2 border">Reason</th><th class="p-2 border">KM</th></tr></thead>
+                                <tbody>
+                                    ${s.travel.logs.map(log => `
+                                    <tr>
+                                        <td class="p-2 border">${log.from}</td>
+                                        <td class="p-2 border">${log.to}</td>
+                                        <td class="p-2 border">${log.reason}</td>
+                                        <td class="p-2 border">${log.km}</td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>` : ''}
+
+                        ${s.caseNotes?.incidents === 'Yes' ? `<div class="mb-6 p-4 bg-red-50 border border-red-100 rounded"><p class="text-red-700 font-bold text-sm mb-1">Incident Reported</p><p class="text-red-600 text-sm">${s.caseNotes.incidentDetails}</p></div>` : ''}
+                        <div class="mt-12 pt-4 border-t text-center text-xs text-gray-400">Generated via Think Pathways Portal</div>
+                    </div>
+                    <script>window.print();</script>
+                </body>
+                </html>
+            `);
+            reportWindow.document.close();
+        };
+
+        return (
+            <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
+                <div className="flex flex-col md:flex-row gap-4">
+                    
+                    {/* 1. DATE COLUMN */}
+                    <div className="md:w-24 flex-shrink-0 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-2">
+                        <div className="text-center md:text-left">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                {s.dateDisplay.split(' ').length > 2 ? s.dateDisplay.split(' ')[2] : ''}
+                            </div>
+                            <div className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                                {s.dateDisplay.split(' ')[0]}
+                            </div>
+                            <div className="text-xs text-slate-500 uppercase">
+                                {s.dateDisplay.split(' ').length > 1 ? s.dateDisplay.split(' ')[1] : ''}
+                            </div>
+                        </div>
+                        <div className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md whitespace-nowrap">
+                            {s.startTime} - {s.endTime}
+                        </div>
+                    </div>
+
+                    {/* 2. CONTENT COLUMN */}
+                    <div className="flex-grow border-l-0 md:border-l border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h4 className="font-bold text-slate-900 dark:text-white text-lg">{s.service}</h4>
+                            {s.recurrence && s.recurrence !== 'none' && (
+                                <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase font-bold tracking-wide">
+                                    {s.recurrence}
+                                </span>
+                            )}
+                        </div>
+                        
+                        {s.notes && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400 italic flex items-start gap-1">
+                                <i className="fa-regular fa-note-sticky mt-0.5"></i> <span>{s.notes}</span>
+                            </div>
+                        )}
+                        
+                        {s.assignedWorkerEmail && (
+                            <div className="mt-2 text-xs text-slate-500 flex items-center gap-1">
+                                <i className="fa-solid fa-user-check text-green-500"></i> Worker Assigned
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. ACTION COLUMN (CLIENT SPECIFIC) */}
+                    <div className="md:w-auto flex-shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between gap-3 border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>
+                            {s.statusLabel}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                            {s.status === 'Pending' && (
+                                <button onClick={() => setCancelModalShift(s)} className="text-xs text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400 dark:hover:text-red-400" title="Withdraw Request">
+                                    <i className="fa-solid fa-ban mr-1"></i> Withdraw
+                                </button>
+                            )}
+                            
+                            {s.status === 'Confirmed' && (
+                                <button onClick={() => setCancelModalShift(s)} className="text-xs text-red-500 hover:text-red-700 font-bold border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-red-50 dark:bg-red-900/10 dark:border-red-900">
+                                    Cancel
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                </div>
+                
+                {/* --- SHIFT REPORT VISIBILITY --- */}
+                {(s.workerStatus === 'Completed' && (s.caseNotes || s.travel)) && (
+                    <div className="mt-3 w-full bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-600 pt-3 px-2">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-brand-600 uppercase">Shift Report</div>
+                            <button onClick={downloadPDF} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-100 flex items-center text-slate-600 shadow-sm"><i className="fa-solid fa-file-pdf mr-1 text-red-500"></i> Download PDF</button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">Summary:</p>
+                                <p className="text-slate-600 dark:text-slate-400 mb-2">{s.caseNotes?.summary || 'N/A'}</p>
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">Goals:</p>
+                                <p className="text-slate-600 dark:text-slate-400">{s.caseNotes?.goals || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <div className="mb-2">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Time: </span>
+                                    <span className="text-slate-600 dark:text-slate-400">{s.timesheet?.start} - {s.timesheet?.end}</span>
+                                </div>
+                                {s.travel?.totalKm > 0 && (
+                                    <div className="mb-2">
+                                        <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
+                                        <span className="text-slate-600 dark:text-slate-400">{s.travel.totalKm} km</span>
+                                        <ul className="mt-1 pl-4 list-disc text-[10px] text-slate-500">
+                                            {s.travel.logs.map((log, i) => (
+                                                <li key={i}>{log.from} to {log.to} ({log.km}km)</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                {s.caseNotes?.incidents === 'Yes' && (
+                                    <div className="bg-red-50 text-red-700 p-2 rounded border border-red-100">
+                                        <strong>Incident:</strong> {s.caseNotes.incidentDetails}
+                                    </div>
+                                )}
+                            </div>
+                            </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-12 transition-colors dark:bg-slate-900">
             {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
@@ -1026,7 +1225,7 @@ const ClientDashboard = () => {
                                             {upcomingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No confirmed upcoming sessions.</div> : 
                                             <div className="space-y-3">
                                                 {upcomingShifts.map(s => (
-                                                    <ShiftItem key={s.id} s={s} />
+                                                    <ClientShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
@@ -1037,7 +1236,7 @@ const ClientDashboard = () => {
                                             {pendingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No pending requests.</div> : 
                                             <div className="space-y-3">
                                                 {pendingShifts.map(s => (
-                                                    <ShiftItem key={s.id} s={s} />
+                                                    <ClientShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
@@ -1048,7 +1247,7 @@ const ClientDashboard = () => {
                                             {historyShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No history found.</div> : 
                                             <div className="space-y-3 opacity-75">
                                                 {historyShifts.map(s => (
-                                                    <ShiftItem key={s.id} s={s} />
+                                                    <ClientShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
