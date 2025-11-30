@@ -5,22 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make a Referral - Think Pathways</title>
     
-    <!-- SEO & Meta Tags -->
-    <meta name="description" content="Submit a referral for NDIS support services with Think Pathways Adelaide. We provide trusted in-home and community access support.">
-    <meta name="keywords" content="NDIS Referral Adelaide, Disability Support Referral, Support Coordinator Adelaide, Think Pathways Referral">
-    <meta name="author" content="Think Pathways">
-    <meta name="robots" content="index, follow">
-
     <!-- FEATURE 1: Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2270%22 font-family=%22Arial, sans-serif%22 font-size=%2255%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>TP</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230ea5e9%22/></svg>">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome -->
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Inter for high readability -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
@@ -108,117 +102,193 @@
             </p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 md:p-12">
-            
-            <!-- Formspree Form -->
-            <form action="https://formspree.io/f/xdkvkyep" method="POST" class="space-y-10">
-                <!-- Redirect to success page -->
-                <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
-                <!-- Subject line for your email notification -->
-                <input type="hidden" name="_subject" value="New Referral Submission">
-
-                <!-- Section 1: Referrer Details -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
-                        <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">1</span>
-                        Referrer Details
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Your Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="referrer_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Organization <span class="text-red-500">*</span></label>
-                            <input type="text" name="referrer_org" required placeholder="e.g., Support Coordination Co." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
-                            <input type="email" name="referrer_email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
-                            <input type="tel" name="referrer_phone" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <!-- Left Column: Form -->
+            <div class="lg:col-span-7">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
+                    
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm">
+                        <div class="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
+                        <p class="font-bold text-slate-600 text-lg">Submitting securely...</p>
                     </div>
-                </div>
 
-                <!-- Section 2: Participant Details -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
-                        <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">2</span>
-                        Participant Details
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Participant Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="participant_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                    <!-- Success Message -->
+                    <div id="successMessage" class="hidden text-center py-12 animate-fade-in-up">
+                        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <i class="fa-solid fa-check text-green-600 text-4xl"></i>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                            <input type="date" name="participant_dob" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Suburb / Postcode <span class="text-red-500">*</span></label>
-                            <input type="text" name="participant_location" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">NDIS Number (If known)</label>
-                            <input type="text" name="ndis_number" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                        </div>
+                        <h2 class="text-2xl font-bold text-slate-900 mb-3">Referral Received!</h2>
+                        <p class="text-slate-600 mb-8 max-w-md mx-auto">Thank you for trusting Think Pathways. We have securely received the details and our intake team has been notified.</p>
+                        <button onclick="window.location.reload()" class="bg-slate-100 text-slate-700 font-bold py-3 px-8 rounded-xl hover:bg-slate-200 transition-colors">Submit Another</button>
                     </div>
-                </div>
 
-                <!-- Section 3: Support Requirements -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
-                        <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">3</span>
-                        Support Requirements
-                    </h3>
-                    <div class="space-y-6">
+                    <!-- The Form -->
+                    <form id="referralForm" class="space-y-10">
+                        <!-- Section 1: Referrer Details -->
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Plan Funding Type <span class="text-red-500">*</span></label>
-                            <select name="funding_type" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
-                                <option value="" disabled selected>Select funding type...</option>
-                                <option>Plan Managed</option>
-                                <option>Self Managed</option>
-                                <option>NDIA Managed (Agency)</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Services Required <span class="text-red-500">*</span></label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                                    <input type="checkbox" name="services[]" value="In-Home Support" class="text-brand-600 focus:ring-brand-500 rounded">
-                                    <span class="ml-2 text-slate-700 text-sm">In-Home Support</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                                    <input type="checkbox" name="services[]" value="Community Access" class="text-brand-600 focus:ring-brand-500 rounded">
-                                    <span class="ml-2 text-slate-700 text-sm">Community Access / Social</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                                    <input type="checkbox" name="services[]" value="Transport" class="text-brand-600 focus:ring-brand-500 rounded">
-                                    <span class="ml-2 text-slate-700 text-sm">Transport Assistance</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                                    <input type="checkbox" name="services[]" value="Skill Development" class="text-brand-600 focus:ring-brand-500 rounded">
-                                    <span class="ml-2 text-slate-700 text-sm">Skill Development / Mentoring</span>
-                                </label>
+                            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
+                                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">1</span>
+                                Referrer Details
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Your Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="referrer_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Organization <span class="text-red-500">*</span></label>
+                                    <input type="text" id="referrer_org" required placeholder="e.g., Support Coordination Co." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+                                    <input type="email" id="referrer_email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+                                    <input type="tel" id="referrer_phone" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Section 2: Participant Details -->
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Goals & Notes <span class="text-red-500">*</span></label>
-                            <textarea name="goals" rows="4" required placeholder="Briefly describe the participant's goals, preferences, or specific support needs..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
+                                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">2</span>
+                                Participant Details
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Participant Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="participant_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                                    <input type="date" id="participant_dob" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Suburb / Postcode <span class="text-red-500">*</span></label>
+                                    <input type="text" id="participant_location" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">NDIS Number</label>
+                                    <input type="text" id="ndis_number" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Support Requirements -->
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-6 flex items-center">
+                                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm mr-3">3</span>
+                                Support Requirements
+                            </h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Plan Funding Type <span class="text-red-500">*</span></label>
+                                    <select id="funding_type" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                                        <option value="" disabled selected>Select funding type...</option>
+                                        <option>Plan Managed</option>
+                                        <option>Self Managed</option>
+                                        <option>NDIA Managed (Agency)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-2">Services Required <span class="text-red-500">*</span></label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                                            <input type="checkbox" class="service-check text-brand-600 focus:ring-brand-500 rounded mr-3" value="In-Home Support">
+                                            <span class="text-slate-700 text-sm">In-Home Support</span>
+                                        </label>
+                                        <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                                            <input type="checkbox" class="service-check text-brand-600 focus:ring-brand-500 rounded mr-3" value="Community Access">
+                                            <span class="text-slate-700 text-sm">Community Access</span>
+                                        </label>
+                                        <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                                            <input type="checkbox" class="service-check text-brand-600 focus:ring-brand-500 rounded mr-3" value="Transport">
+                                            <span class="text-slate-700 text-sm">Transport Assistance</span>
+                                        </label>
+                                        <label class="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                                            <input type="checkbox" class="service-check text-brand-600 focus:ring-brand-500 rounded mr-3" value="Skill Development">
+                                            <span class="text-slate-700 text-sm">Skill Development</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Goals & Notes <span class="text-red-500">*</span></label>
+                                    <textarea id="goals" rows="4" required placeholder="Briefly describe the participant's goals or specific support needs..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex justify-center items-center">
+                            Submit Referral <i class="fa-solid fa-paper-plane ml-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Process & Info -->
+            <div class="lg:col-span-5 space-y-8">
+                <!-- Info Card -->
+                <div class="bg-slate-900 text-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-lg font-bold mb-6">Have Questions?</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-phone text-brand-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Call Us Directly</p>
+                                <p class="text-lg font-medium">+61 420 673 303</p>
+                                <p class="text-sm text-slate-400 mt-1">Available Mon-Fri, 9am - 5pm</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="fa-solid fa-envelope text-brand-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Email Intake</p>
+                                <a href="mailto:care@thinkpathways.com" class="text-lg font-medium hover:text-brand-400 transition-colors">care@thinkpathways.com</a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                    Submit Referral
-                </button>
-            </form>
+                <!-- Process Steps -->
+                <div class="bg-brand-50 rounded-2xl p-8 border border-brand-100">
+                    <h3 class="text-lg font-bold text-brand-900 mb-4">What happens next?</h3>
+                    <ul class="space-y-6 relative">
+                        <!-- Connector Line -->
+                        <div class="absolute left-[11px] top-2 bottom-4 w-0.5 bg-brand-200"></div>
+                        
+                        <li class="flex items-start relative z-10">
+                            <div class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold mr-4 mt-0.5 border-2 border-white shadow-sm">1</div>
+                            <div>
+                                <strong class="text-brand-900 text-sm block">Review</strong>
+                                <p class="text-xs text-brand-800 mt-1">Our intake team reviews the details within 24 hours.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start relative z-10">
+                            <div class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold mr-4 mt-0.5 border-2 border-white shadow-sm">2</div>
+                            <div>
+                                <strong class="text-brand-900 text-sm block">Contact</strong>
+                                <p class="text-xs text-brand-800 mt-1">We contact the referrer or participant to arrange a meet & greet.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start relative z-10">
+                            <div class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold mr-4 mt-0.5 border-2 border-white shadow-sm">3</div>
+                            <div>
+                                <strong class="text-brand-900 text-sm block">Agreement</strong>
+                                <p class="text-xs text-brand-800 mt-1">We sign a service agreement and schedule the first shift.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -242,7 +312,6 @@
                         <li><a href="index.html#services" class="hover:text-white transition-colors">Our Services</a></li>
                         <li><a href="activities.html" class="hover:text-white transition-colors">Activities</a></li>
                         <li><a href="referral.html" class="hover:text-white transition-colors">Make a Referral</a></li>
-                        <li><a href="resources.html" class="hover:text-white transition-colors">Adelaide Resources</a></li>
                         <li><a href="index.html#contact" class="hover:text-white transition-colors">Contact</a></li>
                     </ul>
                 </div>
@@ -288,7 +357,13 @@
         </div>
     </div>
 
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
     <script>
+        // Accessibility Logic
         function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
         function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
         let currentZoom = 100;
@@ -304,6 +379,59 @@
             else localStorage.removeItem('highContrast');
         }
         if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
+
+        // Firebase Logic
+        const firebaseConfig = {
+             apiKey: "AIzaSyDO315mAW8JphkSPqcp8Z9VPakBIUlCrl8", 
+             authDomain: "thinkpathways.firebaseapp.com", 
+             projectId: "thinkpathways", 
+             storageBucket: "thinkpathways.firebasestorage.app", 
+             messagingSenderId: "31616186160", 
+             appId: "1:31616186160:web:646c33b844b999e81efaf5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Anonymous auth to ensure write permissions
+        auth.signInAnonymously().catch(console.error);
+
+        // Form Submission
+        document.getElementById('referralForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
+            const services = Array.from(document.querySelectorAll('.service-check:checked')).map(cb => cb.value);
+
+            const data = {
+                referrer_name: document.getElementById('referrer_name').value,
+                referrer_org: document.getElementById('referrer_org').value,
+                referrer_email: document.getElementById('referrer_email').value,
+                referrer_phone: document.getElementById('referrer_phone').value,
+                participant_name: document.getElementById('participant_name').value,
+                participant_dob: document.getElementById('participant_dob').value,
+                participant_location: document.getElementById('participant_location').value,
+                ndis_number: document.getElementById('ndis_number').value,
+                funding_type: document.getElementById('funding_type').value,
+                services: services,
+                goals: document.getElementById('goals').value,
+                status: 'New', // Status for Admin Portal
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('artifacts/thinkpathways/public/data/referrals').add(data);
+                
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('referralForm').classList.add('hidden');
+                document.getElementById('successMessage').classList.remove('hidden');
+                window.scrollTo(0, 0);
+            } catch (error) {
+                console.error("Error:", error);
+                alert("There was a technical error. Please try again or contact us directly.");
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>

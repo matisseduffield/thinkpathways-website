@@ -39,6 +39,8 @@ const { useState, useEffect, useMemo, useRef, useContext, createContext } = Reac
 const COLLECTION_PATH = 'artifacts/thinkpathways/public/data/shifts';
 const WORKERS_PATH = 'artifacts/thinkpathways/public/data/workers';
 const USERS_PATH = 'artifacts/thinkpathways/public/data/users'; 
+// !!! NEW COLLECTION !!!
+const REFERRALS_PATH = 'artifacts/thinkpathways/public/data/referrals';
 const ADMIN_EMAIL = window.__admin_email;
 
 // --- HELPERS ---
@@ -108,36 +110,34 @@ const useAuthAndData = () => {
     const [workerShifts, setWorkerShifts] = useState([]);
     const [workersList, setWorkersList] = useState([]); 
     const [usersList, setUsersList] = useState([]);
+    // !!! NEW STATE FOR REFERRALS !!!
+    const [referralsList, setReferralsList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (configMissing || !auth) { setIsAuthReady(true); return; }
         const unsubscribe = auth.onAuthStateChanged(async (u) => {
             if (u) {
-                // !!! FORCE TOKEN REFRESH !!!
-                // This ensures we get the latest 'role' claims immediately after they are updated by the backend.
-                // Without this, the user has to wait up to 1 hour or manually refresh the page.
                 try {
+                    // Force refresh to get latest custom claims (roles)
                     await u.getIdToken(true);
-                    // Reload the ID token result to get the claims
                     const idTokenResult = await u.getIdTokenResult();
                     const claims = idTokenResult.claims;
                     
                     setUser(u);
                     const email = u.email.toLowerCase();
                     
-                    // 1. Check Admin (via Claims OR Email)
+                    // 1. Check Admin
                     if (claims.isAdmin || email === ADMIN_EMAIL.toLowerCase()) {
                         setIsAdmin(true);
                     } else {
                         setIsAdmin(false);
                     }
 
-                    // 2. Check Worker (via Claims)
+                    // 2. Check Worker
                     if (claims.isWorker) {
                         setIsWorker(true);
                         setIsClient(false);
-                        // Try to fetch profile
                         try {
                             const q = db.collection(WORKERS_PATH).where("email", "==", email);
                             const snapshot = await q.get();
@@ -146,12 +146,12 @@ const useAuthAndData = () => {
                             }
                         } catch(e) { console.log("Worker profile restricted."); }
                     } 
-                    // 3. Check Client (via Claims)
+                    // 3. Check Client
                     else if (claims.isClient) {
                         setIsClient(true);
                         setIsWorker(false);
                     } 
-                    // 4. Fallback (Unverified)
+                    // 4. Fallback
                     else {
                         setIsWorker(false);
                         setIsClient(false);
@@ -159,7 +159,6 @@ const useAuthAndData = () => {
 
                 } catch (error) {
                     console.error("Token Refresh Error:", error);
-                    // Fallback to basic email check if token fails
                     setUser(u);
                 }
             } else {
@@ -174,7 +173,7 @@ const useAuthAndData = () => {
         return () => unsubscribe();
     }, []);
 
-    // Data Subscription - SECURE QUERIES
+    // Data Subscription
     useEffect(() => {
         if (!user) {
             setShifts([]);
@@ -234,15 +233,30 @@ const useAuthAndData = () => {
     // Admin Subscriptions
     useEffect(() => {
         if (!isAdmin) return;
+        
+        // Workers List
         const unsubWorkers = db.collection(WORKERS_PATH).onSnapshot((snapshot) => {
             const wList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setWorkersList(wList);
         });
+        
+        // Users List
         const unsubUsers = db.collection(USERS_PATH).onSnapshot((snapshot) => {
             const uList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setUsersList(uList);
         });
-        return () => { unsubWorkers(); unsubUsers(); };
+
+        // !!! NEW: Referrals List Subscription !!!
+        const unsubReferrals = db.collection(REFERRALS_PATH).orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+            const rList = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                dateDisplay: doc.data().timestamp ? new Date(doc.data().timestamp.toDate()).toLocaleDateString() : 'Pending'
+            }));
+            setReferralsList(rList);
+        });
+
+        return () => { unsubWorkers(); unsubUsers(); unsubReferrals(); };
     }, [isAdmin]);
 
     const login = (email, password) => auth.signInWithEmailAndPassword(email, password);
@@ -358,6 +372,15 @@ const useAuthAndData = () => {
     const uploadDocument = async (folder, id, file, docName) => { if (!storage) return { success: false, msg: 'Storage error' }; try { const ref = storage.ref().child(`${folder}/${id}/${Date.now()}_${file.name}`); const snapshot = await ref.put(file); const url = await snapshot.ref.getDownloadURL(); await db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id).update({ documents: firebase.firestore.FieldValue.arrayUnion({ name: docName || file.name, url: url, uploadedAt: Date.now() }) }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     const deleteDocument = async (folder, id, docObject) => { try { await db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id).update({ documents: firebase.firestore.FieldValue.arrayRemove(docObject) }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
 
+    // !!! NEW FUNCTION: Archive Referral !!!
+    const archiveReferral = async (id) => {
+        if (!isAdmin) return;
+        try {
+            await db.collection(REFERRALS_PATH).doc(id).update({ status: 'Archived' });
+            return { success: true };
+        } catch (e) { return { success: false, msg: e.message }; }
+    };
+
     const exportToCSV = () => {
         if (!shifts || shifts.length === 0) return;
         const dataToExport = shifts.filter(s => s.status === 'Confirmed' || s.workerStatus === 'Completed');
@@ -394,8 +417,10 @@ const useAuthAndData = () => {
 
     return { 
         user, isAdmin, isWorker, isClient, workerProfile, isAuthReady, shifts, workerShifts, workersList, usersList, isLoading, 
+        referralsList, // EXPORTED
         login, signup, resetPassword, logout, updateProfile, bookShift, updateShiftStatus, 
         assignWorker, removeWorker, workerResponse, completeShift, addWorkerToDB, deleteWorkerFromDB, updateWorkerInDB,
-        verifyUserAsClient, promoteUserToWorker, revokeUserRole, uploadDocument, deleteDocument, exportToCSV
+        verifyUserAsClient, promoteUserToWorker, revokeUserRole, uploadDocument, deleteDocument, exportToCSV,
+        archiveReferral // EXPORTED
     };
 };
