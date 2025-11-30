@@ -97,7 +97,8 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
-            z-index: 0;
+            /* Z-Index increased to 40 so it floats above section backgrounds but below Nav (50) */
+            z-index: 40;
             mix-blend-mode: multiply;
             transition: opacity 0.5s ease;
         }
@@ -166,11 +167,11 @@
     <!-- 1. Scroll Progress Bar -->
     <div id="scroll-progress"></div>
 
-    <!-- 2. Interactive Cursor Glow -->
+    <!-- 2. Interactive Cursor Glow (Z-Index Fixed) -->
     <div id="cursor-glow"></div>
 
     <!-- 3. Back to Top Button -->
-    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="back-to-top" class="fixed bottom-24 right-6 z-40 bg-brand-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 border-2 border-white/20">
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="back-to-top" class="fixed bottom-24 right-6 z-50 bg-brand-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 border-2 border-white/20">
         <i class="fa-solid fa-arrow-up"></i>
     </button>
 
@@ -232,8 +233,8 @@
             <div class="parallax-blob absolute bottom-20 left-20 w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s" data-speed="2"></div>
         </div>
 
-        <!-- Hero Section -->
-        <section id="home" class="relative overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200 z-10">
+        <!-- 1. Hero Section (WHITE) -->
+        <section id="home" class="relative bg-white overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200 z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div class="text-center lg:text-left reveal">
                     <div class="inline-flex items-center px-4 py-1.5 rounded-full border border-brand-300 bg-white/90 backdrop-blur-sm text-brand-800 text-sm font-bold uppercase tracking-wide mb-6 shadow-sm">
@@ -265,8 +266,8 @@
             </div>
         </section>
 
-        <!-- Services Section (With 3D Tilt Cards) -->
-        <section id="services" class="py-24 bg-white/80 backdrop-blur-sm relative z-10">
+        <!-- 2. Services Section (LIGHT BLUE) -->
+        <section id="services" class="py-24 bg-brand-50 relative z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center reveal mb-16">
                     <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-2">Our Services</h2>
@@ -275,7 +276,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Service Card 1 -->
-                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-house-user"></i>
@@ -288,7 +289,7 @@
                     </div>
 
                     <!-- Service Card 2 -->
-                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-people-group"></i>
@@ -301,7 +302,7 @@
                     </div>
 
                     <!-- Service Card 3 -->
-                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-graduation-cap"></i>
@@ -314,7 +315,7 @@
                     </div>
 
                     <!-- Service Card 4 -->
-                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-car"></i>
@@ -327,7 +328,7 @@
                     </div>
 
                     <!-- Service Card 5 -->
-                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-heart-pulse"></i>
@@ -340,7 +341,7 @@
                     </div>
 
                      <!-- Service Card 6 -->
-                     <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                     <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-white border-slate-200" data-tilt data-tilt-max="5">
                         <div class="tilt-content">
                             <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-3xl shadow-sm">
                                 <i class="fa-solid fa-clipboard-list"></i>
@@ -361,7 +362,7 @@
             </div>
         </section>
 
-        <!-- Activities Banner (Darker & richer background) -->
+        <!-- Activities Banner (DARK BLUE - Break) -->
         <section class="py-24 bg-brand-800 relative overflow-hidden z-10">
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 20px 20px;"></div>
             <!-- Gradient Overlay -->
@@ -378,8 +379,8 @@
             </div>
         </section>
 
-        <!-- NEW: Our Core Values Section (Subtle Background) -->
-        <section class="py-24 bg-slate-50 border-b border-slate-200 z-10 relative">
+        <!-- 3. Our Core Values Section (WHITE) -->
+        <section class="py-24 bg-white border-b border-slate-200 z-10 relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-20 reveal">
                     <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Our Philosophy</h2>
@@ -411,7 +412,7 @@
             </div>
         </section>
 
-        <!-- Onboarding Journey (Soft Blue Background) -->
+        <!-- 4. Onboarding Journey (LIGHT BLUE) -->
         <section class="py-24 bg-brand-50 z-10 relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-20 reveal">
@@ -469,7 +470,7 @@
             </div>
         </section>
 
-        <!-- MEET THE FOUNDER SECTION -->
+        <!-- 5. Founder Section (WHITE) -->
         <section id="about" class="py-24 bg-white z-10 relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="glass rounded-3xl p-10 md:p-16 shadow-xl border border-slate-200 reveal bg-slate-50/50">
@@ -529,7 +530,7 @@
             </div>
         </section>
 
-        <!-- Testimonial Section (UPGRADED MARQUEE) -->
+        <!-- Testimonial Section (DARK) -->
         <section class="py-24 bg-slate-900 relative overflow-hidden z-10">
             <!-- Decorative Background Grid -->
             <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px); background-size: 40px 40px;"></div>
@@ -554,8 +555,8 @@
             </div>
         </section>
 
-        <!-- FAQ Section (Restored & Styled) -->
-        <section id="faq" class="py-24 bg-white z-10 relative">
+        <!-- 6. FAQ Section (LIGHT BLUE) -->
+        <section id="faq" class="py-24 bg-brand-50 z-10 relative">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 reveal">
                     <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
@@ -564,7 +565,7 @@
                 
                 <div class="space-y-6">
                     <!-- FAQ Item 1 -->
-                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-white">
                         <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
                             <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-circle-question"></i></div>
                             Are you NDIS registered?
@@ -575,7 +576,7 @@
                     </div>
 
                     <!-- FAQ Item 2 -->
-                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-white">
                         <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
                             <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div>
                             What areas do you service?
@@ -586,7 +587,7 @@
                     </div>
 
                     <!-- FAQ Item 3 -->
-                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-white">
                         <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
                             <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
                             Is there a waiting list?
@@ -599,8 +600,8 @@
             </div>
         </section>
 
-        <!-- Contact Section (Glassmorphism) -->
-        <section id="contact" class="py-24 bg-brand-50 relative overflow-hidden z-10">
+        <!-- 7. Contact Section (WHITE) -->
+        <section id="contact" class="py-24 bg-white relative overflow-hidden z-10">
             <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
                 <div class="absolute top-20 right-0 w-96 h-96 bg-brand-300 rounded-full blur-3xl mix-blend-multiply"></div>
                 <div class="absolute bottom-0 left-20 w-72 h-72 bg-accent-300 rounded-full blur-3xl mix-blend-multiply"></div>
