@@ -157,7 +157,27 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"><div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-pop-in relative border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]"><button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i className="fa-solid fa-xmark text-xl"></i></button><h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">My Profile</h3>{msg && <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg mb-4 flex items-center"><i className="fa-solid fa-check-circle mr-2"></i>{msg}</div>}<div className="overflow-y-auto pr-2"><form id="profileForm" onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Full Name</label><input required className="w-full p-3 bg-slate-50 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-700 dark:text-white transition-all" value={name} onChange={e=>setName(e.target.value)} /></div><div><label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Email</label><input disabled className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-600/50 dark:text-slate-400" value={user.email} /></div>
-        {isWorker && workerProfile && (<div className="pt-4 border-t border-slate-100 dark:border-slate-600"><h4 className="text-sm font-bold text-brand-600 mb-3">Compliance Expiry Dates</h4><div className="grid grid-cols-2 gap-3 mb-4"><div><label className="block text-[10px] font-bold text-slate-400 uppercase">Screening Check</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={screening} onChange={e => setScreening(e.target.value)} /></div><div><label className="block text-[10px] font-bold text-slate-400 uppercase">First Aid</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={firstAid} onChange={e => setFirstAid(e.target.value)} /></div><div><label className="block text-[10px] font-bold text-slate-400 uppercase">CPR</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={cpr} onChange={e => setCpr(e.target.value)} /></div></div><DocumentManager folder="workers" id={workerProfile.id} documents={workerProfile.documents} onUpload={uploadDocument} onDelete={deleteDocument} /></div>)}</form></div><button form="profileForm" disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg">{loading ? 'Saving...' : 'Save Changes'}</button></div></div>
+        {isWorker && (
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-600">
+                <h4 className="text-sm font-bold text-brand-600 mb-3">Compliance & Documents</h4>
+                {workerProfile ? (
+                    <>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div><label className="block text-[10px] font-bold text-slate-400 uppercase">Screening Check</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={screening} onChange={e => setScreening(e.target.value)} /></div>
+                            <div><label className="block text-[10px] font-bold text-slate-400 uppercase">First Aid</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={firstAid} onChange={e => setFirstAid(e.target.value)} /></div>
+                            <div><label className="block text-[10px] font-bold text-slate-400 uppercase">CPR</label><input type="date" className="w-full p-2 border rounded text-sm dark:bg-slate-700 dark:text-white" value={cpr} onChange={e => setCpr(e.target.value)} /></div>
+                        </div>
+                        {/* WORKER DOC UPLOAD - NOW ENABLED */}
+                        <DocumentManager folder="workers" id={workerProfile.id} documents={workerProfile.documents} onUpload={uploadDocument} onDelete={deleteDocument} />
+                    </>
+                ) : (
+                    <div className="p-3 bg-yellow-50 text-yellow-700 text-xs rounded border border-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-200 dark:border-yellow-800">
+                        <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+                        <strong>Profile Syncing:</strong> Your worker documents panel will appear shortly. If this persists, please contact an admin to verify your profile setup.
+                    </div>
+                )}
+            </div>
+        )}</form></div><button form="profileForm" disabled={loading} className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 disabled:opacity-50 mt-4 shadow-lg">{loading ? 'Saving...' : 'Save Changes'}</button></div></div>
     );
 };
 
@@ -968,66 +988,7 @@ const ClientDashboard = () => {
         if (s.status === 'Pending') statusColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
         if (s.status === 'Cancelled' || s.status === 'Declined') statusColor = "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
 
-        // --- PDF GENERATION HANDLER ---
-        const downloadPDF = () => {
-            const reportWindow = window.open('', '_blank');
-            reportWindow.document.write(`
-                <html>
-                <head>
-                    <title>Shift Report - ${s.dateDisplay}</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <style>@media print { body { margin: 0; } .no-print { display: none; } }</style>
-                </head>
-                <body class="p-10 font-sans bg-white">
-                    <div class="max-w-2xl mx-auto border border-gray-200 p-8 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center mb-8 border-b pb-4">
-                            <h1 class="text-2xl font-bold text-slate-900">Shift Report</h1>
-                            <div class="text-right">
-                                <p class="font-bold text-brand-600">Think Pathways</p>
-                                <p class="text-xs text-gray-500">${new Date().toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6 mb-6">
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Client</p><p class="font-medium">${s.userName}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Worker</p><p class="font-medium">${s.assignedWorkerEmail || 'Unknown'}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Date</p><p class="font-medium">${s.dateDisplay}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Time</p><p class="font-medium">${s.timesheet?.start || s.startTime} - ${s.timesheet?.end || s.endTime}</p></div>
-                        </div>
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Summary of Support</p>
-                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.summary || 'No summary provided.'}</div>
-                        </div>
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Goal Progress</p>
-                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.goals || 'No goals recorded.'}</div>
-                        </div>
-                        
-                        ${s.travel?.totalKm > 0 ? `
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel Claim (${s.travel.totalKm} km)</p>
-                            <table class="w-full text-xs text-left border-collapse border border-gray-200">
-                                <thead class="bg-gray-50"><tr><th class="p-2 border">From</th><th class="p-2 border">To</th><th class="p-2 border">Reason</th><th class="p-2 border">KM</th></tr></thead>
-                                <tbody>
-                                    ${s.travel.logs.map(log => `
-                                    <tr>
-                                        <td class="p-2 border">${log.from}</td>
-                                        <td class="p-2 border">${log.to}</td>
-                                        <td class="p-2 border">${log.reason}</td>
-                                        <td class="p-2 border">${log.km}</td>
-                                    </tr>`).join('')}
-                                </tbody>
-                            </table>
-                        </div>` : ''}
-
-                        ${s.caseNotes?.incidents === 'Yes' ? `<div class="mb-6 p-4 bg-red-50 border border-red-100 rounded"><p class="text-red-700 font-bold text-sm mb-1">Incident Reported</p><p class="text-red-600 text-sm">${s.caseNotes.incidentDetails}</p></div>` : ''}
-                        <div class="mt-12 pt-4 border-t text-center text-xs text-gray-400">Generated via Think Pathways Portal</div>
-                    </div>
-                    <script>window.print();</script>
-                </body>
-                </html>
-            `);
-            reportWindow.document.close();
-        };
+        // Removed PDF logic since report is hidden
 
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
@@ -1089,7 +1050,7 @@ const ClientDashboard = () => {
                                 </button>
                             )}
                             
-                            {s.status === 'Confirmed' && (
+                            {s.status === 'Confirmed' && s.workerStatus !== 'Completed' && (
                                 <button onClick={() => setCancelModalShift(s)} className="text-xs text-red-500 hover:text-red-700 font-bold border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-red-50 dark:bg-red-900/10 dark:border-red-900">
                                     Cancel
                                 </button>
