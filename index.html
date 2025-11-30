@@ -86,6 +86,35 @@
             transition: width 0.1s;
         }
 
+        /* Cursor Glow Effect */
+        #cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+            mix-blend-mode: multiply;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Back to Top Button */
+        #back-to-top {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            transform: translateY(20px);
+        }
+        #back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         /* Glassmorphism Class */
         .glass {
             background: rgba(255, 255, 255, 0.85);
@@ -129,13 +158,21 @@
         .high-contrast { background-color: #000 !important; color: #ff0 !important; }
         .high-contrast * { background-color: #000 !important; color: #ff0 !important; border-color: #ff0 !important; }
         .high-contrast .glass { background: #000 !important; backdrop-filter: none !important; border: 2px solid #ff0 !important; }
-        .high-contrast .blob { display: none; }
+        .high-contrast .blob, .high-contrast #cursor-glow { display: none; }
     </style>
 </head>
 <body class="font-sans text-slate-800 bg-slate-50 antialiased relative selection:bg-brand-200 selection:text-brand-900 overflow-x-hidden">
 
-    <!-- Scroll Progress Bar -->
+    <!-- 1. Scroll Progress Bar -->
     <div id="scroll-progress"></div>
+
+    <!-- 2. Interactive Cursor Glow -->
+    <div id="cursor-glow"></div>
+
+    <!-- 3. Back to Top Button -->
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" id="back-to-top" class="fixed bottom-24 right-6 z-40 bg-brand-600 text-white w-12 h-12 rounded-full shadow-lg hover:bg-brand-700 flex items-center justify-center transition-all hover:scale-110 border-2 border-white/20">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
 
     <!-- Accessibility Skip -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50 font-bold">Skip to content</a>
@@ -186,22 +223,13 @@
     </nav>
 
     <!-- Main Content with Parallax -->
-    <main class="relative w-full">
+    <main class="relative w-full" id="main-content">
         
-        <!-- Interactive Parallax Background -->
+        <!-- Background Blobs (Behind Content) -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-            <!-- Blob 1: Top Left -->
-            <div class="parallax-layer absolute top-0 -left-10" data-speed="4">
-                <div class="w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            </div>
-            <!-- Blob 2: Top Right -->
-            <div class="parallax-layer absolute top-20 -right-20" data-speed="-4">
-                <div class="w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
-            </div>
-            <!-- Blob 3: Bottom Left -->
-            <div class="parallax-layer absolute bottom-0 left-20" data-speed="2">
-                <div class="w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
-            </div>
+            <div class="parallax-blob absolute top-20 -left-10 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" data-speed="4"></div>
+            <div class="parallax-blob absolute top-60 -right-20 w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s" data-speed="-4"></div>
+            <div class="parallax-blob absolute bottom-20 left-20 w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s" data-speed="2"></div>
         </div>
 
         <!-- Hero Section -->
@@ -692,12 +720,12 @@
                 <div>
                     <h4 class="text-sm font-bold uppercase tracking-wider mb-6 text-white border-b border-slate-800 pb-2 inline-block">Quick Links</h4>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="index.html#home" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Home</a></li>
-                        <li><a href="index.html#services" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Our Services</a></li>
+                        <li><a href="#home" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Home</a></li>
+                        <li><a href="#services" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Our Services</a></li>
                         <li><a href="referral.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Make a Referral</a></li>
                         <li><a href="activities.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Activities</a></li>
                         <li><a href="resources.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Adelaide Resources</a></li>
-                        <li><a href="index.html#contact" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Contact</a></li>
+                        <li><a href="#contact" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Contact</a></li>
                     </ul>
                 </div>
 
@@ -758,22 +786,37 @@
         function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
         function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
         
-        // --- Parallax Effect ---
-        function parallax(e) {
+        // --- Parallax & Mouse Follow ---
+        document.addEventListener('mousemove', (e) => {
+            // Move Cursor Glow
+            const cursor = document.getElementById('cursor-glow');
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            // Parallax Background
             document.querySelectorAll('.parallax-blob').forEach(blob => {
                 const speed = blob.getAttribute('data-speed');
                 const x = (window.innerWidth - e.pageX * speed) / 100;
                 const y = (window.innerHeight - e.pageY * speed) / 100;
                 blob.style.transform = `translateX(${x}px) translateY(${y}px)`;
             });
-        }
+        });
 
-        // --- Scroll Progress ---
+        // --- Scroll Progress & Back To Top ---
         window.onscroll = function() {
+            // Scroll Progress
             var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
             var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             var scrolled = (winScroll / height) * 100;
             document.getElementById("scroll-progress").style.width = scrolled + "%";
+
+            // Back to Top Button
+            const backToTop = document.getElementById('back-to-top');
+            if (winScroll > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
         };
 
         // --- Typewriter Effect ---
