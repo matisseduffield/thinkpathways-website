@@ -274,15 +274,140 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
 
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    {/* ... existing code ... */}
-                    <div className="sm:w-1/2">
-                        <div className="flex items-center gap-2 mb-1"><h4 className="font-bold text-slate-800 dark:text-white">{s.service}</h4>{s.recurrence && s.recurrence !== 'none' && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase tracking-wide">{s.recurrence}</span>}</div>
-                        <div className="mt-2 flex items-center gap-2">{s.assignedWorkerEmail ? (<div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit"><div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">{workerDisplayName.charAt(0)}</div><span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">{workerDisplayName}</span><span className={`text-[9px] font-bold uppercase px-1.5 rounded ${s.workerStatus === 'Accepted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{s.workerStatus || '...'}</span>{/* REMOVED: Unassign button if shift is completed */}{s.workerStatus !== 'Completed' && <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Unassign"><i className="fa-solid fa-xmark"></i></button>}</div>) : (<button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-400 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-300 px-3 py-1.5 rounded-full transition-colors"><i className="fa-solid fa-user-plus"></i> Assign Worker</button>)}</div>
-                        {s.notes && <div className="mt-2 text-xs text-slate-400 italic truncate max-w-xs"><i className="fa-regular fa-note-sticky mr-1"></i> {s.notes}</div>}
+                <div className="flex flex-col md:flex-row gap-4">
+                    
+                    {/* 1. DATE COLUMN */}
+                    <div className="md:w-24 flex-shrink-0 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-2">
+                        <div className="text-center md:text-left">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                {s.dateDisplay.split(' ').length > 2 ? s.dateDisplay.split(' ')[2] : ''}
+                            </div>
+                            <div className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                                {s.dateDisplay.split(' ')[0]}
+                            </div>
+                            <div className="text-xs text-slate-500 uppercase">
+                                {s.dateDisplay.split(' ').length > 1 ? s.dateDisplay.split(' ')[1] : ''}
+                            </div>
+                        </div>
+                        <div className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md whitespace-nowrap">
+                            {s.startTime} - {s.endTime}
+                        </div>
                     </div>
-                    {/* ... existing code ... */}
+
+                    {/* 2. CONTENT COLUMN */}
+                    <div className="flex-grow border-l-0 md:border-l border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h4 className="font-bold text-slate-900 dark:text-white text-lg">{s.service}</h4>
+                            {s.recurrence && s.recurrence !== 'none' && (
+                                <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase font-bold tracking-wide">
+                                    {s.recurrence}
+                                </span>
+                            )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-2">
+                            {s.assignedWorkerEmail ? (
+                                <div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit">
+                                    <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">
+                                        {workerDisplayName.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">
+                                        {workerDisplayName}
+                                    </span>
+                                    <span className={`w-2 h-2 rounded-full ${s.workerStatus === 'Accepted' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                                    {/* FIX: REMOVAL BUTTON ONLY IF NOT COMPLETED */}
+                                    {s.workerStatus !== 'Completed' && (
+                                        <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Remove Worker">
+                                            <i className="fa-solid fa-xmark"></i>
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                /* FIX: ASSIGN BUTTON ONLY IF CONFIRMED */
+                                s.status === 'Confirmed' ? (
+                                    <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-500 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-400 px-3 py-1.5 rounded-full transition-colors bg-white dark:bg-transparent dark:border-slate-600 dark:text-slate-400 dark:hover:text-brand-400">
+                                        <i className="fa-solid fa-user-plus"></i> Assign Worker
+                                    </button>
+                                ) : (
+                                    <span className="text-xs text-slate-400 italic">Waiting for approval...</span>
+                                )
+                            )}
+                        </div>
+
+                        {s.notes && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400 italic flex items-start gap-1">
+                                <i className="fa-regular fa-note-sticky mt-0.5"></i> <span>{s.notes}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. ACTION COLUMN */}
+                    <div className="md:w-auto flex-shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between gap-3 border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>
+                            {s.statusLabel}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                            {s.status === 'Pending' ? (
+                                <>
+                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-9 h-9 rounded-full bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm" title="Approve Request">
+                                        <i className="fa-solid fa-check"></i>
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-9 h-9 rounded-full bg-red-100 text-red-700 hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm" title="Decline Request">
+                                        <i className="fa-solid fa-xmark"></i>
+                                    </button>
+                                </>
+                            ) : (
+                                s.status === 'Confirmed' && (
+                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-red-500 hover:text-red-700 font-bold border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-red-50 dark:bg-red-900/10 dark:border-red-900">
+                                        Cancel
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    </div>
+
                 </div>
+                
+                {/* --- SHIFT REPORT VISIBILITY --- */}
+                {(s.workerStatus === 'Completed' && (s.caseNotes || s.travel)) && (
+                    <div className="mt-3 w-full bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-600 pt-3 px-2">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-brand-600 uppercase">Shift Report</div>
+                            <button onClick={downloadPDF} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-100 flex items-center text-slate-600 shadow-sm"><i className="fa-solid fa-file-pdf mr-1 text-red-500"></i> Download PDF</button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">Summary:</p>
+                                <p className="text-slate-600 dark:text-slate-400 mb-2">{s.caseNotes?.summary || 'N/A'}</p>
+                                <p className="font-semibold text-slate-700 dark:text-slate-300">Goals:</p>
+                                <p className="text-slate-600 dark:text-slate-400">{s.caseNotes?.goals || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <div className="mb-2">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Time: </span>
+                                    <span className="text-slate-600 dark:text-slate-400">{s.timesheet?.start} - {s.timesheet?.end}</span>
+                                </div>
+                                {s.travel?.totalKm > 0 && (
+                                    <div className="mb-2">
+                                        <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
+                                        <span className="text-slate-600 dark:text-slate-400">{s.travel.totalKm} km</span>
+                                        <ul className="mt-1 pl-4 list-disc text-[10px] text-slate-500">
+                                            {s.travel.logs.map((log, i) => (
+                                                <li key={i}>{log.from} to {log.to} ({log.km}km)</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                {s.caseNotes?.incidents === 'Yes' && (
+                                    <div className="bg-red-50 text-red-700 p-2 rounded border border-red-100">
+                                        <strong>Incident:</strong> {s.caseNotes.incidentDetails}
+                                    </div>
+                                )}
+                            </div>
+                            </div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -313,7 +438,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                         )}
                     </div>
                     <div className="flex items-center">
-                        {/* 1. CONTRACT GENERATOR BUTTON - Updated to use sessionStorage for better privacy */}
+                        {/* 1. CONTRACT GENERATOR BUTTON */}
                         <button 
                             onClick={(e) => { 
                                 e.stopPropagation(); 
@@ -331,7 +456,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                                 };
                                 sessionStorage.setItem('agreementData', JSON.stringify(agreementData));
                                 
-                                // Open the smart agreement (Cleaner URL)
+                                // Open the smart agreement
                                 window.open(`service-agreement.html`, '_blank');
                             }} 
                             className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-colors mr-2" 
@@ -901,16 +1026,7 @@ const ClientDashboard = () => {
                                             {upcomingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No confirmed upcoming sessions.</div> : 
                                             <div className="space-y-3">
                                                 {upcomingShifts.map(s => (
-                                                    <div key={s.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:border-brand-200 transition-all dark:bg-slate-800 dark:border-slate-700 dark:hover:border-brand-700">
-                                                        <div className="mb-3 md:mb-0">
-                                                            <div className="font-bold text-slate-800 text-lg flex items-center dark:text-white"><i className="fa-regular fa-calendar text-green-600 mr-3 dark:text-green-400"></i> {s.dateDisplay}</div>
-                                                            <div className="text-sm text-slate-500 ml-7 flex gap-3 dark:text-slate-400"><span>{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</span>{s.recurrence && s.recurrence !== 'none' && <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded dark:bg-blue-900/30 dark:text-blue-300"><i className="fa-solid fa-rotate mr-1"></i>{s.recurrence}</span>}</div>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">Scheduled</span>
-                                                            <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 p-2 dark:hover:text-red-400" title="Cancel"><i className="fa-solid fa-ban"></i></button>
-                                                        </div>
-                                                    </div>
+                                                    <ShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
@@ -921,16 +1037,7 @@ const ClientDashboard = () => {
                                             {pendingShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No pending requests.</div> : 
                                             <div className="space-y-3">
                                                 {pendingShifts.map(s => (
-                                                    <div key={s.id} className="bg-white p-5 rounded-xl border border-yellow-100 shadow-sm flex flex-col md:flex-row justify-between items-center dark:bg-slate-800 dark:border-yellow-900/50">
-                                                        <div className="mb-3 md:mb-0 opacity-75">
-                                                            <div className="font-bold text-slate-800 text-lg flex items-center dark:text-white"><i className="fa-regular fa-clock text-yellow-600 mr-3 dark:text-yellow-400"></i> {s.dateDisplay}</div>
-                                                            <div className="text-sm text-slate-500 ml-7 dark:text-slate-400">{s.service} • {s.startTime}-{s.endTime} ({s.duration}h)</div>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase border bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">Request Sent</span>
-                                                            <button onClick={() => setCancelModalShift(s)} className="text-slate-300 hover:text-red-500 p-2 dark:hover:text-red-400" title="Withdraw"><i className="fa-solid fa-ban"></i></button>
-                                                        </div>
-                                                    </div>
+                                                    <ShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
@@ -941,23 +1048,7 @@ const ClientDashboard = () => {
                                             {historyShifts.length === 0 ? <div className="text-center text-slate-400 py-8 italic dark:text-slate-500">No history found.</div> : 
                                             <div className="space-y-3 opacity-75">
                                                 {historyShifts.map(s => (
-                                                    <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <div className="font-bold text-slate-700 text-sm dark:text-slate-300">{s.dateDisplay}</div>
-                                                                <div className="text-xs text-slate-500 dark:text-slate-400">{s.service}</div>
-                                                            </div>
-                                                            <div className={`text-xs font-bold uppercase ${s.status === 'Confirmed' ? 'text-slate-500 dark:text-slate-400' : 'text-red-500 dark:text-red-400'}`}>
-                                                                {s.status === 'Confirmed' ? 'Completed' : s.status}
-                                                            </div>
-                                                        </div>
-                                                        {s.cancellationReason && (
-                                                            <div className="mt-3 text-xs text-red-700 bg-red-50 p-3 rounded border border-red-100 flex items-start dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
-                                                                <i className="fa-solid fa-circle-info mr-2 mt-0.5 text-red-500 dark:text-red-400"></i>
-                                                                <span><strong>Note:</strong> {s.cancellationReason}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <ShiftItem key={s.id} s={s} />
                                                 ))}
                                             </div>}
                                         </div>
