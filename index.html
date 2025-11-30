@@ -43,14 +43,16 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
-                        accent: { 500: '#10b981' }
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e' },
+                        accent: { 500: '#10b981', 600: '#059669' },
+                        slate: { 850: '#1e293b' } // Custom dark slate
                     },
                     animation: {
-                        'blob': 'blob 7s infinite',
+                        'blob': 'blob 10s infinite',
                         'float': 'float 6s ease-in-out infinite',
                         'typewriter': 'typewriter 4s steps(40) infinite alternate',
-                        'blink': 'blink 1s step-end infinite'
+                        'blink': 'blink 1s step-end infinite',
+                        'marquee': 'marquee 40s linear infinite',
                     },
                     keyframes: {
                         blob: {
@@ -60,7 +62,11 @@
                             '100%': { transform: 'translate(0px, 0px) scale(1)' },
                         },
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
-                        blink: { '50%': { borderColor: 'transparent' } }
+                        blink: { '50%': { borderColor: 'transparent' } },
+                        marquee: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' }
+                        }
                     }
                 }
             }
@@ -68,15 +74,16 @@
     </script>
     
     <style>
-        /* Glassmorphism Class */
+        /* Glassmorphism Class - Improved Contrast */
         .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.85); /* Increased opacity for readability */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
         .dark .glass {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -99,6 +106,11 @@
         /* Scroll Reveal */
         .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
+        
+        /* Marquee Container */
+        .marquee-container:hover .animate-marquee {
+            animation-play-state: paused;
+        }
 
         /* High Contrast Overrides */
         .high-contrast { background-color: #000 !important; color: #ff0 !important; }
@@ -110,7 +122,7 @@
 <body class="font-sans text-slate-800 bg-slate-50 antialiased relative selection:bg-brand-200 selection:text-brand-900">
 
     <!-- Accessibility Skip -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50">Skip to content</a>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50 font-bold">Skip to content</a>
 
     <!-- Navigation -->
     <nav class="glass sticky top-0 z-50 shadow-sm transition-all duration-300">
@@ -126,39 +138,39 @@
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#home" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Home</a>
-                    <a href="#services" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Services</a>
-                    <a href="activities.html" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">Activities</a>
-                    <a href="#about" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">About Us</a>
-                    <a href="referral.html" class="text-brand-600 font-bold hover:text-brand-700 transition-colors">Referrals</a>
-                    <a href="#faq" class="text-slate-600 hover:text-brand-600 font-medium transition-colors">FAQ</a>
-                    <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">Contact Us</a>
+                    <a href="#home" class="text-slate-700 hover:text-brand-700 font-semibold transition-colors">Home</a>
+                    <a href="#services" class="text-slate-700 hover:text-brand-700 font-semibold transition-colors">Services</a>
+                    <a href="activities.html" class="text-slate-700 hover:text-brand-700 font-semibold transition-colors">Activities</a>
+                    <a href="#about" class="text-slate-700 hover:text-brand-700 font-semibold transition-colors">About Us</a>
+                    <a href="referral.html" class="text-brand-700 font-bold hover:text-brand-800 transition-colors bg-brand-50 px-3 py-1 rounded-md">Referrals</a>
+                    <a href="#faq" class="text-slate-700 hover:text-brand-700 font-semibold transition-colors">FAQ</a>
+                    <a href="#contact" class="bg-brand-600 text-white px-5 py-2.5 rounded-full font-bold hover:bg-brand-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">Contact Us</a>
                 </div>
                 <div class="hidden md:flex items-center ml-4">
-                    <a href="portal.html" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-slate-800 transition-all flex items-center gap-2 border border-transparent hover:border-brand-400 shadow-sm">
+                    <a href="portal.html" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-slate-900 transition-all flex items-center gap-2 border border-transparent hover:border-brand-400 shadow-sm">
                         <i class="fa-solid fa-lock text-brand-400 text-xs"></i> Portal Login
                     </a>
                 </div>
                 <div class="flex items-center md:hidden">
-                    <button type="button" onclick="toggleMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
+                    <button type="button" onclick="toggleMenu()" class="text-slate-700 hover:text-slate-900 focus:outline-none p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
                 </div>
             </div>
         </div>
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 glass">
-            <div class="px-4 pt-2 pb-6 space-y-2">
-                <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Home</a>
-                <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Services</a>
-                <a href="activities.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md">Activities</a>
-                <a href="referral.html" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md">Referrals</a>
-                <a href="portal.html" class="block px-3 py-3 text-base font-medium text-slate-900 bg-slate-100 rounded-md font-bold"><i class="fa-solid fa-lock mr-2"></i>Client Portal</a>
-                <a href="#contact" class="block px-3 py-3 text-base font-medium text-brand-600 font-bold bg-brand-50 rounded-md mt-4">Contact Us</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 glass absolute w-full z-40">
+            <div class="px-4 pt-2 pb-6 space-y-2 shadow-lg">
+                <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md hover:bg-brand-50">Home</a>
+                <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md hover:bg-brand-50">Services</a>
+                <a href="activities.html" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-brand-600 rounded-md hover:bg-brand-50">Activities</a>
+                <a href="referral.html" class="block px-3 py-3 text-base font-bold text-brand-700 bg-brand-50 rounded-md">Referrals</a>
+                <a href="portal.html" class="block px-3 py-3 text-base font-bold text-slate-900 bg-slate-100 rounded-md"><i class="fa-solid fa-lock mr-2"></i>Client Portal</a>
+                <a href="#contact" class="block px-3 py-3 text-base font-bold text-white bg-brand-600 rounded-md mt-4 text-center shadow-md">Contact Us</a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="relative bg-slate-50 overflow-hidden min-h-[90vh] flex items-center">
+    <section id="home" class="relative bg-slate-50 overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200">
         <!-- Background Blobs -->
         <div class="absolute top-0 -left-4 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob blob"></div>
         <div class="absolute top-0 -right-4 w-96 h-96 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 blob"></div>
@@ -166,29 +178,29 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div class="text-center lg:text-left reveal">
-                <div class="inline-flex items-center px-3 py-1 rounded-full border border-brand-200 bg-white/80 backdrop-blur-sm text-brand-800 text-xs font-semibold uppercase tracking-wide mb-6 shadow-sm">
-                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span> Accepting New Referrals
+                <div class="inline-flex items-center px-4 py-1.5 rounded-full border border-brand-300 bg-white/90 backdrop-blur-sm text-brand-800 text-sm font-bold uppercase tracking-wide mb-6 shadow-sm">
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5 animate-pulse"></span> Accepting New Referrals
                 </div>
-                <h1 class="text-5xl tracking-tight font-extrabold text-slate-900 sm:text-6xl md:text-7xl mb-6">
+                <h1 class="text-5xl tracking-tight font-extrabold text-slate-900 sm:text-6xl md:text-7xl mb-6 leading-tight">
                     Compassionate care for <br>
                     <!-- TYPEWRITER EFFECT -->
                     <span class="text-brand-600 typing-cursor" id="typewriter">Your Independence.</span>
                 </h1>
-                <p class="mt-4 text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                <p class="mt-6 text-xl text-slate-700 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
                     At <strong>Think Pathways</strong>, we provide person-centered NDIS support designed to help you live independently. We focus on dignity, respect, and achieving your unique goals.
                 </p>
-                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="#contact" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-brand-500/30 transition-all transform hover:-translate-y-1 text-center">
+                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="#contact" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-brand-500/40 transition-all transform hover:-translate-y-1 text-center">
                         Get Started
                     </a>
-                    <a href="#services" class="px-8 py-4 text-lg font-medium rounded-full text-brand-700 bg-white hover:bg-brand-50 border border-brand-100 shadow-sm hover:shadow-md transition-all text-center">
+                    <a href="#services" class="px-8 py-4 text-lg font-bold rounded-full text-brand-700 bg-white hover:bg-slate-50 border-2 border-brand-100 shadow-sm hover:shadow-md transition-all text-center">
                         View Services
                     </a>
                 </div>
             </div>
-            <div class="relative lg:h-full flex items-center justify-center reveal">
+            <div class="relative lg:h-full flex items-center justify-center reveal mt-12 lg:mt-0">
                 <!-- 3D Tilt on Hero Image -->
-                <div class="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 glass p-2" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 glass p-3 bg-white/40" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
                     <img class="rounded-2xl w-full object-cover shadow-inner" src="https://i.imgur.com/o73sFO7.png" alt="Disability support illustration">
                 </div>
             </div>
@@ -196,87 +208,87 @@
     </section>
 
     <!-- Services Section (With 3D Tilt Cards) -->
-    <section id="services" class="py-24 bg-slate-50">
+    <section id="services" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center reveal mb-16">
-                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm">Our Services</h2>
-                <p class="mt-2 text-4xl font-extrabold text-slate-900">Supporting your independence</p>
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-2">Our Services</h2>
+                <p class="text-4xl font-extrabold text-slate-900">Supporting your independence</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Service Card 1 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-perspective="1000">
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-perspective="1000">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-house-user"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">In-Home Support</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Assistance with daily living tasks, personal care, and household management to help you maintain your independence.
                         </p>
                     </div>
                 </div>
 
                 <!-- Service Card 2 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-500 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-people-group"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">Community Access</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Support to participate in community activities, social groups, appointments, and recreational events.
                         </p>
                     </div>
                 </div>
 
                 <!-- Service Card 3 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-graduation-cap"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">Skill Development</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Mentoring and training to build life skills such as cooking, budgeting, travel training, and technology use.
                         </p>
                     </div>
                 </div>
 
                 <!-- Service Card 4 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-car"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">Transport Assistance</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Safe and reliable transport to get you to your appointments, work, or social engagements on time.
                         </p>
                     </div>
                 </div>
 
                 <!-- Service Card 5 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-heart-pulse"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">Complex Care</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Specialized support for participants with high intensity daily personal activities or complex health needs.
                         </p>
                     </div>
                 </div>
 
                  <!-- Service Card 6 -->
-                 <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card" data-tilt data-tilt-max="10">
+                 <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
                     <div class="tilt-content">
-                        <div class="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-2xl shadow-sm">
+                        <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-3xl shadow-sm">
                             <i class="fa-solid fa-clipboard-list"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900 mb-3">Plan Management</h3>
-                        <p class="text-slate-600 leading-relaxed">
+                        <p class="text-slate-600 leading-relaxed font-medium">
                             Assistance with managing your NDIS funding, paying invoices, and tracking your budget expenditure.
                         </p>
                     </div>
@@ -284,112 +296,115 @@
             </div>
 
             <div class="mt-16 text-center reveal">
-                <a href="pricing.html" class="inline-flex items-center px-8 py-4 border border-brand-600 text-base font-bold rounded-full text-brand-600 bg-white hover:bg-brand-50 transition-colors shadow-md hover:shadow-lg">
+                <a href="pricing.html" class="inline-flex items-center px-8 py-4 border-2 border-brand-600 text-base font-bold rounded-full text-brand-700 bg-white hover:bg-brand-50 transition-colors shadow-md hover:shadow-lg">
                     View Pricing Guide <i class="fa-solid fa-arrow-right ml-2"></i>
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- Activities Banner -->
-    <section class="py-20 bg-brand-600 relative overflow-hidden">
+    <!-- Activities Banner (Darker & richer background) -->
+    <section class="py-24 bg-brand-800 relative overflow-hidden">
         <div class="absolute inset-0 opacity-10 pattern-dots"></div>
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-700 opacity-90"></div>
+        
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
-            <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">See Support in Action</h2>
-            <p class="text-xl text-brand-100 max-w-2xl mx-auto mb-10">
-                We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate.
+            <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-8 tracking-tight">See Support in Action</h2>
+            <p class="text-xl text-brand-100 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
+                We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate to help you achieve your goals.
             </p>
-            <a href="activities.html" class="inline-flex items-center px-8 py-4 border-2 border-white text-lg font-bold rounded-full text-brand-700 bg-white hover:bg-brand-50 shadow-lg transition-all transform hover:-translate-y-1">
-                View Activities
+            <a href="activities.html" class="inline-flex items-center px-10 py-5 border-2 border-white text-lg font-bold rounded-full text-brand-800 bg-white hover:bg-brand-50 shadow-xl transition-all transform hover:-translate-y-1">
+                View Activities Gallery
             </a>
         </div>
     </section>
 
-    <!-- NEW: Our Core Values Section (Restored) -->
-    <section class="py-20 bg-white">
+    <!-- NEW: Our Core Values Section (Subtle Background) -->
+    <section class="py-24 bg-slate-50 border-b border-slate-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 reveal">
-                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm">Our Philosophy</h2>
-                <p class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">Values that drive our care</p>
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Our Philosophy</h2>
+                <p class="text-4xl md:text-5xl font-extrabold text-slate-900">Values that drive our care</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal">
-                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
-                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-hand-holding-heart text-3xl text-brand-600"></i>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 reveal">
+                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-hand-holding-heart text-4xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Empowerment</h3>
-                    <p class="text-slate-600">Building your skills and confidence so you can live life on your own terms.</p>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Empowerment</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed">Building your skills and confidence so you can live life on your own terms.</p>
                 </div>
-                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
-                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-shield-halved text-3xl text-brand-600"></i>
+                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-shield-halved text-4xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Integrity</h3>
-                    <p class="text-slate-600">Honest, transparent, and reliable support. We do what we say we will do.</p>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Integrity</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed">Honest, transparent, and reliable support. We do what we say we will do.</p>
                 </div>
-                <div class="p-8 text-center hover:bg-slate-50 rounded-2xl transition-colors">
-                    <div class="mx-auto w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-users text-3xl text-brand-600"></i>
+                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-users text-4xl text-brand-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Connection</h3>
-                    <p class="text-slate-600">Fostering genuine relationships and meaningful community connections.</p>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Connection</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed">Fostering genuine relationships and meaningful community connections.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Onboarding Journey (Restored) -->
-    <section class="py-20 bg-slate-50">
+    <!-- Onboarding Journey (Soft Blue Background) -->
+    <section class="py-24 bg-brand-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 reveal">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Your Journey with Us</h2>
-                <p class="mt-4 text-lg text-slate-500">We make getting started simple and stress-free.</p>
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">Your Journey with Us</h2>
+                <p class="text-xl text-slate-600 max-w-2xl mx-auto">We make getting started simple, transparent, and stress-free.</p>
             </div>
 
             <div class="relative reveal">
                 <!-- Connector Line (Desktop) -->
-                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-100 -translate-y-1/2 z-0"></div>
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-200 -translate-y-1/2 z-0 rounded-full"></div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
                     <!-- Step 1 -->
-                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
-                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
                             1
                         </div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-2">Get in Touch</h3>
-                        <p class="text-sm text-slate-500">Fill out our contact or referral form to tell us about your needs.</p>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Get in Touch</h3>
+                        <p class="text-base text-slate-600 font-medium">Fill out our contact or referral form to tell us about your needs.</p>
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
-                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
                             2
                         </div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-2">Meet & Greet</h3>
-                        <p class="text-sm text-slate-500">We meet you (in person or online) to ensure we're the right fit for you.</p>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Meet & Greet</h3>
+                        <p class="text-base text-slate-600 font-medium">We meet you (in person or online) to ensure we're the right fit for you.</p>
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
-                        <div class="w-12 h-12 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300 group">
+                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
                             3
                         </div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-2">Service Agreement</h3>
-                        <p class="text-sm text-slate-500 mb-4">We agree on a plan and sign a service agreement outlining your support.</p>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Service Agreement</h3>
+                        <p class="text-base text-slate-600 font-medium mb-4">We agree on a plan and sign a service agreement outlining your support.</p>
                         
                         <!-- Link Added Here -->
-                        <a href="service-agreement.html" target="_blank" class="text-xs font-bold text-brand-600 uppercase tracking-wide hover:text-brand-800 inline-flex items-center">
-                            View Sample <i class="fa-solid fa-arrow-right ml-1"></i>
+                        <a href="service-agreement.html" target="_blank" class="text-sm font-bold text-brand-700 uppercase tracking-wide hover:text-brand-900 inline-flex items-center group-hover:underline underline-offset-4">
+                            View Sample <i class="fa-solid fa-arrow-right ml-2"></i>
                         </a>
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="glass p-6 rounded-2xl border border-white/50 text-center shadow-sm relative hover:shadow-lg transition-all transform hover:-translate-y-1">
-                        <div class="w-12 h-12 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4 relative z-10 shadow-md">
+                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                        <div class="w-16 h-16 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
                             <i class="fa-solid fa-check"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-2">Support Begins</h3>
-                        <p class="text-sm text-slate-500">Your support worker starts, helping you achieve your goals.</p>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Support Begins</h3>
+                        <p class="text-base text-slate-600 font-medium">Your support worker starts, helping you achieve your goals.</p>
                     </div>
                 </div>
             </div>
@@ -399,33 +414,34 @@
     <!-- MEET THE FOUNDER SECTION (Restored) -->
     <section id="about" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="glass rounded-3xl p-8 md:p-12 shadow-xl border border-slate-100 reveal">
+            <div class="glass rounded-3xl p-10 md:p-16 shadow-xl border border-slate-200 reveal bg-slate-50/50">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
                     
                     <!-- Profile Image Column -->
                     <div class="md:col-span-1 text-center relative group">
                         <div class="absolute inset-0 bg-brand-200 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
                         <div class="relative inline-block">
-                            <img src="https://i.imgur.com/o73sFO7.png" alt="Matisse Duffield" class="relative w-56 h-56 md:w-64 md:h-64 rounded-full object-cover border-4 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-lg text-brand-600">
-                                <i class="fa-solid fa-quote-right text-xl"></i>
+                            <!-- UPDATED IMAGE SOURCE -->
+                            <img src="https://i.imgur.com/t5ke22D.jpeg" alt="Matisse Duffield" class="relative w-64 h-64 md:w-72 md:h-72 rounded-full object-cover border-8 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute bottom-6 right-6 bg-white p-3 rounded-full shadow-lg text-brand-600">
+                                <i class="fa-solid fa-quote-right text-2xl"></i>
                             </div>
                         </div>
-                        <div class="mt-6">
-                            <h3 class="text-2xl font-bold text-slate-900">Matisse Duffield</h3>
-                            <p class="text-brand-600 font-medium uppercase tracking-wide text-sm">Founder & Director</p>
+                        <div class="mt-8">
+                            <h3 class="text-3xl font-bold text-slate-900">Matisse Duffield</h3>
+                            <p class="text-brand-700 font-bold uppercase tracking-wide text-sm mt-1">Founder & Director</p>
                         </div>
                     </div>
 
                     <!-- Text Column -->
                     <div class="md:col-span-2">
-                        <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            <i class="fa-solid fa-star text-brand-400"></i> My Philosophy
+                        <div class="mb-8 inline-flex items-center gap-2 px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 uppercase tracking-wider shadow-sm">
+                            <i class="fa-solid fa-star text-yellow-500"></i> My Philosophy
                         </div>
-                        <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
+                        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-8 leading-tight">
                             "Support is about walking <span class="text-brand-600 underline decoration-brand-300 decoration-4 underline-offset-4">with</span> you, not just for you."
                         </h2>
-                        <div class="prose text-slate-600 text-lg leading-relaxed space-y-6">
+                        <div class="prose text-slate-700 text-xl leading-relaxed space-y-6 font-medium">
                             <p>
                                 I started Think Pathways with a simple belief: everyone deserves support that actually <em>listens</em>. I've seen too many participants treated as just a number in a system.
                             </p>
@@ -435,16 +451,16 @@
                         </div>
                         
                         <!-- Signature / Trust Signals -->
-                        <div class="mt-10 pt-8 border-t border-slate-200 flex flex-wrap gap-8">
-                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                        <div class="mt-12 pt-10 border-t border-slate-200 flex flex-wrap gap-8">
+                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
                                 <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-certificate"></i></div>
                                 Fully Insured
                             </div>
-                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
                                 <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-check-circle"></i></div>
                                 NDIS Worker Screened
                             </div>
-                            <div class="flex items-center gap-3 text-slate-600 font-medium">
+                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
                                 <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-heart-pulse"></i></div>
                                 First Aid Certified
                             </div>
@@ -456,78 +472,69 @@
         </div>
     </section>
 
-    <!-- Testimonial Section (Restored) -->
-    <section class="py-24 bg-gradient-to-br from-brand-700 to-brand-900 relative overflow-hidden">
-        <!-- Decorative Background Elements -->
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
-            <div class="absolute -top-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-            <div class="absolute top-1/2 right-0 w-64 h-64 bg-accent-500 rounded-full blur-3xl"></div>
-        </div>
+    <!-- Testimonial Section (UPGRADED MARQUEE) -->
+    <section class="py-24 bg-slate-900 relative overflow-hidden">
+        <!-- Decorative Background Grid -->
+        <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px); background-size: 40px 40px;"></div>
         
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Stories from our community</h2>
-                <p class="text-brand-100 text-lg max-w-2xl mx-auto">Real experiences from the people we support.</p>
+        <div class="relative z-10">
+            <div class="text-center mb-16 px-4">
+                <h2 class="text-brand-400 font-bold tracking-wide uppercase text-sm mb-3">Community Stories</h2>
+                <p class="text-4xl md:text-5xl font-extrabold text-white">Real experiences, real impact</p>
             </div>
             
-            <!-- Carousel Wrapper -->
-            <div class="relative w-full max-w-4xl mx-auto">
-                
-                <!-- Navigation Arrows (Outside the card on desktop) -->
-                <button onclick="prevTestimonial()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-16 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 group" aria-label="Previous testimonial">
-                    <i class="fa-solid fa-arrow-left text-xl group-hover:-translate-x-1 transition-transform"></i>
-                </button>
-                
-                <button onclick="nextTestimonial()" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-16 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50 group" aria-label="Next testimonial">
-                    <i class="fa-solid fa-arrow-right text-xl group-hover:translate-x-1 transition-transform"></i>
-                </button>
+            <!-- Marquee Container -->
+            <div class="marquee-container relative w-full overflow-hidden py-8">
+                <!-- Gradient Fade Edges -->
+                <div class="absolute top-0 bottom-0 left-0 w-24 md:w-48 bg-gradient-to-r from-slate-900 to-transparent z-20 pointer-events-none"></div>
+                <div class="absolute top-0 bottom-0 right-0 w-24 md:w-48 bg-gradient-to-l from-slate-900 to-transparent z-20 pointer-events-none"></div>
 
-                <!-- Slides Container -->
-                <div id="testimonial-container" class="grid grid-rows-1 grid-cols-1 items-center justify-items-center min-h-[300px]">
-                    <!-- Slides injected via JS -->
+                <!-- Scrolling Track -->
+                <div class="flex gap-8 animate-marquee w-max hover:pause" id="testimonial-track">
+                    <!-- JS will inject duplicates here for seamless looping -->
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FAQ Section (Restored) -->
-    <section id="faq" class="py-20 bg-white">
+    <!-- FAQ Section (Restored & Styled) -->
+    <section id="faq" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 reveal">
-                <h2 class="text-3xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
-                <p class="mt-4 text-lg text-slate-500">Common questions about our services and NDIS support.</p>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
+                <p class="mt-4 text-xl text-slate-600">Common questions about our services and NDIS support.</p>
             </div>
             
             <div class="space-y-6">
                 <!-- FAQ Item 1 -->
-                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
-                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-circle-question"></i></div>
+                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-circle-question"></i></div>
                         Are you NDIS registered?
                     </h3>
-                    <p class="text-slate-600 ml-14 leading-relaxed">
-                        We are an NDIS compatible provider. We can support participants who are Plan Managed or Self Managed. 
+                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
+                        We are an NDIS compatible provider. We can support participants who are <strong>Plan Managed</strong> or <strong>Self Managed</strong>. 
                     </p>
                 </div>
 
                 <!-- FAQ Item 2 -->
-                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
-                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div>
                         What areas do you service?
                     </h3>
-                    <p class="text-slate-600 ml-14 leading-relaxed">
-                        We currently provide support services across the Greater Metropolitan area. Please contact us to check if we have a worker in your specific suburb.
+                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
+                        We currently provide support services across the Greater Metropolitan area of Adelaide. Please contact us to check if we have a worker in your specific suburb.
                     </p>
                 </div>
 
                 <!-- FAQ Item 3 -->
-                <div class="glass rounded-2xl p-8 border border-slate-100 hover:shadow-md transition-all reveal">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-3">
-                        <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mr-4 text-lg"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
+                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
                         Is there a waiting list?
                     </h3>
-                    <p class="text-slate-600 ml-14 leading-relaxed">
+                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
                         We currently have capacity to take on new participants. Once we understand your needs, we can usually start services within 1-2 weeks.
                     </p>
                 </div>
@@ -536,76 +543,76 @@
     </section>
 
     <!-- Contact Section (Glassmorphism) -->
-    <section id="contact" class="py-20 bg-slate-50 relative overflow-hidden">
+    <section id="contact" class="py-24 bg-brand-50 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
             <div class="absolute top-20 right-0 w-96 h-96 bg-brand-300 rounded-full blur-3xl mix-blend-multiply"></div>
             <div class="absolute bottom-0 left-20 w-72 h-72 bg-accent-300 rounded-full blur-3xl mix-blend-multiply"></div>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="glass rounded-3xl shadow-2xl overflow-hidden reveal border border-white/50">
+            <div class="glass rounded-3xl shadow-2xl overflow-hidden reveal border border-white/60">
                 <div class="grid grid-cols-1 lg:grid-cols-2">
                     <!-- Contact Info -->
-                    <div class="bg-slate-900 p-12 text-white flex flex-col justify-center">
-                        <h3 class="text-3xl font-bold mb-6">Get in touch</h3>
-                        <p class="text-slate-400 mb-10 text-lg">
+                    <div class="bg-slate-900 p-12 md:p-16 text-white flex flex-col justify-center">
+                        <h3 class="text-4xl font-extrabold mb-6">Get in touch</h3>
+                        <p class="text-slate-300 mb-12 text-xl leading-relaxed">
                             Ready to discuss your support needs? Fill out the form or contact us directly.
                         </p>
-                        <div class="space-y-8">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
-                                    <i class="fa-solid fa-phone text-brand-400"></i>
+                        <div class="space-y-10">
+                            <div class="flex items-center group">
+                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                    <i class="fa-solid fa-phone text-2xl text-brand-400 group-hover:text-white"></i>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold">Call Us</p>
-                                    <p class="text-xl font-medium">+61 420 673 303</p>
+                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Call Us</p>
+                                    <p class="text-2xl font-bold text-white">+61 420 673 303</p>
                                 </div>
                             </div>
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
-                                    <i class="fa-solid fa-envelope text-brand-400"></i>
+                            <div class="flex items-center group">
+                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                    <i class="fa-solid fa-envelope text-2xl text-brand-400 group-hover:text-white"></i>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold">Email Us</p>
-                                    <p class="text-xl font-medium">care@thinkpathways.com</p>
+                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Email Us</p>
+                                    <p class="text-2xl font-bold text-white">care@thinkpathways.com</p>
                                 </div>
                             </div>
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mr-4">
-                                    <i class="fa-solid fa-location-dot text-brand-400"></i>
+                            <div class="flex items-center group">
+                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                    <i class="fa-solid fa-location-dot text-2xl text-brand-400 group-hover:text-white"></i>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold">Service Area</p>
-                                    <p class="text-xl font-medium">Adelaide, South Australia</p>
+                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Service Area</p>
+                                    <p class="text-2xl font-bold text-white">Adelaide, South Australia</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Contact Form -->
-                    <div class="p-12 bg-white/50 backdrop-blur-sm">
-                        <form action="https://formspree.io/f/xkgagpzz" method="POST" class="space-y-6">
+                    <div class="p-12 md:p-16 bg-white/60 backdrop-blur-xl">
+                        <form action="https://formspree.io/f/xkgagpzz" method="POST" class="space-y-8">
                             <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
                             <input type="hidden" name="_subject" value="New Website Inquiry">
                             
                             <div>
-                                <label for="name" class="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
-                                <input type="text" name="name" id="name" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
+                                <label for="name" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Full Name</label>
+                                <input type="text" name="name" id="name" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Your Name">
                             </div>
                             <div>
-                                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
-                                <input type="email" name="email" id="email" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
+                                <label for="email" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Email Address</label>
+                                <input type="email" name="email" id="email" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="you@example.com">
                             </div>
                             <div>
-                                <label for="phone" class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
-                                <input type="tel" name="phone" id="phone" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm">
+                                <label for="phone" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Phone Number</label>
+                                <input type="tel" name="phone" id="phone" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="0400 000 000">
                             </div>
                             <div>
-                                <label for="message" class="block text-sm font-bold text-slate-700 mb-1">How can we help?</label>
-                                <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-shadow shadow-sm"></textarea>
+                                <label for="message" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">How can we help?</label>
+                                <textarea id="message" name="message" rows="4" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Tell us a bit about your needs..."></textarea>
                             </div>
-                            <button type="submit" class="w-full py-4 px-6 text-white font-bold bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
-                                Send Message
+                            <button type="submit" class="w-full py-5 px-8 text-white font-bold text-lg bg-brand-600 hover:bg-brand-700 rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex justify-center items-center">
+                                Send Message <i class="fa-solid fa-paper-plane ml-3"></i>
                             </button>
                         </form>
                     </div>
@@ -615,69 +622,78 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-white pt-16 pb-8">
+    <footer class="bg-slate-900 text-white pt-20 pb-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center gap-2 mb-6">
-                         <div class="w-10 h-10 bg-brand-500 rounded-lg flex items-center justify-center text-white">
-                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                    <div class="flex items-center gap-3 mb-8">
+                         <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                            <i class="fa-solid fa-hands-holding-circle text-2xl"></i>
                         </div>
-                        <span class="font-bold text-2xl tracking-tight">Think Pathways</span>
+                        <span class="font-bold text-3xl tracking-tight text-white">Think Pathways</span>
                     </div>
-                    <p class="text-slate-400 text-lg max-w-sm leading-relaxed">
-                        Empowering individuals with disabilities to live life their way. Trusted, local, and compassionate support in Adelaide.
+                    <p class="text-slate-400 text-lg max-w-md leading-relaxed mb-8">
+                        Empowering individuals with disabilities to live life their way. Trusted, local, and compassionate support in Adelaide, South Australia.
                     </p>
+                    <div class="flex gap-4">
+                        <!-- Social Placeholders -->
+                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
                 </div>
                 
                 <div>
-                    <h4 class="text-lg font-bold mb-6 text-white">Quick Links</h4>
-                    <ul class="space-y-3 text-slate-400">
-                        <li><a href="#home" class="hover:text-brand-400 transition-colors">Home</a></li>
-                        <li><a href="#services" class="hover:text-brand-400 transition-colors">Our Services</a></li>
-                        <li><a href="referral.html" class="hover:text-brand-400 transition-colors">Make a Referral</a></li>
-                        <li><a href="activities.html" class="hover:text-brand-400 transition-colors">Activities</a></li>
-                        <li><a href="#contact" class="hover:text-brand-400 transition-colors">Contact</a></li>
+                    <h4 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-2 inline-block">Quick Links</h4>
+                    <ul class="space-y-4 text-slate-400">
+                        <li><a href="#home" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Home</a></li>
+                        <li><a href="#services" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Our Services</a></li>
+                        <li><a href="referral.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Make a Referral</a></li>
+                        <li><a href="activities.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Activities</a></li>
+                        <li><a href="#contact" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Contact</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-lg font-bold mb-6 text-white">Legal</h4>
+                    <h4 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-2 inline-block">Legal</h4>
                     <ul class="space-y-3 text-slate-400">
-                        <li><a href="privacy.html" class="hover:text-brand-400 transition-colors">Privacy Policy</a></li>
-                        <li><a href="terms.html" class="hover:text-brand-400 transition-colors">Terms of Service</a></li>
-                        <li><a href="feedback.html" class="hover:text-brand-400 transition-colors">Feedback</a></li>
-                        <li><a href="incident.html" class="hover:text-brand-400 transition-colors">Incident Reporting</a></li>
+                        <li><a href="privacy.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Privacy Policy</a></li>
+                        <li><a href="terms.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Terms of Service</a></li>
+                        <li><a href="feedback.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Feedback</a></li>
+                        <li><a href="incident.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Incident Reporting</a></li>
                     </ul>
                 </div>
             </div>
             
-            <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
-                <p>&copy; 2025 Think Pathways. All rights reserved. | ABN 74 169 269 966</p>
+            <div class="border-t border-slate-800 pt-10 text-center text-slate-500 text-sm">
+                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-3 text-slate-700">|</span> ABN 74 169 269 966</p>
             </div>
         </div>
     </footer>
 
     <!-- Accessibility Toolbar -->
     <div class="fixed bottom-4 left-4 z-50">
-        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center shadow-brand-500/50" aria-label="Accessibility Tools">
-            <i class="fa-solid fa-universal-access text-2xl"></i>
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-14 h-14 bg-brand-600 text-white rounded-full shadow-2xl hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center shadow-brand-500/40 hover:scale-110" aria-label="Accessibility Tools">
+            <i class="fa-solid fa-universal-access text-3xl"></i>
         </button>
-        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
-            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
-            <div class="space-y-4">
+        <div id="a11y-menu" class="hidden absolute bottom-20 left-0 bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-72 animate-fade-in-up origin-bottom-left z-50">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h4 class="font-bold text-slate-900 text-lg">Accessibility</h4>
+                <button onclick="toggleA11yMenu()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-6">
                 <div>
-                    <p class="text-xs text-slate-500 mb-1 uppercase font-bold">Text Size</p>
+                    <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-wide">Text Size</p>
                     <div class="flex gap-2">
-                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">-</button>
-                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">Reset</button>
-                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-2 rounded-lg text-sm font-bold">+</button>
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">A-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">A+</button>
                     </div>
                 </div>
                 <div>
-                    <p class="text-xs text-slate-500 mb-1 uppercase font-bold">Display</p>
-                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-3 rounded-lg text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400 transition-colors">
-                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
+                    <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-wide">Display Mode</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-4 rounded-xl text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400 transition-all shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-half-stroke"></i> High Contrast
                     </button>
                 </div>
             </div>
@@ -727,105 +743,92 @@
             }, 50);
         }
         
-        // --- Testimonial Logic (Restored) ---
+        // --- Testimonial Logic (Infinite Marquee) ---
         const testimonials = [
             {
                 quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism.",
-                author: "Nicholas M."
+                author: "Nicholas M.",
+                role: "Participant"
             },
             {
                 quote: "I couldn't be more blessed with the support I receive from Matisse, I truly am grateful for how he has supported me.",
-                author: "Jimi T."
+                author: "Jimi T.",
+                role: "Participant"
             },
             {
-                quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals while having a great time doing it.",
-                author: "Jordan T."
+                quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals while having a great time.",
+                author: "Jordan T.",
+                role: "Participant"
+            },
+            {
+                quote: "Finding a team that genuinely cares is rare. Think Pathways treats my son with such dignity. It’s been life-changing for our family.",
+                author: "Sarah L.",
+                role: "Parent"
+            },
+            {
+                quote: "The community access trips are the highlight of my week. I've made new friends and feel so much more confident going out.",
+                author: "Michael R.",
+                role: "Participant"
             }
         ];
         
-        let currentTestimonialIndex = 0;
-        let testimonialInterval;
-        
-        function initCarousel() {
-            const container = document.getElementById('testimonial-container');
+        function initMarquee() {
+            const container = document.getElementById('testimonial-track');
             if (!container) return;
             
-            container.innerHTML = testimonials.map((t, index) => `
-                <div class="testimonial-slide row-start-1 col-start-1 w-full flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${index === 0 ? 'opacity-100 translate-x-0 scale-100 z-10' : 'opacity-0 translate-x-8 scale-95 z-0'}">
-                    <div class="glass rounded-3xl p-8 md:p-12 text-center relative w-full mx-4 transform transition-transform hover:-translate-y-1 duration-300 border border-white/50 shadow-xl">
-                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-brand-500 rounded-full flex items-center justify-center text-white text-2xl shadow-lg border-4 border-brand-700">
-                            <i class="fa-solid fa-quote-right"></i>
-                        </div>
-                        <blockquote class="text-xl md:text-2xl font-medium text-slate-700 mt-8 mb-10 leading-relaxed font-serif">
-                            "${t.quote}"
-                        </blockquote>
-                        <div class="flex items-center justify-center gap-4 border-t border-slate-200 pt-6">
-                            <div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xl shadow-inner border border-brand-100">
+            // Create cards
+            const createCard = (t) => `
+                <div class="w-[400px] flex-shrink-0 glass rounded-3xl p-10 border border-white/10 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-500 bg-white/5 backdrop-blur-md shadow-2xl">
+                    <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-quote-right text-8xl text-white"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="mb-8 flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white/20">
                                 ${t.author.charAt(0)}
                             </div>
-                            <div class="text-left">
-                                <div class="font-bold text-slate-900 text-lg">${t.author}</div>
-                                <div class="text-sm text-slate-500 font-medium">Participant</div>
+                            <div>
+                                <h4 class="text-white font-bold text-xl tracking-tight">${t.author}</h4>
+                                <p class="text-brand-300 text-sm uppercase tracking-widest font-bold">${t.role}</p>
                             </div>
                         </div>
+                        <p class="text-slate-200 text-xl leading-relaxed font-medium">"${t.quote}"</p>
                     </div>
                 </div>
-            `).join('');
-            startTestimonialCycle();
-        }
-        
-        function updateSlides() {
-            const slides = document.querySelectorAll('.testimonial-slide');
-            slides.forEach((slide, index) => {
-                if (index === currentTestimonialIndex) {
-                    slide.classList.remove('opacity-0', 'translate-x-8', 'scale-95', 'z-0');
-                    slide.classList.add('opacity-100', 'translate-x-0', 'scale-100', 'z-10');
-                } else {
-                    slide.classList.remove('opacity-100', 'translate-x-0', 'scale-100', 'z-10');
-                    slide.classList.add('opacity-0', 'translate-x-8', 'scale-95', 'z-0');
-                }
-            });
-        }
-        
-        function nextTestimonial() {
-            clearInterval(testimonialInterval);
-            currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonials.length;
-            updateSlides();
-            startTestimonialCycle();
-        }
+            `;
 
-        function prevTestimonial() {
-            clearInterval(testimonialInterval);
-            currentTestimonialIndex = (currentTestimonialIndex - 1 + testimonials.length) % testimonials.length;
-            updateSlides();
-            startTestimonialCycle();
-        }
-
-        function startTestimonialCycle() {
-            testimonialInterval = setInterval(() => {
-                currentTestimonialIndex = (currentTestimonialIndex + 1) % testimonials.length;
-                updateSlides();
-            }, 6000); 
+            // Inject original items + clones for infinite loop
+            const cardsHTML = testimonials.map(createCard).join('');
+            
+            // We duplicate the list enough times to fill the screen width for smooth looping
+            container.innerHTML = cardsHTML + cardsHTML + cardsHTML + cardsHTML; 
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             typeWriter(); 
-            initCarousel();
+            initMarquee();
             
-            VanillaTilt.init(document.querySelectorAll(".tilt-card"), {
-                max: 10,
-                speed: 400,
-                glare: true,
-                "max-glare": 0.2,
-            });
+            // Initialize Tilt
+            if (typeof VanillaTilt !== 'undefined') {
+                VanillaTilt.init(document.querySelectorAll(".tilt-card"), {
+                    max: 8,
+                    speed: 400,
+                    glare: true,
+                    "max-glare": 0.3,
+                });
+            }
             
             // Scroll Reveal
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) entry.target.classList.add('active');
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target); // Only trigger once
+                    }
                 });
-            });
+            }, { threshold: 0.1 });
+            
             document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         });
 
