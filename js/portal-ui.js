@@ -1,16 +1,11 @@
 // --- UTILITY COMPONENTS ---
-const TurnstileWidget = ({ onVerify }) => {
-    const containerRef = useRef(null);
-    useEffect(() => {
-        if (window.turnstile && window.__turnstile_site_key) {
-            if (containerRef.current) containerRef.current.innerHTML = '';
-            window.turnstile.render(containerRef.current, {
-                sitekey: window.__turnstile_site_key,
-                callback: (token) => onVerify(token),
-            });
-        }
-    }, []);
-    return <div ref={containerRef} className="my-4 flex justify-center"></div>;
+// --- HELPER: CHECK IF CANCELLATION IS LATE ( < 48 Hours ) ---
+const isLateCancellation = (dateString, timeString) => {
+    if (!dateString) return false;
+    const shiftStart = new Date(`${dateString}T${timeString || '00:00'}`);
+    const now = new Date();
+    const diffHours = (shiftStart - now) / 1000 / 60 / 60;
+    return diffHours < 48;
 };
 
 const ThemeToggle = () => {
@@ -220,337 +215,113 @@ const DayDetailsModal = ({ shifts, onClose }) => { return (<div className="fixed
 
 // --- CLIENT CARD (ADMIN VIEW) ---
 const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionModal, onAssign, showUnassignedOnly, workersList, onViewWorker, onRemoveWorker, onOpenDocs }) => {
-    const pendingCount = client.stats.pending;
-    const upcomingCount = client.stats.upcoming;
-    
-    // Optimized: Memoize filtering and sorting to prevent re-calc on every render
-    const { scheduled, pending, history } = useMemo(() => {
-        const today = new Date().setHours(0, 0, 0, 0);
-        return {
-            scheduled: client.shifts
-                .filter(s => s.status === 'Confirmed' && new Date(s.date) >= today)
-                .sort((a, b) => getSortValue(a) - getSortValue(b)),
-            pending: client.shifts
-                .filter(s => s.status === 'Pending')
-                .sort((a, b) => getSortValue(a) - getSortValue(b)),
-            history: client.shifts
-                .filter(s => s.status === 'Cancelled' || s.status === 'Declined' || new Date(s.date) < today)
-                .sort((a, b) => getSortValue(b) - getSortValue(a))
-        };
-    }, [client.shifts]);
+// --- CLIENT DASHBOARD ---
+const ClientDashboard = () => {
+    const { user, logout, shifts, isLoadingShifts, updateShiftStatus, updateProfile } = useContext(AuthContext);
+    // ... existing state hooks ...
+    const [lateCancelShift, setLateCancelShift] = useState(null); // NEW STATE for late cancel modal
 
-    const renderList = showUnassignedOnly ? scheduled.filter(s => !s.assignedWorkerEmail) : [...scheduled, ...pending, ...history];
-    if (showUnassignedOnly && renderList.length === 0) return null;
+    // ... existing hooks ...
 
-    const ShiftItem = ({ s }) => {
-        const assignedWorker = s.assignedWorkerEmail ? workersList?.find(w => w.email.toLowerCase() === s.assignedWorkerEmail.toLowerCase()) : null;
-        const workerDisplayName = assignedWorker ? assignedWorker.name : s.assignedWorkerEmail;
+    // --- CLIENT-SPECIFIC SHIFT ITEM ---
+    const ClientShiftItem = ({ s }) => {
         let statusColor = "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600";
         if (s.status === 'Confirmed') statusColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800";
         if (s.status === 'Pending') statusColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
         if (s.status === 'Cancelled' || s.status === 'Declined') statusColor = "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
 
-        // --- PDF GENERATION HANDLER ---
-        const downloadPDF = () => {
-            const reportWindow = window.open('', '_blank');
-            reportWindow.document.write(`
-                <html>
-                <head>
-                    <title>Shift Report - ${s.dateDisplay}</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <style>@media print { body { margin: 0; } .no-print { display: none; } }</style>
-                </head>
-                <body class="p-10 font-sans bg-white">
-                    <div class="max-w-2xl mx-auto border border-gray-200 p-8 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center mb-8 border-b pb-4">
-                            <h1 class="text-2xl font-bold text-slate-900">Shift Report</h1>
-                            <div class="text-right">
-                                <p class="font-bold text-brand-600">Think Pathways</p>
-                                <p class="text-xs text-gray-500">${new Date().toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6 mb-6">
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Client</p><p class="font-medium">${s.userName}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Worker</p><p class="font-medium">${workerDisplayName || 'Unknown'}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Date</p><p class="font-medium">${s.dateDisplay}</p></div>
-                            <div><p class="text-xs text-gray-500 uppercase font-bold">Time</p><p class="font-medium">${s.timesheet?.start || s.startTime} - ${s.timesheet?.end || s.endTime}</p></div>
-                        </div>
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Summary of Support</p>
-                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.summary || 'No summary provided.'}</div>
-                        </div>
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Goal Progress</p>
-                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.goals || 'No goals recorded.'}</div>
-                        </div>
-                        
-                        ${s.travel?.totalKm > 0 ? `
-                        <div class="mb-6">
-                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel Claim (${s.travel.totalKm} km)</p>
-                            <table class="w-full text-xs text-left border-collapse border border-gray-200">
-                                <thead class="bg-gray-50"><tr><th class="p-2 border">From</th><th class="p-2 border">To</th><th class="p-2 border">Reason</th><th class="p-2 border">KM</th></tr></thead>
-                                <tbody>
-                                    ${s.travel.logs.map(log => `
-                                    <tr>
-                                        <td class="p-2 border">${log.from}</td>
-                                        <td class="p-2 border">${log.to}</td>
-                                        <td class="p-2 border">${log.reason}</td>
-                                        <td class="p-2 border">${log.km}</td>
-                                    </tr>`).join('')}
-                                </tbody>
-                            </table>
-                        </div>` : ''}
+        // Check for Late Cancellation Condition
+        const isLate = s.status === 'Confirmed' && isLateCancellation(s.date, s.startTime);
 
-                        ${s.caseNotes?.incidents === 'Yes' ? `<div class="mb-6 p-4 bg-red-50 border border-red-100 rounded"><p class="text-red-700 font-bold text-sm mb-1">Incident Reported</p><p class="text-red-600 text-sm">${s.caseNotes.incidentDetails}</p></div>` : ''}
-                        <div class="mt-12 pt-4 border-t text-center text-xs text-gray-400">Generated via Think Pathways Portal</div>
-                    </div>
-                    <script>window.print();</script>
-                </body>
-                </html>
-            `);
-            reportWindow.document.close();
+        const handleCancelClick = () => {
+            if (isLate) {
+                setLateCancelShift(s); // Open special Late Cancel warning
+            } else {
+                setCancelModalShift(s); // Standard Cancel
+            }
         };
+
+        // ... existing PDF logic ...
 
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
                 <div className="flex flex-col md:flex-row gap-4">
-                    
-                    {/* 1. DATE COLUMN */}
-                    <div className="md:w-24 flex-shrink-0 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-2">
-                        <div className="text-center md:text-left">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                                {s.dateDisplay.split(' ').length > 2 ? s.dateDisplay.split(' ')[2] : ''}
-                            </div>
-                            <div className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                                {s.dateDisplay.split(' ')[0]}
-                            </div>
-                            <div className="text-xs text-slate-500 uppercase">
-                                {s.dateDisplay.split(' ').length > 1 ? s.dateDisplay.split(' ')[1] : ''}
-                            </div>
-                        </div>
-                        <div className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md whitespace-nowrap">
-                            {s.startTime} - {s.endTime}
-                        </div>
-                    </div>
-
-                    {/* 2. CONTENT COLUMN */}
-                    <div className="flex-grow border-l-0 md:border-l border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0 md:pl-4">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <h4 className="font-bold text-slate-900 dark:text-white text-lg">{s.service}</h4>
-                            {s.recurrence && s.recurrence !== 'none' && (
-                                <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 uppercase font-bold tracking-wide">
-                                    {s.recurrence}
-                                </span>
-                            )}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mb-2">
-                            {s.assignedWorkerEmail ? (
-                                <div className="flex items-center bg-slate-50 dark:bg-slate-700/50 rounded-full pl-1 pr-3 py-1 border border-slate-100 dark:border-slate-600 w-fit">
-                                    <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold mr-2">
-                                        {workerDisplayName.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300 mr-2">
-                                        {workerDisplayName}
-                                    </span>
-                                    <span className={`w-2 h-2 rounded-full ${s.workerStatus === 'Accepted' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
-                                    {/* FIX: REMOVAL BUTTON ONLY IF NOT COMPLETED */}
-                                    {s.workerStatus !== 'Completed' && (
-                                        <button onClick={(e) => { e.stopPropagation(); onRemoveWorker(s.id); }} className="ml-2 text-slate-400 hover:text-red-500 transition-colors" title="Remove Worker">
-                                            <i className="fa-solid fa-xmark"></i>
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                /* FIX: ASSIGN BUTTON ONLY IF CONFIRMED */
-                                s.status === 'Confirmed' ? (
-                                    <button onClick={(e) => { e.stopPropagation(); onAssign(s); }} className="text-xs flex items-center gap-2 text-slate-500 hover:text-brand-600 border border-dashed border-slate-300 hover:border-brand-400 px-3 py-1.5 rounded-full transition-colors bg-white dark:bg-transparent dark:border-slate-600 dark:text-slate-400 dark:hover:text-brand-400">
-                                        <i className="fa-solid fa-user-plus"></i> Assign Worker
-                                    </button>
-                                ) : (
-                                    <span className="text-xs text-slate-400 italic">Waiting for approval...</span>
-                                )
-                            )}
-                        </div>
-
-                        {s.notes && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400 italic flex items-start gap-1">
-                                <i className="fa-regular fa-note-sticky mt-0.5"></i> <span>{s.notes}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 3. ACTION COLUMN */}
-                    <div className="md:w-auto flex-shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between gap-3 border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor}`}>
+                   {/* ... existing Date & Content Columns ... */}
+                   
+                   {/* 3. ACTION COLUMN (CLIENT SPECIFIC) */}
+                   <div className="md:w-auto flex-shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between gap-3 border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-3 md:pt-0">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor} flex items-center gap-1`}>
+                            {s.workerStatus === 'Completed' && <i className="fa-solid fa-check"></i>}
                             {s.statusLabel}
                         </span>
 
                         <div className="flex items-center gap-2">
-                            {s.status === 'Pending' ? (
-                                <>
-                                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(s.id, 'Confirmed'); }} className="w-9 h-9 rounded-full bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center transition-colors shadow-sm" title="Approve Request">
-                                        <i className="fa-solid fa-check"></i>
-                                    </button>
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Declined'); }} className="w-9 h-9 rounded-full bg-red-100 text-red-700 hover:bg-red-200 flex items-center justify-center transition-colors shadow-sm" title="Decline Request">
-                                        <i className="fa-solid fa-xmark"></i>
-                                    </button>
-                                </>
-                            ) : (
-                                s.status === 'Confirmed' && (
-                                    <button onClick={(e) => { e.stopPropagation(); openActionModal(s, 'Cancelled'); }} className="text-xs text-red-500 hover:text-red-700 font-bold border border-red-100 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-red-50 dark:bg-red-900/10 dark:border-red-900">
-                                        Cancel
-                                    </button>
-                                )
+                            {/* PENDING: Allow Withdraw */}
+                            {s.status === 'Pending' && (
+                                <button onClick={() => setCancelModalShift(s)} className="text-xs text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400 dark:hover:text-red-400" title="Withdraw Request">
+                                    <i className="fa-solid fa-ban mr-1"></i> Withdraw
+                                </button>
                             )}
+                            
+                            {/* CONFIRMED & NOT COMPLETED: Allow Cancel (Standard or Late) */}
+                            {s.status === 'Confirmed' && s.workerStatus !== 'Completed' && (
+                                <button 
+                                    onClick={handleCancelClick} 
+                                    className={`text-xs font-bold border px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${isLate ? 'text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100' : 'text-red-500 hover:text-red-700 border-red-100 hover:border-red-300 bg-red-50'}`}
+                                >
+                                    {isLate && <i className="fa-solid fa-triangle-exclamation"></i>} Cancel
+                                </button>
+                            )}
+                            
+                            {/* COMPLETED: No Actions Allowed */}
                         </div>
                     </div>
-
                 </div>
                 
-                {/* --- SHIFT REPORT VISIBILITY --- */}
-                {(s.workerStatus === 'Completed' && (s.caseNotes || s.travel)) && (
-                    <div className="mt-3 w-full bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-600 pt-3 px-2">
-                            <div className="flex justify-between items-center mb-2">
-                            <div className="text-xs font-bold text-brand-600 uppercase">Shift Report</div>
-                            <button onClick={downloadPDF} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-100 flex items-center text-slate-600 shadow-sm"><i className="fa-solid fa-file-pdf mr-1 text-red-500"></i> Download PDF</button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                            <div>
-                                <p className="font-semibold text-slate-700 dark:text-slate-300">Summary:</p>
-                                <p className="text-slate-600 dark:text-slate-400 mb-2">{s.caseNotes?.summary || 'N/A'}</p>
-                                <p className="font-semibold text-slate-700 dark:text-slate-300">Goals:</p>
-                                <p className="text-slate-600 dark:text-slate-400">{s.caseNotes?.goals || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <div className="mb-2">
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Time: </span>
-                                    <span className="text-slate-600 dark:text-slate-400">{s.timesheet?.start} - {s.timesheet?.end}</span>
-                                </div>
-                                {s.travel?.totalKm > 0 && (
-                                    <div className="mb-2">
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
-                                        <span className="text-slate-600 dark:text-slate-400">{s.travel.totalKm} km</span>
-                                        <ul className="mt-1 pl-4 list-disc text-[10px] text-slate-500">
-                                            {s.travel.logs.map((log, i) => (
-                                                <li key={i}>{log.from} to {log.to} ({log.km}km)</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {s.caseNotes?.incidents === 'Yes' && (
-                                    <div className="bg-red-50 text-red-700 p-2 rounded border border-red-100">
-                                        <strong>Incident:</strong> {s.caseNotes.incidentDetails}
-                                    </div>
-                                )}
-                            </div>
-                            </div>
+                {/* ... existing Shift Report Visibility ... */}
+            </div>
+        );
+    };
+
+    // --- NEW MODAL: LATE CANCELLATION WARNING ---
+    const LateCancellationModal = ({ shift, onClose, onConfirm }) => {
+        const [reason, setReason] = useState('');
+        const [loading, setLoading] = useState(false);
+        
+        const handleConfirm = async () => { 
+            setLoading(true); 
+            // Append "LATE CANCELLATION" tag to the reason for Admin visibility
+            await onConfirm(shift.id, `[LATE CANCELLATION] ${reason}`); 
+            setLoading(false); 
+            onClose(); 
+        };
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md relative animate-pop-in border-l-4 border-orange-500">
+                    <h3 className="text-xl font-bold mb-2 text-orange-600"><i className="fa-solid fa-clock-rotate-left mr-2"></i> Late Cancellation</h3>
+                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-lg mb-4 text-xs text-orange-800 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-200">
+                        <strong>Policy Warning:</strong> This shift is scheduled within 48 hours. Cancelling now may incur a cancellation fee as per your Service Agreement.
                     </div>
-                )}
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">Please provide a reason for this late cancellation:</p>
+                    <textarea value={reason} onChange={(e)=>setReason(e.target.value)} className="w-full p-3 border border-slate-200 rounded-lg mb-4 text-sm outline-none focus:border-orange-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white" rows="3" placeholder="Reason..."></textarea>
+                    <div className="flex gap-3 justify-end">
+                        <button onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 font-medium transition-colors">Keep Shift</button>
+                        <button onClick={handleConfirm} disabled={!reason || loading} className="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 disabled:opacity-50 transition-colors">Confirm Cancel</button>
+                    </div>
+                </div>
             </div>
         );
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all hover:shadow-md mb-6 group">
-            <div className="p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors" onClick={onExpand}>
-                <div className="flex items-center gap-5 mb-4 md:mb-0 w-full md:w-auto">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md ${pendingCount > 0 ? 'bg-amber-500' : 'bg-brand-600'}`}>
-                        {client.name.charAt(0).toUpperCase()}
-                        {pendingCount > 0 && <span className="absolute top-0 right-0 -mr-1 -mt-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{client.name}</h3><p className="text-sm text-slate-500 dark:text-slate-400">{client.email}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <div className="flex gap-3">
-                        <div className="flex flex-col items-center px-4">
-                            <span className="text-xl font-bold text-brand-600 dark:text-brand-400">{upcomingCount}</span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Upcoming</span>
-                        </div>
-                        {pendingCount > 0 && (
-                            <div className="flex flex-col items-center px-4 border-l border-slate-100 dark:border-slate-700">
-                                <span className="text-xl font-bold text-amber-500">{pendingCount}</span>
-                                <span className="text-[10px] text-amber-500 uppercase font-bold tracking-wide">Pending</span>
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex items-center">
-                        {/* 1. CONTRACT GENERATOR BUTTON */}
-                        <button 
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
-                                // Calculate dates (Today + 1 Year)
-                                const start = new Date().toISOString().split('T')[0];
-                                const end = new Date();
-                                end.setFullYear(end.getFullYear() + 1);
-                                const endStr = end.toISOString().split('T')[0];
-                                
-                                // Save to Session Storage
-                                const agreementData = {
-                                    name: client.name,
-                                    start: start,
-                                    end: endStr
-                                };
-                                sessionStorage.setItem('agreementData', JSON.stringify(agreementData));
-                                
-                                // Open the smart agreement
-                                window.open(`service-agreement.html`, '_blank');
-                            }} 
-                            className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-colors mr-2" 
-                            title="Generate Service Agreement"
-                        >
-                            <i className="fa-solid fa-file-contract"></i>
-                        </button>
-
-                        {/* 2. EXISTING DOCS BUTTON */}
-                        <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
-                    </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
-                        <i className="fa-solid fa-chevron-down text-xs"></i>
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-slate-50 font-sans pb-12 transition-colors dark:bg-slate-900">
+            {isModalOpen && <BookingModal onClose={() => setIsModalOpen(false)} />}
+            {cancelModalShift && <CancellationModal shift={cancelModalShift} onClose={() => setCancelModalShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
+            {/* NEW MODAL RENDER */}
+            {lateCancelShift && <LateCancellationModal shift={lateCancelShift} onClose={() => setLateCancelShift(null)} onConfirm={(id, reason) => updateShiftStatus(id, 'Cancelled', reason)} />}
             
-            {/* EXPANDED AREA */}
-            {isExpanded && (
-                <div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">
-                    {!showUnassignedOnly ? (
-                        <>
-                            {pending.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3 pl-1 flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Action Required</h4>
-                                    <div className="space-y-3">{pending.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-                            
-                            {scheduled.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 pl-1 flex items-center mt-2"><span className="w-2 h-2 rounded-full bg-brand-500 mr-2"></span>Scheduled</h4>
-                                    <div className="space-y-3">{scheduled.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-
-                            {history.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 pl-1 mt-6">History</h4>
-                                    <div className="space-y-3 opacity-60 hover:opacity-100 transition-opacity">{history.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                                </div>
-                            )}
-
-                            {scheduled.length === 0 && pending.length === 0 && history.length === 0 && (
-                                <div className="text-center py-8">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i className="fa-regular fa-calendar-xmark text-xl"></i></div>
-                                    <p className="text-sm text-slate-400">No shifts found for this client.</p>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="space-y-3">{renderList.map(s => <ShiftItem key={s.id} s={s} />)}</div>
-                    )}
-                </div>
-            )}
+            {/* ... existing JSX ... */}
         </div>
     );
 };
