@@ -45,7 +45,7 @@
                     colors: {
                         brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e' },
                         accent: { 500: '#10b981', 600: '#059669' },
-                        slate: { 850: '#1e293b' } // Custom dark slate
+                        slate: { 850: '#1e293b' } 
                     },
                     animation: {
                         'blob': 'blob 10s infinite',
@@ -74,9 +74,21 @@
     </script>
     
     <style>
-        /* Glassmorphism Class - Improved Contrast */
+        /* Scroll Progress Bar */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(to right, #0ea5e9, #10b981);
+            z-index: 100;
+            transition: width 0.1s;
+        }
+
+        /* Glassmorphism Class */
         .glass {
-            background: rgba(255, 255, 255, 0.85); /* Increased opacity for readability */
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -98,6 +110,7 @@
         .tilt-card {
             transform-style: preserve-3d;
             transform: perspective(1000px);
+            backface-visibility: hidden;
         }
         .tilt-content {
             transform: translateZ(20px);
@@ -119,7 +132,10 @@
         .high-contrast .blob { display: none; }
     </style>
 </head>
-<body class="font-sans text-slate-800 bg-slate-50 antialiased relative selection:bg-brand-200 selection:text-brand-900">
+<body class="font-sans text-slate-800 bg-slate-50 antialiased relative selection:bg-brand-200 selection:text-brand-900 overflow-x-hidden">
+
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress"></div>
 
     <!-- Accessibility Skip -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-600 text-white px-4 py-2 rounded-md z-50 font-bold">Skip to content</a>
@@ -169,563 +185,605 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="relative bg-slate-50 overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200">
-        <!-- Background Blobs -->
-        <div class="absolute top-0 -left-4 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob blob"></div>
-        <div class="absolute top-0 -right-4 w-96 h-96 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 blob"></div>
-        <div class="absolute -bottom-32 left-20 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 blob"></div>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div class="text-center lg:text-left reveal">
-                <div class="inline-flex items-center px-4 py-1.5 rounded-full border border-brand-300 bg-white/90 backdrop-blur-sm text-brand-800 text-sm font-bold uppercase tracking-wide mb-6 shadow-sm">
-                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5 animate-pulse"></span> Accepting New Referrals
-                </div>
-                <h1 class="text-5xl tracking-tight font-extrabold text-slate-900 sm:text-6xl md:text-7xl mb-6 leading-tight">
-                    Compassionate care for <br>
-                    <!-- TYPEWRITER EFFECT -->
-                    <span class="text-brand-600 typing-cursor" id="typewriter">Your Independence.</span>
-                </h1>
-                <p class="mt-6 text-xl text-slate-700 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                    At <strong>Think Pathways</strong>, we provide person-centered NDIS support designed to help you live independently. We focus on dignity, respect, and achieving your unique goals.
-                </p>
-                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="#contact" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-brand-500/40 transition-all transform hover:-translate-y-1 text-center">
-                        Get Started
-                    </a>
-                    <a href="#services" class="px-8 py-4 text-lg font-bold rounded-full text-brand-700 bg-white hover:bg-slate-50 border-2 border-brand-100 shadow-sm hover:shadow-md transition-all text-center">
-                        View Services
-                    </a>
-                </div>
-            </div>
-            <div class="relative lg:h-full flex items-center justify-center reveal mt-12 lg:mt-0">
-                <!-- 3D Tilt on Hero Image -->
-                <div class="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 glass p-3 bg-white/40" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
-                    <img class="rounded-2xl w-full object-cover shadow-inner" src="https://i.imgur.com/o73sFO7.png" alt="Disability support illustration">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section (With 3D Tilt Cards) -->
-    <section id="services" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center reveal mb-16">
-                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-2">Our Services</h2>
-                <p class="text-4xl font-extrabold text-slate-900">Supporting your independence</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Service Card 1 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-perspective="1000">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-house-user"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">In-Home Support</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Assistance with daily living tasks, personal care, and household management to help you maintain your independence.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 2 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-people-group"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Community Access</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Support to participate in community activities, social groups, appointments, and recreational events.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 3 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Skill Development</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Mentoring and training to build life skills such as cooking, budgeting, travel training, and technology use.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 4 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-car"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Transport Assistance</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Safe and reliable transport to get you to your appointments, work, or social engagements on time.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 5 -->
-                <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-heart-pulse"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Complex Care</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Specialized support for participants with high intensity daily personal activities or complex health needs.
-                        </p>
-                    </div>
-                </div>
-
-                 <!-- Service Card 6 -->
-                 <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 reveal tilt-card bg-slate-50 border-slate-200" data-tilt data-tilt-max="8">
-                    <div class="tilt-content">
-                        <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-3xl shadow-sm">
-                            <i class="fa-solid fa-clipboard-list"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Plan Management</h3>
-                        <p class="text-slate-600 leading-relaxed font-medium">
-                            Assistance with managing your NDIS funding, paying invoices, and tracking your budget expenditure.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-16 text-center reveal">
-                <a href="pricing.html" class="inline-flex items-center px-8 py-4 border-2 border-brand-600 text-base font-bold rounded-full text-brand-700 bg-white hover:bg-brand-50 transition-colors shadow-md hover:shadow-lg">
-                    View Pricing Guide <i class="fa-solid fa-arrow-right ml-2"></i>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Activities Banner (Darker & richer background) -->
-    <section class="py-24 bg-brand-800 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10 pattern-dots"></div>
-        <!-- Gradient Overlay -->
-        <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-700 opacity-90"></div>
+    <!-- Main Content with Parallax -->
+    <main class="relative w-full" onmousemove="parallax(event)">
         
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
-            <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-8 tracking-tight">See Support in Action</h2>
-            <p class="text-xl text-brand-100 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-                We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate to help you achieve your goals.
-            </p>
-            <a href="activities.html" class="inline-flex items-center px-10 py-5 border-2 border-white text-lg font-bold rounded-full text-brand-800 bg-white hover:bg-brand-50 shadow-xl transition-all transform hover:-translate-y-1">
-                View Activities Gallery
-            </a>
+        <!-- Interactive Parallax Background -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+            <div data-speed="2" class="parallax-blob absolute top-20 -left-10 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            <div data-speed="-2" class="parallax-blob absolute top-60 -right-20 w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
+            <div data-speed="1" class="parallax-blob absolute bottom-20 left-20 w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
         </div>
-    </section>
 
-    <!-- NEW: Our Core Values Section (Subtle Background) -->
-    <section class="py-24 bg-slate-50 border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Our Philosophy</h2>
-                <p class="text-4xl md:text-5xl font-extrabold text-slate-900">Values that drive our care</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 reveal">
-                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
-                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
-                        <i class="fa-solid fa-hand-holding-heart text-4xl text-brand-600"></i>
+        <!-- Hero Section -->
+        <section id="home" class="relative overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left reveal">
+                    <div class="inline-flex items-center px-4 py-1.5 rounded-full border border-brand-300 bg-white/90 backdrop-blur-sm text-brand-800 text-sm font-bold uppercase tracking-wide mb-6 shadow-sm">
+                        <span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5 animate-pulse"></span> Accepting New Referrals
                     </div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Empowerment</h3>
-                    <p class="text-slate-600 text-lg leading-relaxed">Building your skills and confidence so you can live life on your own terms.</p>
-                </div>
-                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
-                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
-                        <i class="fa-solid fa-shield-halved text-4xl text-brand-600"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Integrity</h3>
-                    <p class="text-slate-600 text-lg leading-relaxed">Honest, transparent, and reliable support. We do what we say we will do.</p>
-                </div>
-                <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
-                    <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
-                        <i class="fa-solid fa-users text-4xl text-brand-600"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Connection</h3>
-                    <p class="text-slate-600 text-lg leading-relaxed">Fostering genuine relationships and meaningful community connections.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Onboarding Journey (Soft Blue Background) -->
-    <section class="py-24 bg-brand-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">Your Journey with Us</h2>
-                <p class="text-xl text-slate-600 max-w-2xl mx-auto">We make getting started simple, transparent, and stress-free.</p>
-            </div>
-
-            <div class="relative reveal">
-                <!-- Connector Line (Desktop) -->
-                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-200 -translate-y-1/2 z-0 rounded-full"></div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
-                    <!-- Step 1 -->
-                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
-                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
-                            1
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Get in Touch</h3>
-                        <p class="text-base text-slate-600 font-medium">Fill out our contact or referral form to tell us about your needs.</p>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
-                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
-                            2
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Meet & Greet</h3>
-                        <p class="text-base text-slate-600 font-medium">We meet you (in person or online) to ensure we're the right fit for you.</p>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300 group">
-                        <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
-                            3
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Service Agreement</h3>
-                        <p class="text-base text-slate-600 font-medium mb-4">We agree on a plan and sign a service agreement outlining your support.</p>
-                        
-                        <!-- Link Added Here -->
-                        <a href="service-agreement.html" target="_blank" class="text-sm font-bold text-brand-700 uppercase tracking-wide hover:text-brand-900 inline-flex items-center group-hover:underline underline-offset-4">
-                            View Sample <i class="fa-solid fa-arrow-right ml-2"></i>
+                    <h1 class="text-5xl tracking-tight font-extrabold text-slate-900 sm:text-6xl md:text-7xl mb-6 leading-tight">
+                        Compassionate care for <br>
+                        <!-- TYPEWRITER EFFECT -->
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-500 typing-cursor" id="typewriter">Your Independence.</span>
+                    </h1>
+                    <p class="mt-6 text-xl text-slate-700 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                        At <strong>Think Pathways</strong>, we provide person-centered NDIS support designed to help you live independently. We focus on dignity, respect, and achieving your unique goals.
+                    </p>
+                    <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="#contact" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-brand-500/40 transition-all transform hover:-translate-y-1 text-center">
+                            Get Started
+                        </a>
+                        <a href="#services" class="px-8 py-4 text-lg font-bold rounded-full text-brand-700 bg-white hover:bg-slate-50 border-2 border-brand-100 shadow-sm hover:shadow-md transition-all text-center">
+                            View Services
                         </a>
                     </div>
-
-                    <!-- Step 4 -->
-                    <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
-                        <div class="w-16 h-16 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Support Begins</h3>
-                        <p class="text-base text-slate-600 font-medium">Your support worker starts, helping you achieve your goals.</p>
+                </div>
+                <div class="relative lg:h-full flex items-center justify-center reveal mt-12 lg:mt-0">
+                    <!-- 3D Tilt on Hero Image -->
+                    <div class="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 glass p-3 bg-white/40 tilt-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                        <img class="rounded-2xl w-full object-cover shadow-inner" src="https://i.imgur.com/o73sFO7.png" alt="Disability support illustration">
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- MEET THE FOUNDER SECTION (Restored) -->
-    <section id="about" class="py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="glass rounded-3xl p-10 md:p-16 shadow-xl border border-slate-200 reveal bg-slate-50/50">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
-                    
-                    <!-- Profile Image Column -->
-                    <div class="md:col-span-1 text-center relative group">
-                        <div class="absolute inset-0 bg-brand-200 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                        <div class="relative inline-block">
-                            <!-- UPDATED IMAGE SOURCE -->
-                            <img src="https://i.imgur.com/t5ke22D.jpeg" alt="Matisse Duffield" class="relative w-64 h-64 md:w-72 md:h-72 rounded-full object-cover border-8 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute bottom-6 right-6 bg-white p-3 rounded-full shadow-lg text-brand-600">
-                                <i class="fa-solid fa-quote-right text-2xl"></i>
+        <!-- Services Section (With 3D Tilt Cards) -->
+        <section id="services" class="py-24 bg-white/80 backdrop-blur-sm relative z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center reveal mb-16">
+                    <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-2">Our Services</h2>
+                    <p class="text-4xl font-extrabold text-slate-900">Supporting your independence</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Service Card 1 -->
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mb-6 text-brand-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-house-user"></i>
                             </div>
-                        </div>
-                        <div class="mt-8">
-                            <h3 class="text-3xl font-bold text-slate-900">Matisse Duffield</h3>
-                            <p class="text-brand-700 font-bold uppercase tracking-wide text-sm mt-1">Founder & Director</p>
-                        </div>
-                    </div>
-
-                    <!-- Text Column -->
-                    <div class="md:col-span-2">
-                        <div class="mb-8 inline-flex items-center gap-2 px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 uppercase tracking-wider shadow-sm">
-                            <i class="fa-solid fa-star text-yellow-500"></i> My Philosophy
-                        </div>
-                        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-8 leading-tight">
-                            "Support is about walking <span class="text-brand-600 underline decoration-brand-300 decoration-4 underline-offset-4">with</span> you, not just for you."
-                        </h2>
-                        <div class="prose text-slate-700 text-xl leading-relaxed space-y-6 font-medium">
-                            <p>
-                                I started Think Pathways with a simple belief: everyone deserves support that actually <em>listens</em>. I've seen too many participants treated as just a number in a system.
-                            </p>
-                            <p>
-                                My goal is to build a service where you feel genuinely heard, valued, and empowered to take control of your own journey. Whether it's learning a new skill or just having a chat over coffee, we are here to make your day better.
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">In-Home Support</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Assistance with daily living tasks, personal care, and household management to help you maintain your independence.
                             </p>
                         </div>
-                        
-                        <!-- Signature / Trust Signals -->
-                        <div class="mt-12 pt-10 border-t border-slate-200 flex flex-wrap gap-8">
-                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
-                                <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-certificate"></i></div>
-                                Fully Insured
+                    </div>
+
+                    <!-- Service Card 2 -->
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-accent-100 rounded-2xl flex items-center justify-center mb-6 text-accent-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-people-group"></i>
                             </div>
-                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
-                                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-check-circle"></i></div>
-                                NDIS Worker Screened
-                            </div>
-                            <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
-                                <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-heart-pulse"></i></div>
-                                First Aid Certified
-                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Community Access</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Support to participate in community activities, social groups, appointments, and recreational events.
+                            </p>
                         </div>
                     </div>
 
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonial Section (UPGRADED MARQUEE) -->
-    <section class="py-24 bg-slate-900 relative overflow-hidden">
-        <!-- Decorative Background Grid -->
-        <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px); background-size: 40px 40px;"></div>
-        
-        <div class="relative z-10">
-            <div class="text-center mb-16 px-4">
-                <h2 class="text-brand-400 font-bold tracking-wide uppercase text-sm mb-3">Community Stories</h2>
-                <p class="text-4xl md:text-5xl font-extrabold text-white">Real experiences, real impact</p>
-            </div>
-            
-            <!-- Marquee Container -->
-            <div class="marquee-container relative w-full overflow-hidden py-8">
-                <!-- Gradient Fade Edges -->
-                <div class="absolute top-0 bottom-0 left-0 w-24 md:w-48 bg-gradient-to-r from-slate-900 to-transparent z-20 pointer-events-none"></div>
-                <div class="absolute top-0 bottom-0 right-0 w-24 md:w-48 bg-gradient-to-l from-slate-900 to-transparent z-20 pointer-events-none"></div>
-
-                <!-- Scrolling Track -->
-                <div class="flex gap-8 animate-marquee w-max hover:pause" id="testimonial-track">
-                    <!-- JS will inject duplicates here for seamless looping -->
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section (Restored & Styled) -->
-    <section id="faq" class="py-24 bg-white">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 reveal">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
-                <p class="mt-4 text-xl text-slate-600">Common questions about our services and NDIS support.</p>
-            </div>
-            
-            <div class="space-y-6">
-                <!-- FAQ Item 1 -->
-                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
-                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-circle-question"></i></div>
-                        Are you NDIS registered?
-                    </h3>
-                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
-                        We are an NDIS compatible provider. We can support participants who are <strong>Plan Managed</strong> or <strong>Self Managed</strong>. 
-                    </p>
-                </div>
-
-                <!-- FAQ Item 2 -->
-                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
-                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div>
-                        What areas do you service?
-                    </h3>
-                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
-                        We currently provide support services across the Greater Metropolitan area of Adelaide. Please contact us to check if we have a worker in your specific suburb.
-                    </p>
-                </div>
-
-                <!-- FAQ Item 3 -->
-                <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50">
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
-                        <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
-                        Is there a waiting list?
-                    </h3>
-                    <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
-                        We currently have capacity to take on new participants. Once we understand your needs, we can usually start services within 1-2 weeks.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section (Glassmorphism) -->
-    <section id="contact" class="py-24 bg-brand-50 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
-            <div class="absolute top-20 right-0 w-96 h-96 bg-brand-300 rounded-full blur-3xl mix-blend-multiply"></div>
-            <div class="absolute bottom-0 left-20 w-72 h-72 bg-accent-300 rounded-full blur-3xl mix-blend-multiply"></div>
-        </div>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="glass rounded-3xl shadow-2xl overflow-hidden reveal border border-white/60">
-                <div class="grid grid-cols-1 lg:grid-cols-2">
-                    <!-- Contact Info -->
-                    <div class="bg-slate-900 p-12 md:p-16 text-white flex flex-col justify-center">
-                        <h3 class="text-4xl font-extrabold mb-6">Get in touch</h3>
-                        <p class="text-slate-300 mb-12 text-xl leading-relaxed">
-                            Ready to discuss your support needs? Fill out the form or contact us directly.
-                        </p>
-                        <div class="space-y-10">
-                            <div class="flex items-center group">
-                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
-                                    <i class="fa-solid fa-phone text-2xl text-brand-400 group-hover:text-white"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Call Us</p>
-                                    <p class="text-2xl font-bold text-white">+61 420 673 303</p>
-                                </div>
+                    <!-- Service Card 3 -->
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <div class="flex items-center group">
-                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
-                                    <i class="fa-solid fa-envelope text-2xl text-brand-400 group-hover:text-white"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Email Us</p>
-                                    <p class="text-2xl font-bold text-white">care@thinkpathways.com</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center group">
-                                <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
-                                    <i class="fa-solid fa-location-dot text-2xl text-brand-400 group-hover:text-white"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Service Area</p>
-                                    <p class="text-2xl font-bold text-white">Adelaide, South Australia</p>
-                                </div>
-                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Skill Development</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Mentoring and training to build life skills such as cooking, budgeting, travel training, and technology use.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Contact Form -->
-                    <div class="p-12 md:p-16 bg-white/60 backdrop-blur-xl">
-                        <form action="https://formspree.io/f/xkgagpzz" method="POST" class="space-y-8">
-                            <input type="hidden" name="_next" value="https://thinkpathways.com/success.html">
-                            <input type="hidden" name="_subject" value="New Website Inquiry">
+                    <!-- Service Card 4 -->
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-car"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Transport Assistance</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Safe and reliable transport to get you to your appointments, work, or social engagements on time.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Service Card 5 -->
+                    <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 text-red-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-heart-pulse"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Complex Care</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Specialized support for participants with high intensity daily personal activities or complex health needs.
+                            </p>
+                        </div>
+                    </div>
+
+                     <!-- Service Card 6 -->
+                     <div class="glass p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 reveal tilt-card bg-slate-50/50 border-slate-200" data-tilt data-tilt-max="5">
+                        <div class="tilt-content">
+                            <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 text-teal-600 text-3xl shadow-sm">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Plan Management</h3>
+                            <p class="text-slate-600 leading-relaxed font-medium">
+                                Assistance with managing your NDIS funding, paying invoices, and tracking your budget expenditure.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center reveal">
+                    <a href="pricing.html" class="inline-flex items-center px-8 py-4 border-2 border-brand-600 text-base font-bold rounded-full text-brand-700 bg-white hover:bg-brand-50 transition-colors shadow-md hover:shadow-lg">
+                        View Pricing Guide <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activities Banner (Darker & richer background) -->
+        <section class="py-24 bg-brand-800 relative overflow-hidden z-10">
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 20px 20px;"></div>
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-700 opacity-90"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-8 tracking-tight">See Support in Action</h2>
+                <p class="text-xl text-brand-100 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
+                    We focus on practical tasks that build independence and joy. Check out the range of activities we facilitate to help you achieve your goals.
+                </p>
+                <a href="activities.html" class="inline-flex items-center px-10 py-5 border-2 border-white text-lg font-bold rounded-full text-brand-800 bg-white hover:bg-brand-50 shadow-xl transition-all transform hover:-translate-y-1">
+                    View Activities Gallery
+                </a>
+            </div>
+        </section>
+
+        <!-- NEW: Our Core Values Section (Subtle Background) -->
+        <section class="py-24 bg-slate-50 border-b border-slate-200 z-10 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-20 reveal">
+                    <h2 class="text-brand-600 font-bold tracking-wide uppercase text-sm mb-3">Our Philosophy</h2>
+                    <p class="text-4xl md:text-5xl font-extrabold text-slate-900">Values that drive our care</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12 reveal">
+                    <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                        <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-hand-holding-heart text-4xl text-brand-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Empowerment</h3>
+                        <p class="text-slate-600 text-lg leading-relaxed">Building your skills and confidence so you can live life on your own terms.</p>
+                    </div>
+                    <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                        <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-shield-halved text-4xl text-brand-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Integrity</h3>
+                        <p class="text-slate-600 text-lg leading-relaxed">Honest, transparent, and reliable support. We do what we say we will do.</p>
+                    </div>
+                    <div class="p-8 text-center bg-white rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-brand-200 transition-all duration-300 group">
+                        <div class="mx-auto w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-users text-4xl text-brand-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Connection</h3>
+                        <p class="text-slate-600 text-lg leading-relaxed">Fostering genuine relationships and meaningful community connections.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Onboarding Journey (Soft Blue Background) -->
+        <section class="py-24 bg-brand-50 z-10 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-20 reveal">
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">Your Journey with Us</h2>
+                    <p class="text-xl text-slate-600 max-w-2xl mx-auto">We make getting started simple, transparent, and stress-free.</p>
+                </div>
+
+                <div class="relative reveal">
+                    <!-- Connector Line (Desktop) -->
+                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-brand-200 -translate-y-1/2 z-0 rounded-full"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                        <!-- Step 1 -->
+                        <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                            <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
+                                1
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Get in Touch</h3>
+                            <p class="text-base text-slate-600 font-medium">Fill out our contact or referral form to tell us about your needs.</p>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                            <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
+                                2
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Meet & Greet</h3>
+                            <p class="text-base text-slate-600 font-medium">We meet you (in person or online) to ensure we're the right fit for you.</p>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300 group">
+                            <div class="w-16 h-16 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
+                                3
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Service Agreement</h3>
+                            <p class="text-base text-slate-600 font-medium mb-4">We agree on a plan and sign a service agreement outlining your support.</p>
                             
-                            <div>
-                                <label for="name" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Full Name</label>
-                                <input type="text" name="name" id="name" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Your Name">
+                            <!-- Link Added Here -->
+                            <a href="service-agreement.html" target="_blank" class="text-sm font-bold text-brand-700 uppercase tracking-wide hover:text-brand-900 inline-flex items-center group-hover:underline underline-offset-4">
+                                View Sample <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="bg-white p-8 rounded-3xl border border-brand-100 text-center shadow-sm relative hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300">
+                            <div class="w-16 h-16 mx-auto bg-accent-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-6 relative z-10 shadow-lg border-4 border-white">
+                                <i class="fa-solid fa-check"></i>
                             </div>
-                            <div>
-                                <label for="email" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Email Address</label>
-                                <input type="email" name="email" id="email" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="you@example.com">
-                            </div>
-                            <div>
-                                <label for="phone" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Phone Number</label>
-                                <input type="tel" name="phone" id="phone" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="0400 000 000">
-                            </div>
-                            <div>
-                                <label for="message" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">How can we help?</label>
-                                <textarea id="message" name="message" rows="4" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Tell us a bit about your needs..."></textarea>
-                            </div>
-                            <button type="submit" class="w-full py-5 px-8 text-white font-bold text-lg bg-brand-600 hover:bg-brand-700 rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex justify-center items-center">
-                                Send Message <i class="fa-solid fa-paper-plane ml-3"></i>
-                            </button>
-                        </form>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3">Support Begins</h3>
+                            <p class="text-base text-slate-600 font-medium">Your support worker starts, helping you achieve your goals.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-white pt-20 pb-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center gap-3 mb-8">
-                         <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
-                            <i class="fa-solid fa-hands-holding-circle text-2xl"></i>
+        <!-- MEET THE FOUNDER SECTION -->
+        <section id="about" class="py-24 bg-white z-10 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="glass rounded-3xl p-10 md:p-16 shadow-xl border border-slate-200 reveal bg-slate-50/50">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
+                        
+                        <!-- Profile Image Column -->
+                        <div class="md:col-span-1 text-center relative group">
+                            <div class="absolute inset-0 bg-brand-200 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                            <div class="relative inline-block">
+                                <img src="https://i.imgur.com/t5ke22D.jpeg" alt="Matisse Duffield" class="relative w-64 h-64 md:w-72 md:h-72 rounded-full object-cover border-8 border-white shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute bottom-6 right-6 bg-white p-3 rounded-full shadow-lg text-brand-600">
+                                    <i class="fa-solid fa-quote-right text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="mt-8">
+                                <h3 class="text-3xl font-bold text-slate-900">Matisse Duffield</h3>
+                                <p class="text-brand-700 font-bold uppercase tracking-wide text-sm mt-1">Founder & Director</p>
+                            </div>
                         </div>
-                        <span class="font-bold text-3xl tracking-tight text-white">Think Pathways</span>
+
+                        <!-- Text Column -->
+                        <div class="md:col-span-2">
+                            <div class="mb-8 inline-flex items-center gap-2 px-5 py-2 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 uppercase tracking-wider shadow-sm">
+                                <i class="fa-solid fa-star text-yellow-500"></i> My Philosophy
+                            </div>
+                            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-8 leading-tight">
+                                "Support is about walking <span class="text-brand-600 underline decoration-brand-300 decoration-4 underline-offset-4">with</span> you, not just for you."
+                            </h2>
+                            <div class="prose text-slate-700 text-xl leading-relaxed space-y-6 font-medium">
+                                <p>
+                                    I started Think Pathways with a simple belief: everyone deserves support that actually <em>listens</em>. I've seen too many participants treated as just a number in a system.
+                                </p>
+                                <p>
+                                    My goal is to build a service where you feel genuinely heard, valued, and empowered to take control of your own journey. Whether it's learning a new skill or just having a chat over coffee, we are here to make your day better.
+                                </p>
+                            </div>
+                            
+                            <!-- Signature / Trust Signals -->
+                            <div class="mt-12 pt-10 border-t border-slate-200 flex flex-wrap gap-8">
+                                <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
+                                    <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-certificate"></i></div>
+                                    Fully Insured
+                                </div>
+                                <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
+                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-check-circle"></i></div>
+                                    NDIS Worker Screened
+                                </div>
+                                <div class="flex items-center gap-3 text-slate-700 font-bold bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100">
+                                    <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-heart-pulse"></i></div>
+                                    First Aid Certified
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <p class="text-slate-400 text-lg max-w-md leading-relaxed mb-8">
-                        Empowering individuals with disabilities to live life their way. Trusted, local, and compassionate support in Adelaide, South Australia.
-                    </p>
-                    <div class="flex gap-4">
-                        <!-- Social Placeholders -->
-                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-brand-600 transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
-                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonial Section (UPGRADED MARQUEE) -->
+        <section class="py-24 bg-slate-900 relative overflow-hidden z-10">
+            <!-- Decorative Background Grid -->
+            <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px); background-size: 40px 40px;"></div>
+            
+            <div class="relative z-10">
+                <div class="text-center mb-16 px-4">
+                    <h2 class="text-brand-400 font-bold tracking-wide uppercase text-sm mb-3">Community Stories</h2>
+                    <p class="text-4xl md:text-5xl font-extrabold text-white">Real experiences, real impact</p>
                 </div>
                 
+                <!-- Marquee Container -->
+                <div class="marquee-container relative w-full overflow-hidden py-8">
+                    <!-- Gradient Fade Edges -->
+                    <div class="absolute top-0 bottom-0 left-0 w-24 md:w-48 bg-gradient-to-r from-slate-900 to-transparent z-20 pointer-events-none"></div>
+                    <div class="absolute top-0 bottom-0 right-0 w-24 md:w-48 bg-gradient-to-l from-slate-900 to-transparent z-20 pointer-events-none"></div>
+
+                    <!-- Scrolling Track -->
+                    <div class="flex gap-8 animate-marquee w-max hover:pause" id="testimonial-track">
+                        <!-- JS will inject duplicates here for seamless looping -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section (Restored & Styled) -->
+        <section id="faq" class="py-24 bg-white z-10 relative">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16 reveal">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900">Frequently Asked Questions</h2>
+                    <p class="mt-4 text-xl text-slate-600">Common questions about our services and NDIS support.</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- FAQ Item 1 -->
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                        <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                            <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-circle-question"></i></div>
+                            Are you NDIS registered?
+                        </h3>
+                        <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
+                            We are an NDIS compatible provider. We can support participants who are <strong>Plan Managed</strong> or <strong>Self Managed</strong>. 
+                        </p>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                        <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                            <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div>
+                            What areas do you service?
+                        </h3>
+                        <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
+                            We currently provide support services across the Greater Metropolitan area of Adelaide. Please contact us to check if we have a worker in your specific suburb.
+                        </p>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="glass rounded-3xl p-8 border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all reveal bg-slate-50/50">
+                        <h3 class="text-xl font-bold text-slate-900 flex items-center mb-4">
+                            <div class="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-5 text-xl flex-shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
+                            Is there a waiting list?
+                        </h3>
+                        <p class="text-slate-700 ml-16 leading-relaxed font-medium text-lg">
+                            We currently have capacity to take on new participants. Once we understand your needs, we can usually start services within 1-2 weeks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section (Glassmorphism) -->
+        <section id="contact" class="py-24 bg-brand-50 relative overflow-hidden z-10">
+            <div class="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
+                <div class="absolute top-20 right-0 w-96 h-96 bg-brand-300 rounded-full blur-3xl mix-blend-multiply"></div>
+                <div class="absolute bottom-0 left-20 w-72 h-72 bg-accent-300 rounded-full blur-3xl mix-blend-multiply"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="glass rounded-3xl shadow-2xl overflow-hidden reveal border border-white/60">
+                    <div class="grid grid-cols-1 lg:grid-cols-2">
+                        <!-- Contact Info -->
+                        <div class="bg-slate-900 p-12 md:p-16 text-white flex flex-col justify-center">
+                            <h3 class="text-4xl font-extrabold mb-6">Get in touch</h3>
+                            <p class="text-slate-300 mb-12 text-xl leading-relaxed">
+                                Ready to discuss your support needs? Fill out the form or contact us directly.
+                            </p>
+                            <div class="space-y-10">
+                                <div class="flex items-center group">
+                                    <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                        <i class="fa-solid fa-phone text-2xl text-brand-400 group-hover:text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Call Us</p>
+                                        <p class="text-2xl font-bold text-white">+61 420 673 303</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center group">
+                                    <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                        <i class="fa-solid fa-envelope text-2xl text-brand-400 group-hover:text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Email Us</p>
+                                        <p class="text-2xl font-bold text-white">care@thinkpathways.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center group">
+                                    <div class="w-14 h-14 bg-white/10 group-hover:bg-brand-600 transition-colors rounded-2xl flex items-center justify-center mr-6">
+                                        <i class="fa-solid fa-location-dot text-2xl text-brand-400 group-hover:text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Service Area</p>
+                                        <p class="text-2xl font-bold text-white">Adelaide, South Australia</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Form -->
+                        <div class="p-12 md:p-16 bg-white/60 backdrop-blur-xl relative">
+                            
+                            <!-- Success Message (Hidden by default) -->
+                            <div id="contactSuccess" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center rounded-br-3xl text-center p-8">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fa-solid fa-check text-green-600 text-2xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900">Message Sent!</h3>
+                                <p class="text-slate-600 mt-2">Thanks for reaching out. We'll be in touch shortly.</p>
+                                <button onclick="window.location.reload()" class="mt-6 text-brand-600 font-bold hover:underline">Send Another</button>
+                            </div>
+
+                            <form id="contactForm" class="space-y-8">
+                                <div>
+                                    <label for="name" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Full Name</label>
+                                    <input type="text" id="contactName" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Your Name">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Email Address</label>
+                                    <input type="email" id="contactEmail" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="you@example.com">
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">Phone Number</label>
+                                    <input type="tel" id="contactPhone" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="0400 000 000">
+                                </div>
+                                <div>
+                                    <label for="message" class="block text-sm font-bold text-slate-800 mb-2 uppercase tracking-wide">How can we help?</label>
+                                    <textarea id="contactMessage" rows="4" required class="w-full px-6 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-900 placeholder-slate-400" placeholder="Tell us a bit about your needs..."></textarea>
+                                </div>
+                                <button type="submit" id="contactSubmitBtn" class="w-full py-5 px-8 text-white font-bold text-lg bg-brand-600 hover:bg-brand-700 rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex justify-center items-center">
+                                    <span>Send Message</span> <i class="fa-solid fa-paper-plane ml-3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#0B1120] text-white pt-16 pb-8 mt-auto relative z-20 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <!-- Column 1: Brand & Description -->
+                <div class="col-span-1 md:col-span-2 pr-0 md:pr-12">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                            <i class="fa-solid fa-hands-holding-circle text-xl"></i>
+                        </div>
+                        <span class="font-bold text-2xl tracking-tight text-white">Think Pathways</span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-8 max-w-md">
+                        Empowering individuals with disabilities to live life their way. Trusted, local, and compassionate support in Adelaide, South Australia.
+                    </p>
+                    <!-- Social Icons (Clean Circle Style) -->
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white transition-all duration-300 border border-slate-700 hover:border-brand-500">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white transition-all duration-300 border border-slate-700 hover:border-brand-500">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-slate-800/50 rounded-full flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white transition-all duration-300 border border-slate-700 hover:border-brand-500">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Quick Links -->
                 <div>
-                    <h4 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-2 inline-block">Quick Links</h4>
-                    <ul class="space-y-4 text-slate-400">
-                        <li><a href="#home" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Home</a></li>
-                        <li><a href="#services" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Our Services</a></li>
-                        <li><a href="referral.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Make a Referral</a></li>
-                        <li><a href="activities.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Activities</a></li>
+                    <h4 class="text-sm font-bold uppercase tracking-wider mb-6 text-white border-b border-slate-800 pb-2 inline-block">Quick Links</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="index.html#home" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Home</a></li>
+                        <li><a href="index.html#services" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Our Services</a></li>
+                        <li><a href="referral.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Make a Referral</a></li>
+                        <li><a href="activities.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Activities</a></li>
                         <li><a href="resources.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Adelaide Resources</a></li>
-                        <li><a href="#contact" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Contact</a></li>
+                        <li><a href="index.html#contact" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Contact</a></li>
                     </ul>
                 </div>
 
+                <!-- Column 3: Legal -->
                 <div>
-                    <h4 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-2 inline-block">Legal</h4>
-                    <ul class="space-y-3 text-slate-400">
-                        <li><a href="privacy.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Privacy Policy</a></li>
-                        <li><a href="terms.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Terms of Service</a></li>
-                        <li><a href="feedback.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Feedback</a></li>
-                        <li><a href="incident.html" class="hover:text-brand-400 transition-colors flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-3 text-slate-600"></i> Incident Reporting</a></li>
+                    <h4 class="text-sm font-bold uppercase tracking-wider mb-6 text-white border-b border-slate-800 pb-2 inline-block">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="privacy.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Privacy Policy</a></li>
+                        <li><a href="terms.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Terms of Service</a></li>
+                        <li><a href="feedback.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Feedback</a></li>
+                        <li><a href="incident.html" class="text-slate-400 hover:text-brand-400 transition-colors flex items-center group"><i class="fa-solid fa-chevron-right text-[10px] mr-3 text-slate-600 group-hover:text-brand-500 transition-colors"></i> Incident Reporting</a></li>
                     </ul>
                 </div>
             </div>
-            
-            <div class="border-t border-slate-800 pt-10 text-center text-slate-500 text-sm">
-                <p>&copy; 2025 Think Pathways. All rights reserved. <span class="mx-3 text-slate-700">|</span> ABN 74 169 269 966</p>
+
+            <!-- Copyright Bar -->
+            <div class="border-t border-slate-800/50 pt-8 flex flex-col md:flex-row justify-center items-center text-slate-500 text-xs gap-4">
+                <p>&copy; 2025 Think Pathways. All rights reserved.</p>
+                <div class="hidden md:block w-px h-3 bg-slate-700"></div>
+                <p>ABN 74 169 269 966</p>
             </div>
         </div>
     </footer>
 
     <!-- Accessibility Toolbar -->
     <div class="fixed bottom-4 left-4 z-50">
-        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-14 h-14 bg-brand-600 text-white rounded-full shadow-2xl hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center shadow-brand-500/40 hover:scale-110" aria-label="Accessibility Tools">
-            <i class="fa-solid fa-universal-access text-3xl"></i>
+        <button id="a11y-toggle" onclick="toggleA11yMenu()" class="w-12 h-12 bg-brand-600 text-white rounded-full shadow-lg hover:bg-brand-700 transition-all focus:ring-4 focus:ring-yellow-400 flex items-center justify-center" aria-label="Accessibility Tools">
+            <i class="fa-solid fa-universal-access text-2xl"></i>
         </button>
-        <div id="a11y-menu" class="hidden absolute bottom-20 left-0 bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-72 animate-fade-in-up origin-bottom-left z-50">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h4 class="font-bold text-slate-900 text-lg">Accessibility</h4>
-                <button onclick="toggleA11yMenu()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-6">
+        <div id="a11y-menu" class="hidden absolute bottom-14 left-0 bg-white rounded-lg shadow-xl border border-slate-200 p-4 w-64 animate-fade-in-up origin-bottom-left">
+            <h4 class="font-bold text-slate-900 mb-3 border-b pb-2">Accessibility Tools</h4>
+            <div class="space-y-3">
                 <div>
-                    <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-wide">Text Size</p>
+                    <p class="text-xs text-slate-500 mb-1">Text Size</p>
                     <div class="flex gap-2">
-                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">A-</button>
-                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">Reset</button>
-                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl text-sm font-bold transition-colors border border-slate-200">A+</button>
+                        <button onclick="resizeText(-1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">-</button>
+                        <button onclick="resizeText(0)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">Reset</button>
+                        <button onclick="resizeText(1)" class="flex-1 bg-slate-100 hover:bg-slate-200 py-1 rounded text-sm">+</button>
                     </div>
                 </div>
                 <div>
-                    <p class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-wide">Display Mode</p>
-                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-4 rounded-xl text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400 transition-all shadow-lg flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-circle-half-stroke"></i> High Contrast
+                    <p class="text-xs text-slate-500 mb-1">Display</p>
+                    <button onclick="toggleContrast()" class="w-full bg-slate-900 text-yellow-400 py-2 rounded text-sm font-bold hover:bg-black border-2 border-transparent focus:border-yellow-400">
+                        <i class="fa-solid fa-circle-half-stroke mr-2"></i> High Contrast
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Firebase SDK (Add before </body> if not already there) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
     <script>
-        // --- Typewriter Effect Logic ---
+        // --- Interactions ---
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
+        
+        // --- Parallax Effect ---
+        function parallax(e) {
+            document.querySelectorAll('.parallax-blob').forEach(blob => {
+                const speed = blob.getAttribute('data-speed');
+                const x = (window.innerWidth - e.pageX * speed) / 100;
+                const y = (window.innerHeight - e.pageY * speed) / 100;
+                blob.style.transform = `translateX(${x}px) translateY(${y}px)`;
+            });
+        }
+
+        // --- Scroll Progress ---
+        window.onscroll = function() {
+            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var scrolled = (winScroll / height) * 100;
+            document.getElementById("scroll-progress").style.width = scrolled + "%";
+        };
+
+        // --- Typewriter Effect ---
         const words = ["Your Independence.", "Your Community.", "Your Goals.", "Your Life."];
         let i = 0;
         let timer;
 
         function typeWriter() {
             const heading = document.getElementById("typewriter");
+            if (!heading) return;
             const word = words[i];
             let charIndex = 0;
-            
-            // Clear previous
             heading.textContent = "";
-            
-            // Typing loop
             const typeInterval = setInterval(() => {
                 heading.textContent += word.charAt(charIndex);
                 charIndex++;
                 if (charIndex >= word.length) {
                     clearInterval(typeInterval);
-                    // Wait before deleting (or switching)
-                    setTimeout(() => {
-                        deleteWord();
-                    }, 2000);
+                    setTimeout(() => deleteWord(), 2000);
                 }
             }, 100);
         }
@@ -743,41 +801,19 @@
                 }
             }, 50);
         }
-        
-        // --- Testimonial Logic (Infinite Marquee) ---
+
+        // --- Marquee Logic ---
         const testimonials = [
-            {
-                quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism.",
-                author: "Nicholas M.",
-                role: "Participant"
-            },
-            {
-                quote: "I couldn't be more blessed with the support I receive from Matisse, I truly am grateful for how he has supported me.",
-                author: "Jimi T.",
-                role: "Participant"
-            },
-            {
-                quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals while having a great time.",
-                author: "Jordan T.",
-                role: "Participant"
-            },
-            {
-                quote: "Finding a team that genuinely cares is rare. Think Pathways treats my son with such dignity. It’s been life-changing for our family.",
-                author: "Sarah L.",
-                role: "Parent"
-            },
-            {
-                quote: "The community access trips are the highlight of my week. I've made new friends and feel so much more confident going out.",
-                author: "Michael R.",
-                role: "Participant"
-            }
+            { quote: "Think Pathways has helped me learn many life skills, they have transformed how I live day-to-day with my Autism.", author: "Nicholas M.", role: "Participant" },
+            { quote: "I couldn't be more blessed with the support I receive from Matisse, I truly am grateful for how he has supported me.", author: "Jimi T.", role: "Participant" },
+            { quote: "I finally feel heard and supported. The team goes above and beyond to make sure I'm achieving my goals.", author: "Jordan T.", role: "Participant" },
+            { quote: "Finding a team that genuinely cares is rare. Think Pathways treats my son with such dignity.", author: "Sarah L.", role: "Parent" },
+            { quote: "The community access trips are the highlight of my week. I've made new friends and feel so much more confident.", author: "Michael R.", role: "Participant" }
         ];
         
         function initMarquee() {
             const container = document.getElementById('testimonial-track');
             if (!container) return;
-            
-            // Create cards
             const createCard = (t) => `
                 <div class="w-[400px] flex-shrink-0 glass rounded-3xl p-10 border border-white/10 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-500 bg-white/5 backdrop-blur-md shadow-2xl">
                     <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -797,15 +833,11 @@
                     </div>
                 </div>
             `;
-
-            // Inject original items + clones for infinite loop
             const cardsHTML = testimonials.map(createCard).join('');
-            
-            // We duplicate the list enough times to fill the screen width for smooth looping
             container.innerHTML = cardsHTML + cardsHTML + cardsHTML + cardsHTML; 
         }
 
-        // Initialize
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             typeWriter(); 
             initMarquee();
@@ -813,10 +845,11 @@
             // Initialize Tilt
             if (typeof VanillaTilt !== 'undefined') {
                 VanillaTilt.init(document.querySelectorAll(".tilt-card"), {
-                    max: 8,
+                    max: 5,
                     speed: 400,
                     glare: true,
-                    "max-glare": 0.3,
+                    "max-glare": 0.2,
+                    scale: 1.02
                 });
             }
             
@@ -825,7 +858,7 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('active');
-                        observer.unobserve(entry.target); // Only trigger once
+                        observer.unobserve(entry.target);
                     }
                 });
             }, { threshold: 0.1 });
@@ -833,15 +866,12 @@
             document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         });
 
-        // Mobile Menu
-        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-        function toggleA11yMenu() { document.getElementById('a11y-menu').classList.toggle('hidden'); }
-        
-        // Accessibility
+        // --- Accessibility ---
         let currentZoom = 100;
-        function resizeText(dir) {
-            if (dir === 0) currentZoom = 100;
-            else currentZoom = Math.max(90, Math.min(150, currentZoom + (dir * 10)));
+        function resizeText(direction) {
+            if (direction === 0) currentZoom = 100;
+            else if (direction === 1) currentZoom = Math.min(currentZoom + 10, 150);
+            else currentZoom = Math.max(currentZoom - 10, 90);
             document.documentElement.style.fontSize = currentZoom + '%';
         }
         function toggleContrast() {
@@ -849,6 +879,54 @@
             localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
         }
         if (localStorage.getItem('highContrast') === 'true') document.body.classList.add('high-contrast');
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+             apiKey: "AIzaSyDO315mAW8JphkSPqcp8Z9VPakBIUlCrl8", 
+             authDomain: "thinkpathways.firebaseapp.com", 
+             projectId: "thinkpathways", 
+             storageBucket: "thinkpathways.firebasestorage.app", 
+             messagingSenderId: "31616186160", 
+             appId: "1:31616186160:web:646c33b844b999e81efaf5"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        auth.signInAnonymously().catch(console.error);
+
+        // --- CONTACT FORM LOGIC ---
+        const contactForm = document.getElementById('contactForm');
+        if(contactForm) {
+            contactForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('contactSubmitBtn');
+                const originalText = btn.innerHTML;
+                
+                // Loading State
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
+
+                const data = {
+                    name: document.getElementById('contactName').value,
+                    email: document.getElementById('contactEmail').value,
+                    phone: document.getElementById('contactPhone').value,
+                    message: document.getElementById('contactMessage').value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'New'
+                };
+
+                try {
+                    await db.collection('artifacts/thinkpathways/public/data/inquiries').add(data);
+                    document.getElementById('contactSuccess').classList.remove('hidden');
+                    contactForm.reset();
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Could not send message. Please call us directly.");
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        }
     </script>
 </body>
 </html>
