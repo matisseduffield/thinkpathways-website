@@ -22,7 +22,7 @@ const ThemeToggle = () => {
     );
 };
 
-// --- SMART TIME SELECT COMPONENT ---
+// --- NEW: SMART TIME SELECT COMPONENT ---
 const TimeSelect = ({ label, value, onChange, minTime }) => {
     const times = useMemo(() => {
         const t = [];
@@ -244,7 +244,24 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             <p class="text-xs text-gray-500 uppercase font-bold mb-1">Goal Progress</p>
                             <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.goals || 'No goals recorded.'}</div>
                         </div>
-                        ${s.travel?.totalKm > 0 ? `<div class="mb-6"><p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel</p><p class="text-sm">${s.travel.totalKm} km claimed.</p></div>` : ''}
+                        
+                        ${s.travel?.totalKm > 0 ? `
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel Claim (${s.travel.totalKm} km)</p>
+                            <table class="w-full text-xs text-left border-collapse border border-gray-200">
+                                <thead class="bg-gray-50"><tr><th class="p-2 border">From</th><th class="p-2 border">To</th><th class="p-2 border">Reason</th><th class="p-2 border">KM</th></tr></thead>
+                                <tbody>
+                                    ${s.travel.logs.map(log => `
+                                    <tr>
+                                        <td class="p-2 border">${log.from}</td>
+                                        <td class="p-2 border">${log.to}</td>
+                                        <td class="p-2 border">${log.reason}</td>
+                                        <td class="p-2 border">${log.km}</td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>` : ''}
+
                         ${s.caseNotes?.incidents === 'Yes' ? `<div class="mb-6 p-4 bg-red-50 border border-red-100 rounded"><p class="text-red-700 font-bold text-sm mb-1">Incident Reported</p><p class="text-red-600 text-sm">${s.caseNotes.incidentDetails}</p></div>` : ''}
                         <div class="mt-12 pt-4 border-t text-center text-xs text-gray-400">Generated via Think Pathways Portal</div>
                     </div>
@@ -297,10 +314,17 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                                         <span className="font-semibold text-slate-700 dark:text-slate-300">Time: </span>
                                         <span className="text-slate-600 dark:text-slate-400">{s.timesheet?.start} - {s.timesheet?.end}</span>
                                     </div>
-                                    <div className="mb-2">
-                                        <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
-                                        <span className="text-slate-600 dark:text-slate-400">{s.travel?.totalKm || 0} km</span>
-                                    </div>
+                                    {s.travel?.totalKm > 0 && (
+                                        <div className="mb-2">
+                                            <span className="font-semibold text-slate-700 dark:text-slate-300">Travel: </span>
+                                            <span className="text-slate-600 dark:text-slate-400">{s.travel.totalKm} km</span>
+                                            <ul className="mt-1 pl-4 list-disc text-[10px] text-slate-500">
+                                                {s.travel.logs.map((log, i) => (
+                                                    <li key={i}>{log.from} to {log.to} ({log.km}km)</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                     {s.caseNotes?.incidents === 'Yes' && (
                                         <div className="bg-red-50 text-red-700 p-2 rounded border border-red-100">
                                             <strong>Incident:</strong> {s.caseNotes.incidentDetails}
@@ -769,7 +793,7 @@ const WorkerDashboard = () => {
                          )}
 
                          <h3 className="text-lg font-bold text-slate-900 mb-4 dark:text-white">History</h3>
-                         {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No past shifts found.</div> : (
+                         {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 mb-8 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No past shifts found.</div> : (
                              <div className="space-y-4 opacity-75">{pastShifts.map(s => (
                                  <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center dark:bg-slate-800/50 dark:border-slate-700">
                                      <div>
