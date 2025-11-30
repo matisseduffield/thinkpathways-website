@@ -22,7 +22,7 @@ const ThemeToggle = () => {
     );
 };
 
-// --- SMART TIME SELECT ---
+// --- SMART TIME SELECT COMPONENT ---
 const TimeSelect = ({ label, value, onChange, minTime }) => {
     const times = useMemo(() => {
         const t = [];
@@ -211,6 +211,50 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
         if (s.status === 'Pending') statusColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
         if (s.status === 'Cancelled' || s.status === 'Declined') statusColor = "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
 
+        // --- PDF GENERATION HANDLER ---
+        const downloadPDF = () => {
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(`
+                <html>
+                <head>
+                    <title>Shift Report - ${s.dateDisplay}</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>@media print { body { margin: 0; } .no-print { display: none; } }</style>
+                </head>
+                <body class="p-10 font-sans bg-white">
+                    <div class="max-w-2xl mx-auto border border-gray-200 p-8 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h1 class="text-2xl font-bold text-slate-900">Shift Report</h1>
+                            <div class="text-right">
+                                <p class="font-bold text-brand-600">Think Pathways</p>
+                                <p class="text-xs text-gray-500">${new Date().toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Client</p><p class="font-medium">${s.userName}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Worker</p><p class="font-medium">${workerDisplayName || 'Unknown'}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Date</p><p class="font-medium">${s.dateDisplay}</p></div>
+                            <div><p class="text-xs text-gray-500 uppercase font-bold">Time</p><p class="font-medium">${s.timesheet?.start || s.startTime} - ${s.timesheet?.end || s.endTime}</p></div>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Summary of Support</p>
+                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.summary || 'No summary provided.'}</div>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-xs text-gray-500 uppercase font-bold mb-1">Goal Progress</p>
+                            <div class="bg-gray-50 p-4 rounded text-sm leading-relaxed">${s.caseNotes?.goals || 'No goals recorded.'}</div>
+                        </div>
+                        ${s.travel?.totalKm > 0 ? `<div class="mb-6"><p class="text-xs text-gray-500 uppercase font-bold mb-1">Travel</p><p class="text-sm">${s.travel.totalKm} km claimed.</p></div>` : ''}
+                        ${s.caseNotes?.incidents === 'Yes' ? `<div class="mb-6 p-4 bg-red-50 border border-red-100 rounded"><p class="text-red-700 font-bold text-sm mb-1">Incident Reported</p><p class="text-red-600 text-sm">${s.caseNotes.incidentDetails}</p></div>` : ''}
+                        <div class="mt-12 pt-4 border-t text-center text-xs text-gray-400">Generated via Think Pathways Portal</div>
+                    </div>
+                    <script>window.print();</script>
+                </body>
+                </html>
+            `);
+            reportWindow.document.close();
+        };
+
         return (
             <div className="relative bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -237,7 +281,10 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                     {/* --- SHIFT REPORT VISIBILITY --- */}
                     {(s.workerStatus === 'Completed' && (s.caseNotes || s.travel)) && (
                         <div className="mt-3 w-full bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-600 pt-3 px-2">
-                             <div className="text-xs font-bold text-brand-600 uppercase mb-2">Shift Report</div>
+                             <div className="flex justify-between items-center mb-2">
+                                <div className="text-xs font-bold text-brand-600 uppercase">Shift Report</div>
+                                <button onClick={downloadPDF} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-100 flex items-center text-slate-600 shadow-sm"><i className="fa-solid fa-file-pdf mr-1 text-red-500"></i> Download PDF</button>
+                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                 <div>
                                     <p className="font-semibold text-slate-700 dark:text-slate-300">Summary:</p>
@@ -293,6 +340,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             </div>
                         )}
                     </div>
+                    {/* DOCS BUTTON ADDED HERE */}
                     <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
                         <i className="fa-solid fa-chevron-down text-xs"></i>
@@ -300,6 +348,7 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                 </div>
             </div>
             
+            {/* EXPANDED AREA */}
             {isExpanded && (
                 <div className="bg-slate-50/80 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 p-6 space-y-6 animate-fade-in">
                     {!showUnassignedOnly ? (
@@ -720,7 +769,7 @@ const WorkerDashboard = () => {
                          )}
 
                          <h3 className="text-lg font-bold text-slate-900 mb-4 dark:text-white">History</h3>
-                         {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 mb-8 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No past shifts found.</div> : (
+                         {pastShifts.length === 0 ? <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">No past shifts found.</div> : (
                              <div className="space-y-4 opacity-75">{pastShifts.map(s => (
                                  <div key={s.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center dark:bg-slate-800/50 dark:border-slate-700">
                                      <div>
