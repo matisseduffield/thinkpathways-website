@@ -101,7 +101,7 @@ const useAuthAndData = () => {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isWorker, setIsWorker] = useState(false);
-    const [workerProfile, setWorkerProfile] = useState(null); // NEW: Store full worker data
+    const [workerProfile, setWorkerProfile] = useState(null); 
     const [isClient, setIsClient] = useState(false);
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [shifts, setShifts] = useState([]);
@@ -114,58 +114,53 @@ const useAuthAndData = () => {
         if (configMissing || !auth) { setIsAuthReady(true); return; }
         const unsubscribe = auth.onAuthStateChanged(async (u) => {
             if (u) {
-                setUser(u);
-                const email = u.email.toLowerCase();
-                let adminStatus = false;
-
-                // 1. Check Admin
-                if (email === ADMIN_EMAIL.toLowerCase()) {
-                    setIsAdmin(true);
-                    adminStatus = true;
-                } else {
-                    setIsAdmin(false);
-                }
-
-                // 2. Determine Role (UPDATED LOGIC: TRUST USER DOC FIRST)
-                // This fixes the issue where workers couldn't verify because they couldn't read the 'workers' collection
-                if (!adminStatus) {
-                    try {
-                        const userDoc = await db.collection(USERS_PATH).doc(u.uid).get();
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            
-                            // Check Role Field directly
-                            if (userData.role === 'worker') {
-                                setIsWorker(true);
-                                setIsClient(false);
-                                
-                                // Try to fetch detailed profile (might fail if rules restricted, but user is logged in)
-                                try {
-                                    const q = db.collection(WORKERS_PATH).where("email", "==", email);
-                                    const snapshot = await q.get();
-                                    if (!snapshot.empty) {
-                                        setWorkerProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
-                                    }
-                                } catch(e) { console.log("Detailed worker profile restricted, basic access granted."); }
-
-                            } else if (userData.role === 'client') {
-                                setIsClient(true);
-                                setIsWorker(false);
-                            } else {
-                                // Unverified or other
-                                setIsWorker(false);
-                                setIsClient(false);
-                            }
-                        } else {
-                            // No user doc?
-                            setIsClient(false);
-                            setIsWorker(false);
-                        }
-                    } catch (e) { 
-                        console.error("Role Check Error", e);
-                        setIsClient(false); 
-                        setIsWorker(false);
+                // !!! FORCE TOKEN REFRESH !!!
+                // This ensures we get the latest 'role' claims immediately after they are updated by the backend.
+                // Without this, the user has to wait up to 1 hour or manually refresh the page.
+                try {
+                    await u.getIdToken(true);
+                    // Reload the ID token result to get the claims
+                    const idTokenResult = await u.getIdTokenResult();
+                    const claims = idTokenResult.claims;
+                    
+                    setUser(u);
+                    const email = u.email.toLowerCase();
+                    
+                    // 1. Check Admin (via Claims OR Email)
+                    if (claims.isAdmin || email === ADMIN_EMAIL.toLowerCase()) {
+                        setIsAdmin(true);
+                    } else {
+                        setIsAdmin(false);
                     }
+
+                    // 2. Check Worker (via Claims)
+                    if (claims.isWorker) {
+                        setIsWorker(true);
+                        setIsClient(false);
+                        // Try to fetch profile
+                        try {
+                            const q = db.collection(WORKERS_PATH).where("email", "==", email);
+                            const snapshot = await q.get();
+                            if (!snapshot.empty) {
+                                setWorkerProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+                            }
+                        } catch(e) { console.log("Worker profile restricted."); }
+                    } 
+                    // 3. Check Client (via Claims)
+                    else if (claims.isClient) {
+                        setIsClient(true);
+                        setIsWorker(false);
+                    } 
+                    // 4. Fallback (Unverified)
+                    else {
+                        setIsWorker(false);
+                        setIsClient(false);
+                    }
+
+                } catch (error) {
+                    console.error("Token Refresh Error:", error);
+                    // Fallback to basic email check if token fails
+                    setUser(u);
                 }
             } else {
                 setUser(null);
@@ -192,17 +187,11 @@ const useAuthAndData = () => {
         
         let query = db.collection(COLLECTION_PATH);
 
-        // --- SECURITY PATCH: FILTERED QUERIES ---
-        // We MUST filter the query locally to match the Firestore Rules
-        // otherwise Firestore will reject the request ("Missing Permissions")
         if (isAdmin) {
-            // Admin sees all
             query = query; 
         } else if (isWorker) {
-            // Worker ONLY sees their assigned shifts
             query = query.where('assignedWorkerEmail', '==', user.email.toLowerCase());
         } else if (isClient) {
-            // Client ONLY sees their own shifts
             query = query.where('userId', '==', user.uid);
         }
 
@@ -225,7 +214,6 @@ const useAuthAndData = () => {
                 };
             });
 
-            // Sort locally (Firestore sort requires composite index for filtered queries)
             data.sort((a, b) => getSortValue(a) - getSortValue(b));
 
             if (isAdmin) {
@@ -238,8 +226,6 @@ const useAuthAndData = () => {
             setIsLoading(false);
         }, (error) => {
             console.error("Data Fetch Error:", error);
-            // Don't alert the user, just log it. 
-            // In a real app we might show a friendly "Connection issue" toast.
             setIsLoading(false);
         });
         return () => unsubscribe();
@@ -277,16 +263,13 @@ const useAuthAndData = () => {
     const resetPassword = (email) => auth.sendPasswordResetEmail(email);
     const logout = () => auth.signOut();
     
-    // UPDATED: Handles Compliance Updates for Workers
     const updateProfile = async (name, complianceData = null) => {
         try {
             await user.updateProfile({ displayName: name });
             setUser({ ...user, displayName: name });
             
-            // Update User Doc
             await db.collection(USERS_PATH).doc(user.uid).update({ name: name }).catch(()=>null);
 
-            // If Worker, update Worker Doc with Compliance Data
             if (isWorker && workerProfile) {
                 const updateData = { name: name };
                 if (complianceData) {
@@ -295,8 +278,6 @@ const useAuthAndData = () => {
                     updateData.cprExpiry = complianceData.cprExpiry;
                 }
                 await db.collection(WORKERS_PATH).doc(workerProfile.id).update(updateData);
-                
-                // Refresh local profile state
                 setWorkerProfile(prev => ({ ...prev, ...updateData }));
             }
 
@@ -306,7 +287,6 @@ const useAuthAndData = () => {
         }
     };
 
-    // ... (Existing bookShift, updateShiftStatus, assignWorker, etc. kept same)
     const checkConflict = (date) => { if(!shifts || shifts.length === 0) return false; return shifts.some(s => s.date === date && s.status !== 'Cancelled' && s.status !== 'Declined'); };
     const bookShift = async (data) => {
         try {
@@ -368,7 +348,6 @@ const useAuthAndData = () => {
     const workerResponse = async (shiftId, response) => { try { await db.collection(COLLECTION_PATH).doc(shiftId).update({ workerStatus: response }); return true; } catch (e) { return false; } };
     const completeShift = async (shiftId, finalData) => { try { await db.collection(COLLECTION_PATH).doc(shiftId).update({ workerStatus: 'Completed', status: 'Confirmed', caseNotes: { summary: finalData.summary, goals: finalData.goals, incidents: finalData.incidents, incidentDetails: finalData.incidentDetails }, timesheet: { start: finalData.actualStartTime, end: finalData.actualEndTime, scheduledStart: finalData.scheduledStartTime, scheduledEnd: finalData.scheduledEndTime }, travel: { logs: finalData.travelLog, totalKm: finalData.totalTravelKm }, completedAt: firebase.firestore.FieldValue.serverTimestamp() }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     
-    // --- WORKER/USER MGMT ---
     const addWorkerToDB = async (workerData) => { if (!isAdmin) return false; try { const check = await db.collection(WORKERS_PATH).where("email", "==", workerData.email.toLowerCase()).get(); if (!check.empty) return { success: false, msg: 'Exists.' }; await db.collection(WORKERS_PATH).add({ ...workerData, email: workerData.email.toLowerCase(), documents: [], timestamp: firebase.firestore.FieldValue.serverTimestamp() }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     const deleteWorkerFromDB = async (id) => { if (!isAdmin) return; try { await db.collection(WORKERS_PATH).doc(id).delete(); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     const updateWorkerInDB = async (id, data) => { if (!isAdmin) return; try { await db.collection(WORKERS_PATH).doc(id).update(data); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
@@ -376,27 +355,18 @@ const useAuthAndData = () => {
     const promoteUserToWorker = async (uid, userData) => { try { const batch = db.batch(); batch.update(db.collection(USERS_PATH).doc(uid), { role: 'worker' }); const check = await db.collection(WORKERS_PATH).where("email", "==", userData.email.toLowerCase()).get(); if (check.empty) { batch.set(db.collection(WORKERS_PATH).doc(), { name: userData.name, email: userData.email.toLowerCase(), notes: 'Promoted', documents: [], timestamp: firebase.firestore.FieldValue.serverTimestamp() }); } await batch.commit(); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     const revokeUserRole = async (uid, email) => { try { const batch = db.batch(); batch.update(db.collection(USERS_PATH).doc(uid), { role: 'unverified' }); if (email) { const q = await db.collection(WORKERS_PATH).where("email", "==", email.toLowerCase()).get(); q.forEach(doc => batch.delete(doc.ref)); } await batch.commit(); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
 
-    // --- DOCUMENTS ---
     const uploadDocument = async (folder, id, file, docName) => { if (!storage) return { success: false, msg: 'Storage error' }; try { const ref = storage.ref().child(`${folder}/${id}/${Date.now()}_${file.name}`); const snapshot = await ref.put(file); const url = await snapshot.ref.getDownloadURL(); await db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id).update({ documents: firebase.firestore.FieldValue.arrayUnion({ name: docName || file.name, url: url, uploadedAt: Date.now() }) }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
     const deleteDocument = async (folder, id, docObject) => { try { await db.collection(folder === 'workers' ? WORKERS_PATH : USERS_PATH).doc(id).update({ documents: firebase.firestore.FieldValue.arrayRemove(docObject) }); return { success: true }; } catch (e) { return { success: false, msg: e.message }; } };
 
-    // --- NEW: EXPORT TO CSV ---
     const exportToCSV = () => {
         if (!shifts || shifts.length === 0) return;
-
-        // Filter only completed or confirmed shifts
         const dataToExport = shifts.filter(s => s.status === 'Confirmed' || s.workerStatus === 'Completed');
-
         if (dataToExport.length === 0) {
             alert("No confirmed or completed shifts to export.");
             return;
         }
-
-        // Headers
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += "Date,Client Name,Worker Email,Service,Start Time,End Time,Duration (Hrs),Status,Travel KM,Notes\n";
-
-        // Rows
         dataToExport.forEach(s => {
             const row = [
                 s.date,
@@ -408,12 +378,10 @@ const useAuthAndData = () => {
                 s.duration,
                 s.workerStatus === 'Completed' ? 'Completed' : 'Scheduled',
                 s.travel?.totalKm || 0,
-                (s.caseNotes?.summary || '').replace(/,/g, ' ') // Escape commas in notes
+                (s.caseNotes?.summary || '').replace(/,/g, ' ') 
             ].join(",");
             csvContent += row + "\n";
         });
-
-        // Download trigger
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
