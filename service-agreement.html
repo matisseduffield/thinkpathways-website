@@ -105,11 +105,13 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase">Start Date</label>
-                            <div class="h-8 border-b border-slate-300"></div>
+                            <!-- UPDATED: Added ID -->
+                            <div class="h-8 border-b border-slate-300 flex items-end pb-1 font-mono text-sm font-bold text-slate-800" id="sa_start_date"></div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase">End Date</label>
-                            <div class="h-8 border-b border-slate-300"></div>
+                            <!-- UPDATED: Added ID -->
+                            <div class="h-8 border-b border-slate-300 flex items-end pb-1 font-mono text-sm font-bold text-slate-800" id="sa_end_date"></div>
                         </div>
                     </div>
                 </div>
@@ -121,8 +123,10 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-slate-900 mb-1 text-sm">The Participant</h3>
-                    <p class="text-slate-400 italic text-sm">[Participant Name]</p>
-                    <p class="text-xs text-slate-500 mt-1">NDIS Number: _______________________</p>
+                    <!-- UPDATED: Added ID -->
+                    <p id="sa_participant" class="text-slate-400 italic text-sm">[Participant Name]</p>
+                    <!-- UPDATED: Added ID inside Span -->
+                    <p class="text-xs text-slate-500 mt-1">NDIS Number: <span id="sa_ndis" class="ml-1 font-mono">_______________________</span></p>
                 </div>
             </div>
         </section>
@@ -363,6 +367,36 @@
             <p>Service Agreement - Think Pathways | ABN 74 169 269 966 | <strong>Page 3 of 3</strong></p>
         </div>
     </div>
+
+    <!-- AUTOMATIC FILLER SCRIPT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Get data from the URL
+            const params = new URLSearchParams(window.location.search);
+            
+            // 2. Helper to safely fill text
+            const fill = (id, paramKey) => {
+                const el = document.getElementById(id);
+                const val = params.get(paramKey);
+                if (el && val) {
+                    el.innerText = decodeURIComponent(val);
+                    el.classList.remove('italic', 'text-slate-400', 'text-slate-500'); // Remove placeholder styling
+                    el.classList.add('font-bold', 'text-slate-900'); // Add "filled" styling
+                }
+            };
+
+            // 3. Map URL data to HTML IDs
+            fill('sa_participant', 'name');
+            fill('sa_ndis', 'ndis');
+            fill('sa_start_date', 'start');
+            fill('sa_end_date', 'end');
+            
+            // Auto-print option (optional)
+            if(params.get('print') === 'true') {
+                setTimeout(() => window.print(), 1000);
+            }
+        });
+    </script>
 
 </body>
 </html>

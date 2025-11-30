@@ -364,8 +364,29 @@ const ClientCard = ({ client, onExpand, isExpanded, onUpdateStatus, openActionMo
                             </div>
                         )}
                     </div>
-                    {/* DOCS BUTTON ADDED HERE */}
-                    <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
+                    <div className="flex items-center">
+                        {/* 1. CONTRACT GENERATOR BUTTON */}
+                        <button 
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                // Calculate dates (Today + 1 Year)
+                                const start = new Date().toISOString().split('T')[0];
+                                const end = new Date();
+                                end.setFullYear(end.getFullYear() + 1);
+                                const endStr = end.toISOString().split('T')[0];
+                                
+                                // Open the smart agreement
+                                window.open(`service-agreement.html?name=${encodeURIComponent(client.name)}&start=${start}&end=${endStr}&print=false`, '_blank');
+                            }} 
+                            className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-colors mr-2" 
+                            title="Generate Service Agreement"
+                        >
+                            <i className="fa-solid fa-file-contract"></i>
+                        </button>
+
+                        {/* 2. EXISTING DOCS BUTTON */}
+                        <button onClick={(e) => { e.stopPropagation(); onOpenDocs(client); }} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-brand-600 flex items-center justify-center transition-colors" title="Manage Documents"><i className="fa-regular fa-folder-open"></i></button>
+                    </div>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-slate-200 dark:bg-slate-600 text-slate-600' : ''}`}>
                         <i className="fa-solid fa-chevron-down text-xs"></i>
                     </div>
