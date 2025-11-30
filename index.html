@@ -186,13 +186,22 @@
     </nav>
 
     <!-- Main Content with Parallax -->
-    <main class="relative w-full" onmousemove="parallax(event)">
+    <main class="relative w-full">
         
         <!-- Interactive Parallax Background -->
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-            <div data-speed="2" class="parallax-blob absolute top-20 -left-10 w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div data-speed="-2" class="parallax-blob absolute top-60 -right-20 w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
-            <div data-speed="1" class="parallax-blob absolute bottom-20 left-20 w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
+            <!-- Blob 1: Top Left -->
+            <div class="parallax-layer absolute top-0 -left-10" data-speed="4">
+                <div class="w-96 h-96 bg-brand-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+            </div>
+            <!-- Blob 2: Top Right -->
+            <div class="parallax-layer absolute top-20 -right-20" data-speed="-4">
+                <div class="w-[30rem] h-[30rem] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 2s"></div>
+            </div>
+            <!-- Blob 3: Bottom Left -->
+            <div class="parallax-layer absolute bottom-0 left-20" data-speed="2">
+                <div class="w-80 h-80 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style="animation-delay: 4s"></div>
+            </div>
         </div>
 
         <!-- Hero Section -->
