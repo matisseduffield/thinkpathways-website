@@ -368,33 +368,49 @@
         </div>
     </div>
 
-    <!-- AUTOMATIC FILLER SCRIPT -->
+    <!-- AUTOMATIC FILLER SCRIPT (PRIVACY SAFE MODE) -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // 1. Get data from the URL
+            // Check for data in sessionStorage (Secure hand-off from Portal)
+            const storedData = sessionStorage.getItem('agreementData');
+            
+            // Or fallback to URL params (Legacy support, but discouraged)
             const params = new URLSearchParams(window.location.search);
             
-            // 2. Helper to safely fill text
-            const fill = (id, paramKey) => {
+            // Priority: Session -> URL
+            const getName = () => {
+                if(storedData) return JSON.parse(storedData).name;
+                return params.get('name');
+            };
+            
+            const getStart = () => {
+                if(storedData) return JSON.parse(storedData).start;
+                return params.get('start');
+            };
+            
+            const getEnd = () => {
+                if(storedData) return JSON.parse(storedData).end;
+                return params.get('end');
+            };
+
+            // Helper to fill
+            const fill = (id, val) => {
                 const el = document.getElementById(id);
-                const val = params.get(paramKey);
                 if (el && val) {
                     el.innerText = decodeURIComponent(val);
-                    el.classList.remove('italic', 'text-slate-400', 'text-slate-500'); // Remove placeholder styling
-                    el.classList.add('font-bold', 'text-slate-900'); // Add "filled" styling
+                    el.classList.remove('italic', 'text-slate-400', 'text-slate-500'); 
+                    el.classList.add('font-bold', 'text-slate-900');
                 }
             };
 
-            // 3. Map URL data to HTML IDs
-            fill('sa_participant', 'name');
-            fill('sa_ndis', 'ndis');
-            fill('sa_start_date', 'start');
-            fill('sa_end_date', 'end');
+            // Execute Fill
+            fill('sa_participant', getName());
+            fill('sa_ndis', '_______________________'); // Keep blank for manual
+            fill('sa_start_date', getStart());
+            fill('sa_end_date', getEnd());
             
-            // Auto-print option (optional)
-            if(params.get('print') === 'true') {
-                setTimeout(() => window.print(), 1000);
-            }
+            // Clean up session storage so it doesn't persist
+            if(storedData) sessionStorage.removeItem('agreementData');
         });
     </script>
 

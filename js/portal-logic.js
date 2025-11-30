@@ -179,7 +179,7 @@ const useAuthAndData = () => {
         return () => unsubscribe();
     }, []);
 
-    // Data Subscription
+    // Data Subscription - SECURE QUERIES
     useEffect(() => {
         if (!user) {
             setShifts([]);
@@ -190,8 +190,23 @@ const useAuthAndData = () => {
 
         setIsLoading(true);
         
-        // Admins see all, Workers/Clients see filtered via Firestore Rules + Client Side Logic
-        const unsubscribe = db.collection(COLLECTION_PATH).onSnapshot((snapshot) => {
+        let query = db.collection(COLLECTION_PATH);
+
+        // --- SECURITY PATCH: FILTERED QUERIES ---
+        // We MUST filter the query locally to match the Firestore Rules
+        // otherwise Firestore will reject the request ("Missing Permissions")
+        if (isAdmin) {
+            // Admin sees all
+            query = query; 
+        } else if (isWorker) {
+            // Worker ONLY sees their assigned shifts
+            query = query.where('assignedWorkerEmail', '==', user.email.toLowerCase());
+        } else if (isClient) {
+            // Client ONLY sees their own shifts
+            query = query.where('userId', '==', user.uid);
+        }
+
+        const unsubscribe = query.onSnapshot((snapshot) => {
             const data = snapshot.docs.map(doc => {
                 const d = doc.data();
                 let statusText = d.status;
@@ -210,22 +225,21 @@ const useAuthAndData = () => {
                 };
             });
 
+            // Sort locally (Firestore sort requires composite index for filtered queries)
             data.sort((a, b) => getSortValue(a) - getSortValue(b));
 
             if (isAdmin) {
                 setShifts(data);
             } else if (isWorker) {
-                // Filter for assigned worker (extra safety)
-                const assigned = data.filter(s => s.assignedWorkerEmail && s.assignedWorkerEmail.toLowerCase() === user.email.toLowerCase());
-                setWorkerShifts(assigned);
+                setWorkerShifts(data);
             } else {
-                // Filter for client (extra safety)
-                const myShifts = data.filter(s => s.userId === user.uid);
-                setShifts(myShifts);
+                setShifts(data);
             }
             setIsLoading(false);
         }, (error) => {
             console.error("Data Fetch Error:", error);
+            // Don't alert the user, just log it. 
+            // In a real app we might show a friendly "Connection issue" toast.
             setIsLoading(false);
         });
         return () => unsubscribe();
